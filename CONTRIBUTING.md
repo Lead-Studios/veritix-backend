@@ -32,6 +32,7 @@ Thank you for considering contributing to Veritix! We welcome all contributions 
 ## Contribution Guidelines
 
 ### Code Standards
+
 - Follow best practices and ensure your code is clean and readable.
 - Use meaningful commit messages.
 - Maintain consistent code formatting.
@@ -45,6 +46,7 @@ Thank you for considering contributing to Veritix! We welcome all contributions 
 Provide a clear and concise description of the issue. If applicable, add screenshots to help explain the problem.
 
 **Steps to Reproduce:**
+
 1. Go to '...'
 2. Click on '...'
 3. Scroll down to '...'
@@ -57,6 +59,7 @@ A clear and concise description of what you expected to happen.
 A clear and concise description of what actually happened.
 
 **Environment:**
+
 - OS: [e.g., Windows, MacOS, Linux]
 - Browser: [e.g., Chrome, Firefox]
 - Version: [e.g., v1.0.0]
@@ -75,12 +78,14 @@ Provide a brief description of what this PR does and why it is needed.
 Reference any related issues (e.g., Fixes #123, Closes #456).
 
 **Changes Made:**
+
 - [ ] Feature implementation
 - [ ] Bug fix
 - [ ] Code refactoring
 - [ ] Documentation update
 
 **How to Test:**
+
 1. Pull this branch
 2. Run `npm install` (if new dependencies were added)
 3. Run the project using `npm start`
@@ -90,6 +95,7 @@ Reference any related issues (e.g., Fixes #123, Closes #456).
 Include screenshots or gifs if relevant.
 
 **Checklist:**
+
 - [ ] Code follows the project's coding style
 - [ ] Tests have been added or updated
 - [ ] Documentation has been updated
@@ -99,20 +105,23 @@ Include screenshots or gifs if relevant.
 Include any additional information reviewers should be aware of.
 
 ## Issue Reporting
+
 - Before opening a new issue, check if it has already been reported.
 - Use the provided issue templates.
 - Provide detailed steps to reproduce the issue.
 
 ## Testing
+
 - Write unit tests for any new functionality.
 - Run tests before submitting a PR:
-   ```bash
-   npm test
-   ```
+  ```bash
+  npm test
+  ```
 
 ## Code of Conduct
+
 By participating in this project, you agree to adhere to our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ---
-Thank you for contributing to Veritix! 🚀
 
+Thank you for contributing to Veritix! 🚀
