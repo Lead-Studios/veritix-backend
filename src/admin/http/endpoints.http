@@ -1,0 +1,90 @@
+
+### Login as Admin to get JWT token
+# @name login
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+  "email": "{adminEmail}",
+  "password": "{adminPassword}"
+}
+
+### Login as Regular User to get JWT token (for testing forbidden access)
+# @name loginUser
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+  "email": "{userEmail}",
+  "password": "{userPassword}"
+}
+
+### Admin Endpoints
+
+### Get All Users (Admin Access)
+GET http://localhost:3000/admin/all-users
+Authorization: Bearer {adminToken}
+
+### Get All Users (Unauthorized - No Token)
+GET http://localhost:3000/admin/all-users
+
+### Get All Users (Forbidden - User Token)
+GET http://localhost:3000/admin/all-users
+Authorization: Bearer {userToken}
+
+### Get User by ID (Admin Access)
+GET http://localhost:3000/admin/users/userId
+Authorization: Bearer {adminToken}
+
+### Get User by ID (Non-existent User)
+GET http://localhost:3000/admin/users/999
+Authorization: Bearer {adminToken}
+
+### Get User by ID (Unauthorized - No Token)
+GET http://localhost:3000/admin/users/userId
+
+### Get User by ID (Forbidden - User Token)
+GET http://localhost:3000/admin/users/userId
+Authorization: Bearer {userToken}
+
+
+### Report Generation Endpoints
+
+### Generate Weekly Report (Admin Access)
+GET http://localhost:3000/admin/user/reports?period=week
+Authorization: Bearer {adminToken}
+
+### Generate Monthly Report (Admin Access)
+GET http://localhost:3000/admin/user/reports?period=month
+Authorization: Bearer {adminToken}
+
+### Generate Yearly Report (Admin Access)
+GET http://localhost:3000/admin/user/reports?period=year
+Authorization: Bearer {adminToken}
+
+### Generate Custom Period Report (Admin Access)
+GET http://localhost:3000/admin/user/reports?period=custom&startDate=2023-01-01&endDate=2023-12-31
+Authorization: Bearer {adminToken}
+
+### Generate Report (Invalid Period)
+GET http://localhost:3000/admin/user/reports?period=invalid
+Authorization: Bearer {adminToken}
+
+### Generate Custom Report (Missing Dates)
+GET http://localhost:3000/admin/user/reports?period=custom
+Authorization: Bearer {adminToken}
+
+### Generate Custom Report (Invalid Date Format)
+GET http://localhost:3000/admin/user/reports?period=custom&startDate=invalid-date&endDate=2023-12-31
+Authorization: Bearer {adminToken}
+
+### Generate Custom Report (End Date Before Start Date)
+GET http://localhost:3000/admin/user/reports?period=custom&startDate=2023-12-31&endDate=2023-01-01
+Authorization: Bearer {adminToken}
+
+### Generate Report (Unauthorized - No Token)
+GET http://localhost:3000/admin/user/reports?period=week
+
+### Generate Report (Forbidden - User Token)
+GET http://localhost:3000/admin/user/reports?period=week
+Authorization: Bearer {userToken}
