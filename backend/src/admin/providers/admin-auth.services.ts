@@ -74,7 +74,7 @@ export class AdminAuthService {
       });
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
-      const admin = await this.adminService.findOneById(payload.sub);
+      const admin = await this.adminService.findUserById(payload.sub);
       if (!admin || !admin.refreshToken) {
         throw new UnauthorizedException('Invalid refresh token');
       }
@@ -158,7 +158,7 @@ export class AdminAuthService {
   }
 
   async sendVerificationEmail(adminId: number) {
-    const admin = await this.adminService.findOneById(adminId);
+    const admin:any = await this.adminService.findOneById(adminId);
     if (!admin) {
       throw new NotFoundException('Admin not found');
     }

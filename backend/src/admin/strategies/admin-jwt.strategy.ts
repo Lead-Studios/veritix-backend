@@ -20,7 +20,7 @@ export class AdminJwtStrategy extends PassportStrategy(Strategy, 'admin-jwt') {
   }
 
   async validate(payload: any) {
-    const admin = await this.adminService.findOneById(payload.sub);
+    const admin:any = await this.adminService.findOneById(payload.sub);
     // Filter out sensitive data
     const { password, refreshToken, resetToken, ...result } = admin;
     return result;

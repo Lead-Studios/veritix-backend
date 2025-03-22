@@ -5,7 +5,6 @@ import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import { AdminService } from './providers/admin.service';
-import { AdminController } from './admin.controller';
 import { AdminAuthController } from './admin-auth.controller';
 import { AdminJwtStrategy } from './strategies/admin-jwt.strategy';
 import { AdminLocalStrategy } from './strategies/admin-local.strategy';
@@ -13,6 +12,7 @@ import { Admin } from './entities/admin.entity';
 import { AdminAuthService } from './providers/admin-auth.services';
 import { BcryptProvider } from './providers/bcrpt-provider';
 import { HashingProvider } from './providers/hashing-services';
+import AdminController from './admin.controller';
 
 @Module({
   imports: [
