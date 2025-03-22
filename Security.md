@@ -4,10 +4,10 @@
 
 We actively maintain and provide security updates for the following versions of Veritix:
 
-| Version  | Supported          |
-|----------|------------------|
-| 1.x.x    | ✅ Yes           |
-| 0.x.x    | ❌ No            |
+| Version | Supported |
+| ------- | --------- |
+| 1.x.x   | ✅ Yes    |
+| 0.x.x   | ❌ No     |
 
 We encourage all users to update to the latest version to receive security patches and improvements.
 
@@ -27,4 +27,3 @@ If you discover a security vulnerability in Veritix, please follow these steps:
 - Low-severity concerns will be reviewed and patched in the next scheduled update.
 
 We appreciate your help in keeping Veritix secure!
-

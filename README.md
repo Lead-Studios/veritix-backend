@@ -45,10 +45,9 @@ The API documentation is available at: [API Documentation Link] (Replace with ac
 We welcome contributions! Please read our [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on how to contribute to this project.
 
 ## Security Policy
-We welcome contributions! Please read our [Security_Policy.md](Security.md) for guidelines on how to report security vulnarability on this project.
 
+We welcome contributions! Please read our [Security_Policy.md](Security.md) for guidelines on how to report security vulnarability on this project.
 
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
-
