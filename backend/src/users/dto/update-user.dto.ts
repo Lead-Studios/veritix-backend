@@ -7,5 +7,6 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
   @PrimaryColumn()
   @IsNotEmpty()
   @IsInt()
+  name: string;
   id: number;
 }

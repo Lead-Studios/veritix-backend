@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   Injectable,
   NotFoundException,
@@ -99,10 +97,10 @@ export class UsersService {
     }
 
     // Ensure only specified fields are updated, excluding id
-    const allowedUpdates = ['name', 'email'];
-    for (const key of Object.keys(updateUserDto)) {
-      if (allowedUpdates.includes(key)) {
-        (user as any)[key] = (updateUserDto as any)[key];
+    const allowedUpdates: (keyof UpdateUserDto)[] = ['name', 'email'];
+    for (const key of allowedUpdates) {
+      if (key in updateUserDto) {
+        user[key] = updateUserDto[key];
       }
     }
 

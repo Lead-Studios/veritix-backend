@@ -18,7 +18,7 @@ export class AdminAuthController {
   @UseGuards(AdminLocalAuthGuard)
   @Post('login')
   @HttpCode(200)
-  async login(@Request() req) {
+  async login(@Request() req: { user: any }) {
     return this.adminAuthService.login(req.user);
   }
 
@@ -47,7 +47,7 @@ export class AdminAuthController {
   @Post('send-verification')
   @UseGuards(AdminJwtAuthGuard)
   @HttpCode(200)
-  async sendVerification(@Request() req) {
+  async sendVerification(@Request() req: { user: { id: number } }) {
     return this.adminAuthService.sendVerificationEmail(req.user.id);
   }
 
@@ -62,7 +62,7 @@ export class AdminAuthController {
 
   @Get('me')
   @UseGuards(AdminJwtAuthGuard)
-  getProfile(@Request() req) {
+  getProfile(@Request() req: { user: any }): any {
     return req.user;
   }
 }

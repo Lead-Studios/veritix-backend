@@ -20,7 +20,7 @@ import { HashingProvider } from './providers/hashing-services';
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
+      useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_ADMIN_SECRET'),
         signOptions: {
           expiresIn: configService.get<string>('JWT_ADMIN_EXPIRATION', '15m'),
