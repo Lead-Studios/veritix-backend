@@ -1,0 +1,13 @@
+{
+  "private": true,
+  "name": "registry",
+  "version": "1.0.0",
+  "scripts": {
+    "pretest": "happy-birthday --you=pretest",
+    "test": "happy-birthday --you=test",
+    "posttest": "happy-birthday --you=posttest"
+  },
+  "dependencies": {
+    "happy-birthday": "0.6.0"
+  }
+}

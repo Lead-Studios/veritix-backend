@@ -1,0 +1,57 @@
+### Create User (Admin)
+POST http://localhost:3000/api/v1/users
+Content-Type: application/json
+
+{
+  "userName": "User3",
+  "email": "testuser2@veritix.com",
+  "password": "SecurePass123!"
+}
+
+### Login to Get JWT
+# @name login
+POST http://localhost:3000/api/v1/auth/sign-in
+Content-Type: application/json
+
+{
+  "email": "testuser2@veritix.com",
+  "password": "SecurePass123!"
+}
+
+### Save JWT Token
+@token = {{login.response.body.access_token}}
+
+### Get User Details
+GET http://localhost:3000/api/v1/users/details
+Authorization: Bearer {{token}}
+
+### Update Profile
+PUT http://localhost:3000/api/v1/users/update-profile
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "userName": "UpdatedUser",
+  "email": "updated@veritix.com"
+}
+
+### Change Password
+PUT http://localhost:3000/api/v1/users/change-password
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "currentPassword": "SecurePass123!",
+  "newPassword": "NewSecurePass456!"
+}
+
+### Upload Profile Image
+POST http://localhost:3000/api/v1/users/upload/profile-image
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="profile.jpg"
+Content-Type: image/jpeg
+
+< /path/to/your/local/image.jpg

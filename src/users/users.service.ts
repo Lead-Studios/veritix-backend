@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+<<<<<<< HEAD:src/users/users.service.ts
 } from "@nestjs/common";
 import { CreateUserDto } from "./dto/create-user.dto";
 // import { UpdateUserDto } from './dto/update-user.dto';
@@ -13,6 +14,20 @@ import { CreateUsersProvider } from "./providers/create-users-provider";
 import { Repository } from "typeorm";
 import { FindOneByEmailProvider } from "./providers/find-one-by-email.provider";
 import { UpdateUserDto } from "./dto/update-user.dto";
+=======
+  UnauthorizedException,
+} from '@nestjs/common';
+import { CreateUserDto } from './dto/create-user.dto';
+// import { UpdateUserDto } from './dto/update-user.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { User } from './entities/user.entity';
+import { CreateUsersProvider } from './providers/create-users-provider';
+import { Repository } from 'typeorm';
+import { FindOneByEmailProvider } from './providers/find-one-by-email.provider';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { HashingProvider } from 'src/admin/providers/hashing-services';
+import { ChangePasswordDto, ProfileImageDto, UpdateProfileDto } from './dto/update-profile.dto';
+>>>>>>> 79d2cfe (feat: Implement User Profile Management\n Fix: issues with jwt must be a string or number):backend/src/users/users.service.ts
 
 @Injectable()
 export class UsersService {
@@ -26,6 +41,8 @@ export class UsersService {
     private readonly findOneByEmailProvider: FindOneByEmailProvider,
 
     private readonly createUserProvider: CreateUsersProvider,
+
+    private hashingProvider: HashingProvider, // Inject the HashingProvider for password hashing
 
     // @Inject(forwardRef(() => AuthService))
     // private readonly authService: AuthService,
@@ -107,5 +124,49 @@ export class UsersService {
     }
 
     return this.userRepository.save(user);
+  }
+
+  async findById(id: number): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    return user;
+  }
+
+  async updateProfile(id: number, updateData: UpdateProfileDto): Promise<User> {
+
+    const allowedUpdates = {
+      userName: updateData.userName,
+      email: updateData.email,
+    };
+
+    await this.userRepository.update(id, allowedUpdates);
+    return this.findById(id);
+  }
+
+  async changePassword(
+    id: number,
+    dto: ChangePasswordDto,
+  ): Promise<void> {
+    const user = await this.findById(id);
+    const isValidPassword = await this.hashingProvider.comparePassword(
+      dto.currentPassword,
+      user.password,
+    );
+
+    if (!isValidPassword) throw new UnauthorizedException('Invalid current password');
+
+    if (dto.currentPassword === dto.newPassword) {
+      throw new BadRequestException('New password must be different from the current password');
+    }
+
+    const hashedPassword = await this.hashingProvider.hashPassword(dto.newPassword);
+    await this.userRepository.update(id, { password: hashedPassword });
+  }
+
+  async updateProfileImage(id: number, dto: ProfileImageDto): Promise<User> {
+    await this.userRepository.update(id, { profileImageUrl: dto.imageUrl });
+    return this.findById(id);
   }
 }
