@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
+import { SponsorsModule } from "./sponsors/sponsors.module";
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { AppService } from "./app.service";
       entities: [__dirname + "/../**/*.entity{.ts,.js}"],
       synchronize: true,
     }),
+    SponsorsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
