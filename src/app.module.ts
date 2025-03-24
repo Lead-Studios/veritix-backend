@@ -3,6 +3,7 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { SponsorsModule } from "./sponsors/sponsors.module";
+import { PostersModule } from './posters/posters.module';
 
 @Module({
   imports: [
@@ -10,13 +11,14 @@ import { SponsorsModule } from "./sponsors/sponsors.module";
       type: "postgres",
       host: "localhost",
       port: 5432,
-      username: "your_db_user",
-      password: "your_db_password",
-      database: "your_db_name",
+      username: "lagodxy",
+      password: "4633922",
+      database: "test",
       entities: [__dirname + "/../**/*.entity{.ts,.js}"],
       synchronize: true,
     }),
     SponsorsModule,
+    PostersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

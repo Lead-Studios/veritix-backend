@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToMany } from "t
 import { Ticket } from "../../tickets/entities/ticket.entity";
 import { SpecialGuest } from "../../special-guests/entities/special-guest.entity";
 import { Sponsor } from "src/sponsors/sponsor.entity";
+import { Poster } from "src/posters/entities/poster.entity";
 
 @Entity()
 export class Event {
@@ -79,4 +80,10 @@ export class Event {
     nullable: true,
   })
   specialGuests: SpecialGuest[] | null;
+
+  @OneToMany(
+    () => Poster,
+    (poster) => poster.event,
+  )
+  posters: Poster[]
 }
