@@ -41,8 +41,8 @@ export class AdminEventController {
   }
 
   @Post("archive/event")
-  async archiveEvent(@Param("id") id: string) {
-    return this.eventsService.archiveEvent(id);
+  async archiveEvent(@Param("id") getEventParamDto: GetEventParamDto) {
+    return this.eventsService.archiveEvent(getEventParamDto.id);
   }
 
   @Delete("delete/event/:id")
