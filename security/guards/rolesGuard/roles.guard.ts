@@ -24,7 +24,6 @@ export class RolesGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const user = request.user; // Ensure user is attached to request (e.g., via JWT auth)
-    console.log("User from request:", user);
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     if (!user || !user.role) {

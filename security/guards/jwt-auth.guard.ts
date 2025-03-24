@@ -12,7 +12,6 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
   }
 
   handleRequest<TUser = any>(err: any, user: TUser): TUser {
-    console.log("Extracted User:", user);
     if (err || !user) {
       throw new UnauthorizedException("you dont have any access ");
     }

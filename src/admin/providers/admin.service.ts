@@ -1,4 +1,4 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { forwardRef, Injectable, Logger, Inject } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import type { Repository } from "typeorm";
 import { UserNotFoundException } from "src/common/exceptions/user-not-found.exception";
@@ -9,6 +9,7 @@ import type { UserResponseDto } from "../dto/user-response.dto";
 import type { ReportFilterDto } from "../dto/report-filter.dto";
 import type { ReportResponseDto } from "../dto/report-response.dto";
 import { Admin } from "../entities/admin.entity";
+import { UsersService } from "src/users/users.service";
 
 @Injectable()
 export class AdminService {
@@ -34,6 +35,9 @@ export class AdminService {
     private usersRepository: Repository<User>,
     @InjectRepository(Admin)
     private readonly adminRepository: Repository<Admin>,
+
+    @Inject(forwardRef(() => UsersService))
+    private readonly usersService: UsersService,
   ) {}
 
   async findOneByEmail(email: string): Promise<Admin | undefined> {
@@ -206,7 +210,7 @@ export class AdminService {
     return {
       id: user.id,
       email: user.email,
-      username: user.username,
+      username: user.userName,
       firstName: user.firstName,
       lastName: user.lastName,
       role: user.role,
