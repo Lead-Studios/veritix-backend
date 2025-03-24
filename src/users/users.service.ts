@@ -16,6 +16,8 @@ import { Repository } from "typeorm";
 import { FindOneByEmailProvider } from "./providers/find-one-by-email.provider";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { AuthService } from "src/auth/providers/auth.service";
+import { HashingProvider } from 'src/admin/providers/hashing-services';
+import { ChangePasswordDto, ProfileImageDto, UpdateProfileDto } from './dto/update-profile.dto';
 
 @Injectable()
 export class UsersService {
@@ -32,11 +34,13 @@ export class UsersService {
 
     @Inject(forwardRef(() => AuthService))
     private readonly authService: AuthService,
+
+    private hashingProvider: HashingProvider, // Inject the HashingProvider for password hashing
+
+  
   ) {}
 
-  // public create(createUserDto: CreateUserDto) {
-  //   return this.createUserProvider.createUser(createUserDto);
-  // }
+ 
 
   public async create(
     createUserDto: CreateUserDto,
@@ -80,8 +84,19 @@ export class UsersService {
     return { message: `User with ID ${id} has been deleted.` };
   }
 
-  public async findOneById(id: number): Promise<User | null> {
-    return await this.userRepository.findOneBy({ id });
+  public async findOneById(id: number): Promise<User> {
+    // Double-check ID validity
+    if (typeof id !== 'number' || isNaN(id) || id <= 0) {
+      throw new NotFoundException(`Invalid user ID: ${id}`);
+    }
+    
+    const user = await this.userRepository.findOneBy({ id });
+    
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    
+    return user;
   }
 
   // update(id: number, updateUserDto: UpdateUserDto) {
@@ -120,5 +135,50 @@ export class UsersService {
     }
 
     return this.userRepository.save(user);
+  }
+
+  async findById(id: number): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    return user;
+  }
+
+  async updateProfile(id: number, updateData: UpdateProfileDto): Promise<User> {
+
+    const allowedUpdates = {
+      userName: updateData.userName,
+      email: updateData.email,
+    };
+
+    await this.userRepository.update(id, allowedUpdates);
+    return this.findById(id);
+  }
+
+  async changePassword(
+    id: number,
+    dto: ChangePasswordDto,
+  ): Promise<string> {
+    const user = await this.findById(id);
+    const isValidPassword = await this.hashingProvider.comparePassword(
+      dto.currentPassword,
+      user.password,
+    );
+
+    if (!isValidPassword) throw new BadRequestException('Invalid current password');
+
+    if (dto.currentPassword === dto.newPassword) {
+      throw new BadRequestException('New password must be different from the current password');
+    }
+
+    const hashedPassword = await this.hashingProvider.hashPassword(dto.newPassword);
+    await this.userRepository.update(id, { password: hashedPassword });
+    return (await this.findById(id)).password;
+  }
+
+  async updateProfileImage(id: number, dto: ProfileImageDto): Promise<User> {
+    await this.userRepository.update(id, { profileImageUrl: dto.imageUrl });
+    return this.findById(id);
   }
 }

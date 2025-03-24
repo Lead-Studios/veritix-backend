@@ -9,14 +9,18 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>("JWT_SECRET"),
+      secretOrKey: configService.get<string>("jwt.secret"),
+      
     });
   }
 
   async validate(payload: any) {
-    if (!payload) {
-      throw new UnauthorizedException();
+    const userId = payload.sub || payload.userId;
+    if (!userId) {
+      throw new UnauthorizedException("Invalid token");
     }
-    return { userId: payload.sub, email: payload.email, role: payload.role };
-  }
+    console.log('JWT Secret:', this.configService.get<string>('jwt.secret'));
+
+    return { userId: Number(userId), email: payload.email, role: payload.role };
+  };
 }

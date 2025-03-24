@@ -1,4 +1,4 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { forwardRef, Injectable, Logger, Inject } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import type { Repository } from "typeorm";
 import { UserNotFoundException } from "src/common/exceptions/user-not-found.exception";
@@ -9,6 +9,7 @@ import type { UserResponseDto } from "../dto/user-response.dto";
 import type { ReportFilterDto } from "../dto/report-filter.dto";
 import type { ReportResponseDto } from "../dto/report-response.dto";
 import { Admin } from "../entities/admin.entity";
+import { UsersService } from "src/users/users.service";
 
 @Injectable()
 export class AdminService {
@@ -34,6 +35,9 @@ export class AdminService {
     private usersRepository: Repository<User>,
     @InjectRepository(Admin)
     private readonly adminRepository: Repository<Admin>,
+
+    @Inject(forwardRef(() => UsersService))
+    private readonly usersService: UsersService,
   ) {}
 
   async findOneByEmail(email: string): Promise<Admin | undefined> {
@@ -176,6 +180,31 @@ export class AdminService {
       throw error;
     }
   }
+
+  // let startDate: Date, endDate: Date;
+
+  //   const today = new Date();
+
+  //   if (ReportPeriodEnum.WEEK) {
+  //     startDate = startOfWeek(today);
+  //     endDate = endOfWeek(today);
+  //   } else if (ReportPeriodEnum.MONTH) {
+  //     startDate = startOfMonth(today);
+  //     endDate = endOfMonth(today);
+  //   } else if (ReportPeriodEnum.YEAR) {
+  //     startDate = startOfYear(today);
+  //     endDate = endOfYear(today);
+  //   } else {
+  //     startDate = startOfDay(today);
+  //     endDate = endOfDay(today);
+  //   }
+
+  //   return this.eventRepository.find({
+  //     where: {
+  //       createdAt: Between(startDate, endDate),
+  //       isArchived: false, // Exclude archived events from reports
+  //     },
+  //   });
 
   private mapToUserResponseDto(user: User): UserResponseDto {
     return {

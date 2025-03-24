@@ -1,7 +1,15 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToMany } from "typeorm";
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToMany,
+  ManyToMany,
+  DeleteDateColumn,
+} from "typeorm";
 import { Ticket } from "../../tickets/entities/ticket.entity";
 import { SpecialGuest } from "../../special-guests/entities/special-guest.entity";
 import { Sponsor } from "src/sponsors/sponsor.entity";
+import { Poster } from "src/posters/entities/poster.entity";
 
 @Entity()
 export class Event {
@@ -72,11 +80,23 @@ export class Event {
   sponsors: Sponsor[];
 
   // Relations - Make them optional
-  @OneToMany(() => Ticket, (ticket) => ticket.event, { nullable: true })
-  tickets: Ticket[] | null;
+  @OneToMany(() => Ticket, (ticket) => ticket.event)
+  tickets: Ticket[];
 
   @OneToMany(() => SpecialGuest, (specialGuest) => specialGuest.event, {
     nullable: true,
   })
   specialGuests: SpecialGuest[] | null;
+
+  @Column({ default: false })
+  isArchived: boolean;
+
+  @DeleteDateColumn()
+  deletedAt?: Date;
+
+  @OneToMany(
+    () => Poster,
+    (poster) => poster.event,
+  )
+  posters: Poster[]
 }

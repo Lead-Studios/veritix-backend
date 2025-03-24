@@ -2,41 +2,50 @@ import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
+// import { DatabaseModule } from "./database.module";
+import { AuthModule } from "./auth/auth.module";
 import { SponsorsModule } from "./sponsors/sponsors.module";
 import { UsersModule } from "./users/users.module";
-import { AuthModule } from "./auth/auth.module";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { PdfService } from "./utils/pdf.service";
 import { TicketModule } from "./tickets/tickets.module";
+import { SpecialGuestModule } from "./special-guests/special-guests.module";
+import { EventsModule } from "./events/events.module";
+import { PostersModule } from "./posters/posters.module";
+import databaseConfig from "src/config/database.config";
+import jwtConfig from "src/config/jwt.config";
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: [".env.development"], 
+      envFilePath: ".env.development",
+      load: [jwtConfig],
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        type: "postgres",
-        host: configService.get<string>("DB_HOST"),
-        port: configService.get<number>("DB_PORT"),
-        username: configService.get<string>("DB_USERNAME"),
-        password: configService.get<string>("DB_PASSWORD"),
-        database: configService.get<string>("DB_NAME"),
-        entities: [__dirname + "/../**/*.entity{.ts,.js}"],
-        synchronize: true,
+        type: configService.get<"postgres">("database.type"),
+        host: configService.get<string>("database.host"),
+        port: configService.get<number>("database.port"),
+        username: configService.get<string>("database.username"),
+        password: configService.get<string>("database.password"),
+        database: configService.get<string>("database.database"),
+        synchronize: configService.get<boolean>("database.synchronize"),
+        autoLoadEntities: true,
       }),
     }),
     SponsorsModule,
     UsersModule,
     AuthModule,
     TicketModule,
+    SpecialGuestModule,
+    EventsModule,
+    PostersModule,
   ],
   controllers: [AppController],
   providers: [AppService, PdfService],
-  exports: [PdfService],
+  exports: [PdfService, AppService],
 })
 export class AppModule {}
- 

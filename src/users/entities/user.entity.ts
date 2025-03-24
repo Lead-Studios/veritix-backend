@@ -28,6 +28,9 @@ export class User {
   @Column("varchar", { nullable: true })
   lastName: string;
 
+  @Column("varchar", { nullable: true })
+  profileImageUrl: string;
+
   @Column({
     type: "enum",
     enum: UserRole,

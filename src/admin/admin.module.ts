@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { forwardRef, Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { JwtModule } from "@nestjs/jwt";
 import { PassportModule } from "@nestjs/passport";
@@ -12,16 +12,19 @@ import { Admin } from "./entities/admin.entity";
 import { AdminAuthService } from "./providers/admin-auth.services";
 import { BcryptProvider } from "./providers/bcrpt-provider";
 import { HashingProvider } from "./providers/hashing-services";
-import AdminController from "./admin.controller";
+import { AdminController } from "./admin.controller";
+import { UsersModule } from "src/users/users.module";
+import { User } from "src/users/entities/user.entity";
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Admin]),
-    PassportModule,
+    TypeOrmModule.forFeature([Admin, User]),
+    forwardRef(() => UsersModule),
+    PassportModule.register({ defaultStrategy: "admin-jwt" }),
     JwtModule.registerAsync({
-      imports: [ConfigModule],
+      // imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
-        secret: configService.get<string>("JWT_ADMIN_SECRET"),
+        secret: configService.get<string>("jwt.secret"),
         signOptions: {
           expiresIn: configService.get<string>("JWT_ADMIN_EXPIRATION", "15m"),
         },
@@ -40,6 +43,6 @@ import AdminController from "./admin.controller";
       useClass: BcryptProvider,
     },
   ],
-  exports: [AdminService, AdminAuthService],
+  exports: [AdminService, AdminAuthService, HashingProvider],
 })
 export class AdminModule {}

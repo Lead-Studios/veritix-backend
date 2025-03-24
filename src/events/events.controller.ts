@@ -46,13 +46,13 @@ export class EventsController {
     return this.eventsService.deleteEvent(id);
   }
 
-  @Get(":eventId/tickets")
-  async getTicketsForEvent(@Param("eventId") eventId: string) {
-    return this.eventsService.getTicketsForEvent(eventId);
-  }
+  // @Get(":eventId/tickets")
+  // async getTicketsForEvent(@Param("eventId") eventId: string) {
+  //   return this.eventsService.getTicketsForEvent(eventId);
+  // }
 
-  @Get(":eventId/special-guests")
-  async getSpecialGuestsForEvent(@Param("eventId") eventId: string) {
-    return this.eventsService.getSpecialGuestsForEvent(eventId);
-  }
+  // @Get(":eventId/special-guests")
+  // async getSpecialGuestsForEvent(@Param("eventId") eventId: string) {
+  //   return this.eventsService.getSpecialGuestsForEvent(eventId);
+  // }
 }

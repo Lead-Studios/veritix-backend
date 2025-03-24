@@ -24,9 +24,10 @@ export class SignInProvider {
     private readonly generateTokensProvider: GenerateTokenProvider,
 
     // inter dependency injection of genrate token provide
+    
   ) {}
 
-  public async SignIn(signInDto: SignInDto) {
+  public async signIn(signInDto: SignInDto) {
     // find the user in the database by the email
     // throw an error
     const user = await this.userServices.GetOneByEmail(signInDto.email);
@@ -57,6 +58,6 @@ export class SignInProvider {
       throw new UnauthorizedException("Email/Password is incorrect");
     }
     const tokens = await this.generateTokensProvider.generateTokens(user);
-    return [tokens, user];
+    return {tokens, user};
   }
 }

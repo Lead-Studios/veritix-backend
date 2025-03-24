@@ -10,7 +10,7 @@ export class AuthController {
   @Post("sign-in")
   @HttpCode(HttpStatus.OK)
   public SignIn(@Body() signinDto: SignInDto) {
-    return this.authService.SignIn(signinDto);
+    return this.authService.signIn(signinDto);
   }
 
   @Post("refresh-token")
