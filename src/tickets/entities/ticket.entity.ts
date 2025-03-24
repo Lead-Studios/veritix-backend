@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from "typeorm";
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  CreateDateColumn,
+} from "typeorm";
 import { Event } from "../../events/entities/event.entity";
 
 @Entity()
@@ -26,4 +32,14 @@ export class Ticket {
 
   @Column({ default: false })
   isReserved: boolean;
+
+  // new fields for ticket history and receipt
+  @Column({ nullable: true })
+  transactionId: string;
+
+  @CreateDateColumn()
+  purchaseDate: Date;
+
+  @Column({ nullable: true })
+  userId: string;
 }

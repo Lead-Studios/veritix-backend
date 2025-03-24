@@ -16,10 +16,18 @@ import {
 import { UsersService } from "./users.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { User } from "./entities/user.entity";
 
-@Controller("/api/v1/users")
+@Controller("users")
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    @InjectRepository(User)
+    private usersRepository: Repository<User>,
+
+    private readonly usersService: UsersService
+  ) {}
 
   @Post()
   @UseInterceptors(ClassSerializerInterceptor)
@@ -29,11 +37,18 @@ export class UsersController {
 
   // GET /users?limit=10&page=1
   @Get()
-  async findAll(
-    @Query("page", ParseIntPipe) page: number = 1,
-    @Query("limit", ParseIntPipe) limit: number = 10,
-  ) {
-    return this.usersService.findAll(page, limit);
+  public async findAll(pagination?: {
+    limits: number;
+    page: number;
+  }): Promise<{ users: CreateUserDto[]; total: number }> {
+    // set default limits and page we want
+    const { limits = 20, page = 1 } = pagination || {};
+
+    const [users, total] = await this.usersRepository.findAndCount({
+      take: limits,
+      skip: (page - 1) * limits,
+    });
+    return { users: users, total };
   }
 
   // DELETE /users/:id
