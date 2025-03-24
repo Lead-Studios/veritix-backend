@@ -9,6 +9,7 @@ import {
 import { Ticket } from "../../tickets/entities/ticket.entity";
 import { SpecialGuest } from "../../special-guests/entities/special-guest.entity";
 import { Sponsor } from "src/sponsors/sponsor.entity";
+import { Poster } from "src/posters/entities/poster.entity";
 
 @Entity()
 export class Event {
@@ -92,4 +93,10 @@ export class Event {
 
   @DeleteDateColumn()
   deletedAt?: Date;
+
+  @OneToMany(
+    () => Poster,
+    (poster) => poster.event,
+  )
+  posters: Poster[]
 }
