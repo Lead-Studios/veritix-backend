@@ -1,6 +1,13 @@
+<<<<<<< HEAD
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
 // import { Ticket } from "../../tickets/entities/ticket.entity";
 // import { SpecialGuest } from "../../special-guests/entities/special-guest.entity";
+=======
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToMany } from "typeorm";
+import { Ticket } from "../../tickets/entities/ticket.entity";
+import { SpecialGuest } from "../../special-guests/entities/special-guest.entity";
+import { Sponsor } from "src/sponsors/sponsor.entity";
+>>>>>>> ff556710b3e2d7f04c81dbfcda43b06a07f8cf64
 
 @Entity()
 export class Event {
@@ -66,6 +73,9 @@ export class Event {
 
   @Column({ nullable: true })
   instagram: string;
+
+  @ManyToMany(() => Sponsor, (sponsor) => sponsor.events)
+  sponsors: Sponsor[];
 
   // Relations - Make them optional
   // @OneToMany(() => Ticket, (ticket) => ticket.event, { nullable: true })
