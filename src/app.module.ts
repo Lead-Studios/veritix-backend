@@ -2,38 +2,47 @@ import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
-<<<<<<< HEAD
 import { UsersModule } from "./users/users.module";
 import { DatabaseModule } from "./database.module";
 import { AuthModule } from "./auth/auth.module";
 import { UsersController } from "./users/users.controller";
-
-@Module({
-  imports: [
-    UsersModule,
-    DatabaseModule,
-    AuthModule
-  ],
-  controllers: [AppController, UsersController],
-=======
 import { SponsorsModule } from "./sponsors/sponsors.module";
+import envConfiguration from "config/envConfiguration";
+import { ConfigModule, ConfigService } from "@nestjs/config";
+import { EventsModule } from "./events/events.module";
+import { TicketModule } from "./tickets/tickets.module";
+import { SpecialGuestModule } from "./special-guests/special-guests.module";
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: "postgres",
-      host: "localhost",
-      port: 5432,
-      username: "your_db_user",
-      password: "your_db_password",
-      database: "your_db_name",
-      entities: [__dirname + "/../**/*.entity{.ts,.js}"],
-      synchronize: true,
+    ConfigModule.forRoot({
+      load: [envConfiguration],
+      isGlobal: true,
+    }),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        type: "postgres",
+        host: configService.get<string>("database.host"),
+        port: configService.get<number>("database.port"),
+        username: configService.get<string>("database.username"),
+        password: configService.get<string>("database.password"),
+        database: configService.get<string>("database.name"),
+        entities: [__dirname + "/**/*.entity{.ts,.js}"],
+        autoLoadEntities: true,
+        synchronize: configService.get('NODE_ENV') === 'development',
+      }),
     }),
     SponsorsModule,
+    UsersModule,
+    AuthModule,
+    DatabaseModule,
+    EventsModule,
+    TicketModule,
+    SpecialGuestModule,
   ],
-  controllers: [AppController],
->>>>>>> ff556710b3e2d7f04c81dbfcda43b06a07f8cf64
+  controllers: [AppController, UsersController],
   providers: [AppService],
 })
 export class AppModule {}
