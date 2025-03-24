@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToMany } from "typeorm";
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToMany,
+  ManyToMany,
+  DeleteDateColumn,
+} from "typeorm";
 import { Ticket } from "../../tickets/entities/ticket.entity";
 import { SpecialGuest } from "../../special-guests/entities/special-guest.entity";
 import { Sponsor } from "src/sponsors/sponsor.entity";
@@ -79,4 +86,10 @@ export class Event {
     nullable: true,
   })
   specialGuests: SpecialGuest[] | null;
+
+  @Column({ default: false })
+  isArchived: boolean;
+
+  @DeleteDateColumn()
+  deletedAt?: Date;
 }

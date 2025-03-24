@@ -40,6 +40,20 @@ export class EventsService {
     return this.getEventById(id);
   }
 
+  async archiveEvent(id: string) {
+    event: Event;
+    let event = await this.eventRepository.findOne({
+      where: { id },
+    });
+
+    if (!id) {
+      throw new NotFoundException("Event not Found");
+    }
+
+    event.isArchived = true;
+    return await this.eventRepository.softDelete(id);
+  }
+
   async deleteEvent(id: string): Promise<void> {
     const result = await this.eventRepository.delete(id);
     if (!result.affected) throw new NotFoundException("Event not found");
