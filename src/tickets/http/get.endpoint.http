@@ -19,32 +19,9 @@ Authorization: Bearer
 # generates ticket receipt
 GET http://localhost:3000/user/ticket/receipt/:id
 Authorization: Bearer 
-
  
 
 
 
-GET http://localhost:3000/users
-Authorization: Bearer 
 
-
-POST http://localhost:3000/users
-Content-Type:application/json 
-
-{
-  "firstName": "Nafiu",
-  "lastName": "Ishaq",
-  "userName" : "nafson11",
-  "email": "nafsom413@gmail.com",
-  "password": "Nafiu@542",
-  "role": "Admin"
-}
-
-POST http://localhost:3000/auth/sign-in 
-Content-Type:application/json 
-
-{
-  "email": "nafsom413@gmail.com",
-  "password": "Nafiu@542"
-}
 
