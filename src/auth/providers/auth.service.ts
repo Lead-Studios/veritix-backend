@@ -15,8 +15,8 @@ export class AuthService {
     private readonly refreshTokenProvider: RefreshTokenProvider,
   ) {}
 
-  public async SignIn(signInDto: SignInDto) {
-    return await this.signInProvider.SignIn(signInDto);
+  public async signIn(signInDto: SignInDto) {
+    return await this.signInProvider.signIn(signInDto);
   }
 
   public async refreshToken(refreshTokenDto: RefreshTokenDto) {

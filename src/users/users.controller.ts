@@ -15,13 +15,9 @@ import {
   Req,
   UploadedFile,
   UseGuards,
-<<<<<<< HEAD:src/users/users.controller.ts
+  UnauthorizedException,
+  Logger,
 } from "@nestjs/common";
-import { UsersService } from "./users.service";
-import { CreateUserDto } from "./dto/create-user.dto";
-import { UpdateUserDto } from "./dto/update-user.dto";
-=======
-} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -31,7 +27,9 @@ import { RolesGuard } from 'security/guards/rolesGuard/roles.guard';
 import { UserRole } from 'src/common/enums/users-roles.enum';
 import { UpdateProfileDto, ChangePasswordDto, ProfileImageDto } from './dto/update-profile.dto';
 import { RoleDecorator } from 'security/decorators/roles.decorator';
->>>>>>> 79d2cfe (feat: Implement User Profile Management\n Fix: issues with jwt must be a string or number):backend/src/users/users.controller.ts
+import { Request } from 'express';
+import { JwtAuthGuard } from "security/guards/jwt-auth.guard";
+import { request } from "http";
 
 @Controller("/api/v1/users")
 export class UsersController {
@@ -43,7 +41,86 @@ export class UsersController {
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
   }
+  
 
+  /// USER PROFILE ENDPOINTS
+
+  // GET /users/details
+  @Get('details')
+  @UseGuards(JwtAuthGuard)
+  async getUserDetails(@Req() request: Request) {
+    const user = request.user as any;
+  
+    if (!user?.userId) {
+      throw new UnauthorizedException('User information missing');
+    }
+
+    // Convert to number using safe parsing
+    const userId = Number(user.userId) || Number(user.sub);
+    
+    if (isNaN(userId) || !Number.isInteger(userId) || userId <= 0) {
+      console.error('Invalid user ID from JWT:', user.userId);
+      throw new Error('Invalid user identification');
+    }
+    return this.usersService.findOneById(userId);
+  }
+
+  // PUT /users/update-profile
+  @Put('update-profile')
+  @UseGuards(JwtAuthGuard)
+  async updateProfile(
+    @Req() request: Request,
+    @Body() updateProfileDto: UpdateProfileDto
+  ) {
+    const user = request.user as any;
+    
+    if (!user || !user.userId) {
+      throw new Error('Invalid user information');
+    }
+    
+    // Pass the numeric userId to the service
+    return this.usersService.updateProfile(user.userId, updateProfileDto);
+  }
+
+  // PUT /users/change-password
+  @Put('/change-password')
+  @UseGuards(JwtAuthGuard)
+  async changePassword(
+    @Req() request: Request,
+    @Body() dto: ChangePasswordDto
+  ) {
+    const user = request.user as any;
+    if (!user || !user.userId) {
+      throw new Error('Invalid user information');
+    }
+    return this.usersService.changePassword(user.userId, dto);
+  }
+
+  @Post('/upload/profile-image')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadProfileImage(
+    @Req() request: Request,
+    @UploadedFile() file: any,
+  ) {
+
+    const user = request.user as any;
+
+    const userId = Number(user?.userId) || Number(user?.sub);
+
+    if (!userId) {
+      throw new UnauthorizedException('User information missing');
+    }
+
+    const profileImageDto: ProfileImageDto = {
+      imageUrl: file.path || file.filename || file.originalname
+    };
+
+    return this.usersService.updateProfileImage(userId, profileImageDto);
+  }
+
+
+  /// OTHER ENDPOINTS
   // GET /users?limit=10&page=1
   @Get()
   async findAll(
@@ -82,41 +159,5 @@ export class UsersController {
       throw new NotFoundException("No user was found");
     }
     return user;
-  }
-
-  @Get('/details/:id')
-  async getDetails(@Req() req: { user: { userId: number } }) {
-    return this.usersService.findById(req.user.userId);
-  }
-
-  @Put('/update-profile/:id')
-  @RoleDecorator(UserRole.User)
-  async updateProfile(
-    @Req() req: { user: { userId: number } },
-    @Body() dto: UpdateProfileDto
-  ) {
-    const userId = req.user.userId;
-    return this.usersService.updateProfile(userId, dto);
-  }
-
-  @Put('/change-password/:id')
-  @RoleDecorator(UserRole.User)
-  async changePassword(
-    @Req() req: { user: { userId: number } },
-    @Body() dto: ChangePasswordDto
-  ) {
-    const userId = req.user.userId;
-    return this.usersService.changePassword(userId, dto);
-  }
-
-  @Post('/upload/profile-image/:id')
-  @RoleDecorator(UserRole.User)
-  @UseInterceptors(FileInterceptor('file'))
-  async uploadProfileImage(
-    @Req() req: { user: { userId: number } },
-    @UploadedFile() file: any,
-  ) {
-    const imagePath = await this.fileService.storeProfileImage(file);
-    return this.usersService.updateProfileImage(req.user.userId, imagePath);
   }
 }

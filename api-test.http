@@ -1,43 +1,78 @@
-### Create User (Admin)
+### Create User
 POST http://localhost:3000/api/v1/users
 Content-Type: application/json
 
 {
-  "userName": "User3",
-  "email": "testuser2@veritix.com",
-  "password": "SecurePass123!"
+  "userName": "testuser12345",
+  "email": "testuser12345@veritix.com",
+  "password": "SecurePass123!",
+  "firstName": "Test",
+  "lastName": "User"
 }
 
-### Login to Get JWT
+### Login to Get JWT Token
 # @name login
 POST http://localhost:3000/api/v1/auth/sign-in
 Content-Type: application/json
 
 {
-  "email": "testuser2@veritix.com",
+  "email": "testuser12345@veritix.com",
   "password": "SecurePass123!"
 }
 
-### Save JWT Token
-@token = {{login.response.body.access_token}}
+### Save JWT Token from Login Response
+@authToken={{login.response.body.tokens.access_token}}
 
-### Get User Details
+### Get User Details (Current User)
 GET http://localhost:3000/api/v1/users/details
-Authorization: Bearer {{token}}
+Authorization: Bearer {{authToken}}
 
-### Update Profile
+### Update User Profile
 PUT http://localhost:3000/api/v1/users/update-profile
-Authorization: Bearer {{token}}
+Authorization: Bearer {{authToken}}
 Content-Type: application/json
 
 {
-  "userName": "UpdatedUser",
-  "email": "updated@veritix.com"
+  "userName": "updatedUsername1",
+  "email": "testuser12345@veritix.com"
 }
 
-### Change Password
+
+### Upload Profile Image
+POST http://localhost:3000/api/v1/users/upload/profile-image
+Authorization: Bearer {{authToken}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="file"; filename="profile.jpg"
+Content-Type: image/jpeg
+
+< ./test-assets/profile.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### Change Password: Wrong Current Password
 PUT http://localhost:3000/api/v1/users/change-password
-Authorization: Bearer {{token}}
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "currentPassword": "SecurePass!",
+  "newPassword": "NewSecurePass456!"
+}
+
+### Change Password: Same as Current Password
+PUT http://localhost:3000/api/v1/users/change-password
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "currentPassword": "SecurePass123!",
+  "newPassword": "SecurePass123!"
+}
+
+### Change Password: Correct
+PUT http://localhost:3000/api/v1/users/change-password
+Authorization: Bearer {{authToken}}
 Content-Type: application/json
 
 {
@@ -45,13 +80,31 @@ Content-Type: application/json
   "newPassword": "NewSecurePass456!"
 }
 
+### Login with New Password
+# @name loginWithNewPassword
+POST http://localhost:3000/api/v1/auth/sign-in
+Content-Type: application/json
+
+{
+  "email": "testuser12345@veritix.com",
+  "password": "NewSecurePass456!"
+}
+
+### Save New JWT Token
+@newAuthToken = {{loginWithNewPassword.response.body.tokens.access_token}}
+
 ### Upload Profile Image
 POST http://localhost:3000/api/v1/users/upload/profile-image
-Authorization: Bearer {{token}}
-Content-Type: multipart/form-data; boundary=WebAppBoundary
+Authorization: Bearer {{newAuthToken}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
 
---WebAppBoundary
-Content-Disposition: form-data; name="file"; filename="profile.jpg"
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="file"; filename="profile123.jpg"
 Content-Type: image/jpeg
 
-< /path/to/your/local/image.jpg
+< ./test-assets/profile.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### Get User Details After Updates
+GET http://localhost:3000/api/v1/users/details
+Authorization: Bearer {{newAuthToken}}

@@ -23,7 +23,7 @@ import { AllExceptionsFilter } from "src/common/filters";
 import { UserRole } from "src/common/enums/users-roles.enum";
 import { JwtAuthGuard } from "security/guards/jwt-auth.guard";
 import { RolesGuard } from "security/guards/rolesGuard/roles.guard";
-import type { AdminService } from "./providers/admin.service";
+import { AdminService } from "./providers/admin.service";
 import { RoleDecorator, ROLES_KEY } from "security/decorators/roles.decorator";
 
 @ApiTags("Admin")
@@ -32,7 +32,7 @@ import { RoleDecorator, ROLES_KEY } from "security/decorators/roles.decorator";
 @UseGuards(JwtAuthGuard, RolesGuard)
 @RoleDecorator(UserRole.Admin)
 @UseFilters(AllExceptionsFilter)
-export default class AdminController {
+export class AdminController {
   private readonly logger = new Logger(AdminController.name);
 
   constructor(private readonly adminService: AdminService) {}
