@@ -12,6 +12,7 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
 import { EventsModule } from "./events/events.module";
 import { TicketModule } from "./tickets/tickets.module";
 import { SpecialGuestModule } from "./special-guests/special-guests.module";
+import { PostersModule } from './posters/posters.module'
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { SpecialGuestModule } from "./special-guests/special-guests.module";
     EventsModule,
     TicketModule,
     SpecialGuestModule,
+    PostersModule,
   ],
   controllers: [AppController, UsersController],
   providers: [AppService],
