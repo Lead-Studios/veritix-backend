@@ -14,7 +14,7 @@ export class User {
   id: number;
 
   @Column("varchar", { unique: true, nullable: false })
-  username: string;
+  userName: string;
 
   @Column("varchar", { unique: true, nullable: false })
   email: string;
@@ -27,6 +27,9 @@ export class User {
 
   @Column("varchar", { nullable: true })
   lastName: string;
+
+  @Column("varchar", { nullable: true })
+  profileImageUrl: string;
 
   @Column({
     type: "enum",

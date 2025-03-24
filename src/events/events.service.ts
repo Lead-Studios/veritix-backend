@@ -3,16 +3,16 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Event } from "./entities/event.entity";
 import { CreateEventDto } from "./dto/create-event.dto";
-import { Ticket } from "../tickets/entities/ticket.entity";
-import { SpecialGuest } from "../special-guests/entities/special-guest.entity";
+// import { Ticket } from "../tickets/entities/ticket.entity";
+// import { SpecialGuest } from "../special-guests/entities/special-guest.entity";
 
 @Injectable()
 export class EventsService {
   constructor(
     @InjectRepository(Event) private eventRepository: Repository<Event>,
-    @InjectRepository(Ticket) private ticketRepository: Repository<Ticket>,
-    @InjectRepository(SpecialGuest)
-    private specialGuestRepository: Repository<SpecialGuest>,
+    // @InjectRepository(Ticket) private ticketRepository: Repository<Ticket>,
+    // @InjectRepository(SpecialGuest)
+    // private specialGuestRepository: Repository<SpecialGuest>,
   ) {}
 
   async createEvent(dto: CreateEventDto): Promise<Event> {
@@ -45,13 +45,13 @@ export class EventsService {
     if (!result.affected) throw new NotFoundException("Event not found");
   }
 
-  async getTicketsForEvent(eventId: string): Promise<Ticket[]> {
-    return this.ticketRepository.find({ where: { event: { id: eventId } } });
-  }
+  // async getTicketsForEvent(eventId: string): Promise<Ticket[]> {
+  //   return this.ticketRepository.find({ where: { event: { id: eventId } } });
+  // }
 
-  async getSpecialGuestsForEvent(eventId: string): Promise<SpecialGuest[]> {
-    return this.specialGuestRepository.find({
-      where: { event: { id: eventId } },
-    });
-  }
+  // async getSpecialGuestsForEvent(eventId: string): Promise<SpecialGuest[]> {
+  //   return this.specialGuestRepository.find({
+  //     where: { event: { id: eventId } },
+  //   });
+  // }
 }

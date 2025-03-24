@@ -73,8 +73,8 @@ export class Event {
   sponsors: Sponsor[];
 
   // Relations - Make them optional
-  @OneToMany(() => Ticket, (ticket) => ticket.event, { nullable: true })
-  tickets: Ticket[] | null;
+  @OneToMany(() => Ticket, (ticket) => ticket.event)
+  tickets: Ticket[];
 
   @OneToMany(() => SpecialGuest, (specialGuest) => specialGuest.event, {
     nullable: true,

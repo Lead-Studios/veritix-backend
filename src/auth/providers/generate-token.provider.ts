@@ -13,7 +13,7 @@ export class GenerateTokenProvider {
     private readonly jwtConfiguration: ConfigType<typeof jwtConfig>,
   ) {}
 
-  public async SignToken<T>(userId: number, expiresIn: number, payload?: T) {
+  public async SignToken<T>(userId: number, expiresIn: string | number, payload?: T) {
     return await this.jwtService.signAsync(
       {
         sub: userId,
@@ -31,9 +31,12 @@ export class GenerateTokenProvider {
   public async generateTokens(user: User) {
     const [access_token, refresh_token] = await Promise.all([
       this.SignToken(user.id, this.jwtConfiguration.expiresIn, {
+        userId: user.id,
         email: user.email,
       }),
-      this.SignToken(user.id, this.jwtConfiguration.refreshExpiresIn),
+      this.SignToken(user.id, this.jwtConfiguration.refreshExpiresIn, {
+        userId: user.id
+      }),
     ]);
 
     return { access_token, refresh_token };
