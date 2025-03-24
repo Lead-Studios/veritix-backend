@@ -33,7 +33,7 @@ import { PostersModule } from './posters/posters.module'
         entities: [__dirname + "/**/*.entity{.ts,.js}"],
         autoLoadEntities: true,
         synchronize: configService.get('NODE_ENV') === 'development',
-      }),
+      })
     }),
     SponsorsModule,
     UsersModule,

@@ -181,6 +181,31 @@ export class AdminService {
     }
   }
 
+  // let startDate: Date, endDate: Date;
+
+  //   const today = new Date();
+
+  //   if (ReportPeriodEnum.WEEK) {
+  //     startDate = startOfWeek(today);
+  //     endDate = endOfWeek(today);
+  //   } else if (ReportPeriodEnum.MONTH) {
+  //     startDate = startOfMonth(today);
+  //     endDate = endOfMonth(today);
+  //   } else if (ReportPeriodEnum.YEAR) {
+  //     startDate = startOfYear(today);
+  //     endDate = endOfYear(today);
+  //   } else {
+  //     startDate = startOfDay(today);
+  //     endDate = endOfDay(today);
+  //   }
+
+  //   return this.eventRepository.find({
+  //     where: {
+  //       createdAt: Between(startDate, endDate),
+  //       isArchived: false, // Exclude archived events from reports
+  //     },
+  //   });
+
   private mapToUserResponseDto(user: User): UserResponseDto {
     return {
       id: user.id,
