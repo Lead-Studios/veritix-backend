@@ -13,6 +13,7 @@ import { EventsModule } from "./events/events.module";
 import { TicketModule } from "./tickets/tickets.module";
 import { SpecialGuestModule } from "./special-guests/special-guests.module";
 import { PostersModule } from './posters/posters.module'
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { PostersModule } from './posters/posters.module'
     TicketModule,
     SpecialGuestModule,
     PostersModule,
+    NotificationModule,
   ],
   controllers: [AppController, UsersController],
   providers: [AppService],
