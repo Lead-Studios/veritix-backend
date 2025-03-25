@@ -20,7 +20,7 @@ import jwtConfig from "src/config/jwt.config";
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ".env.development",
-      load: [jwtConfig],
+      load: [databaseConfig, jwtConfig],
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
