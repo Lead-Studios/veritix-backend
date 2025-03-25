@@ -10,17 +10,18 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
 import { PdfService } from "./utils/pdf.service";
 import { TicketModule } from "./tickets/tickets.module";
 import { SpecialGuestModule } from "./special-guests/special-guests.module";
+import { NotificationModule } from './notification/notification.module';
 import { EventsModule } from "./events/events.module";
 import { PostersModule } from "./posters/posters.module";
 import databaseConfig from "src/config/database.config";
 import jwtConfig from "src/config/jwt.config";
-
+import { EventDashboardModule } from "./dashboard/dashboard.module";
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ".env.development",
-      load: [jwtConfig],
+      load: [databaseConfig, jwtConfig], 
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -43,6 +44,8 @@ import jwtConfig from "src/config/jwt.config";
     SpecialGuestModule,
     EventsModule,
     PostersModule,
+    NotificationModule,
+    EventDashboardModule
   ],
   controllers: [AppController],
   providers: [AppService, PdfService],

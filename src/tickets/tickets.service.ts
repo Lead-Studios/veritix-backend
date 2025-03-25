@@ -29,6 +29,17 @@ export class TicketService {
     return ticket;
   }
 
+  async getTicketByIDAndEvent(id:string, eventId:string): Promise<Ticket> {
+    const ticket = await this.ticketRepository.findOne({
+      where: { 
+        id,
+        event: { id: eventId }
+      },
+      relations: ['event']
+    });
+    return ticket
+  }
+
   async getTicketsByEvent(eventId: string): Promise<Ticket[]> {
     return this.ticketRepository.find({ where: { event: { id: eventId } } });
   }

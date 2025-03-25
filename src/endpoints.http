@@ -1,0 +1,10 @@
+POST http://localhost:3434/api/v1/auth/sign-in
+Content-Type: application/json
+
+GET http://localhost:6767/dashboard/events/4d65fddf-d651-405b-917d-b86cebc05fdd
+
+
+{
+    "email": "user@gmail.com",
+    "password": "user@123"
+}
