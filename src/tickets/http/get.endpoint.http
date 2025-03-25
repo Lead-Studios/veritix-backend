@@ -1,0 +1,27 @@
+
+# gets all tickets history
+GET http://localhost:3000/user/ticket/history
+Authorization: Bearer 
+
+
+# gets single ticket history
+GET http://localhost:3000/user/ticket/history/:id
+Authorization: Bearer 
+
+
+
+# gets ticket details
+GET http://localhost:3000/user/ticket/details/:id
+Authorization: Bearer 
+
+
+
+# generates ticket receipt
+GET http://localhost:3000/user/ticket/receipt/:id
+Authorization: Bearer 
+ 
+
+
+
+
+

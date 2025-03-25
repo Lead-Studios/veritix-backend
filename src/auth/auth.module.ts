@@ -6,8 +6,8 @@ import { BcryptProvider } from "./providers/bcrypt-provider";
 import { UsersModule } from "src/users/users.module";
 import { SignInProvider } from "./providers/sign-in.provider";
 import { GenerateTokenProvider } from "./providers/generate-token.provider";
-import jwtConfig from "config/jwt.config";
-import { ConfigModule } from "@nestjs/config";
+import jwtConfig from "src/config/jwt.config";
+import { ConfigModule, ConfigService } from "@nestjs/config";
 import { JwtModule } from "@nestjs/jwt";
 import { RefreshTokenProvider } from "./providers/refresh-token.provider";
 import { PassportModule } from "@nestjs/passport";
@@ -18,11 +18,20 @@ import { JwtStrategy } from "../../security/strategies/jwt.strategy";
     forwardRef(() => UsersModule),
     ConfigModule.forFeature(jwtConfig),
     PassportModule.register({ defaultStrategy: "jwt" }),
-    JwtModule.register({
-      secret: process.env.JWT_SECRET || "yourSecretKey",
-      signOptions: { expiresIn: "1h" },
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>("jwt.secret"),
+        signOptions: {
+          expiresIn: configService.get<string>("jwt.expiresIn"),
+          issuer: configService.get<string>("jwt.issuer"),
+          audience: configService.get<string>("jwt.audience"),
+        },
+      }),
     }),
   ],
+
   controllers: [AuthController],
   providers: [
     AuthService,

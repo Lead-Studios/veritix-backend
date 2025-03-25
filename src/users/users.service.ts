@@ -4,14 +4,18 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  forwardRef,
+  Inject,
 } from "@nestjs/common";
-import { CreateUserDto } from './dto/create-user.dto';
-import { InjectRepository } from '@nestjs/typeorm';
-import { User } from './entities/user.entity';
-import { CreateUsersProvider } from './providers/create-users-provider';
-import { Repository } from 'typeorm';
-import { FindOneByEmailProvider } from './providers/find-one-by-email.provider';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { CreateUserDto } from "./dto/create-user.dto";
+// import { UpdateUserDto } from './dto/update-user.dto';
+import { InjectRepository } from "@nestjs/typeorm";
+import { User } from "./entities/user.entity";
+import { CreateUsersProvider } from "./providers/create-users-provider";
+import { Repository } from "typeorm";
+import { FindOneByEmailProvider } from "./providers/find-one-by-email.provider";
+import { UpdateUserDto } from "./dto/update-user.dto";
+import { AuthService } from "src/auth/providers/auth.service";
 import { HashingProvider } from 'src/admin/providers/hashing-services';
 import { ChangePasswordDto, ProfileImageDto, UpdateProfileDto } from './dto/update-profile.dto';
 
@@ -28,14 +32,24 @@ export class UsersService {
 
     private readonly createUserProvider: CreateUsersProvider,
 
+    @Inject(forwardRef(() => AuthService))
+    private readonly authService: AuthService,
+
     private hashingProvider: HashingProvider, // Inject the HashingProvider for password hashing
 
-    // @Inject(forwardRef(() => AuthService))
-    // private readonly authService: AuthService,
+  
   ) {}
 
-  create(createUserDto: CreateUserDto) {
-    return this.createUserProvider.createUser(createUserDto);
+ 
+
+  public async create(
+    createUserDto: CreateUserDto,
+  ): Promise<{ message: string; user: CreateUserDto }> {
+    const user = await this.createUserProvider.createUser(createUserDto);
+    return {
+      message: 'A new user has been created successfully',
+      user: user, 
+    };
   }
 
   public async GetOneByEmail(email: string) {
@@ -43,7 +57,7 @@ export class UsersService {
   }
 
   // Find all users with pagination
-  async findAll(page: number, limit: number) {
+  public async findAll(page: number, limit: number) {
     const [users, total] = await this.userRepository.findAndCount({
       skip: (page - 1) * limit,
       take: limit,

@@ -9,7 +9,8 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>("JWT_SECRET"),
+      secretOrKey: configService.get<string>("jwt.secret"),
+      
     });
   }
 
@@ -18,6 +19,8 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
     if (!userId) {
       throw new UnauthorizedException("Invalid token");
     }
+    console.log('JWT Secret:', this.configService.get<string>('jwt.secret'));
+
     return { userId: Number(userId), email: payload.email, role: payload.role };
   };
 }
