@@ -1,3 +1,4 @@
+
 import {
   Controller,
   Post,
@@ -6,7 +7,9 @@ import {
   Delete,
   Param,
   Body,
+  Query,
   UseGuards,
+  ParseIntPipe,
 } from "@nestjs/common";
 import { EventsService } from "./events.service";
 import { CreateEventDto } from "./dto/create-event.dto";
@@ -24,8 +27,14 @@ export class EventsController {
   }
 
   @Get()
-  async getAllEvents() {
-    return this.eventsService.getAllEvents();
+  async getAllEvents(
+    @Query("page", ParseIntPipe) page: number = 1,
+    @Query("limit", ParseIntPipe) limit: number = 10,
+    @Query("name") name?: string,
+    @Query("category") category?: string,
+    @Query("location") location?: string,
+  ) {
+    return this.eventsService.getAllEvents(page, limit, { name, category, location });
   }
 
   @Get(":id")
@@ -45,14 +54,4 @@ export class EventsController {
   async deleteEvent(@Param("id") id: string) {
     return this.eventsService.deleteEvent(id);
   }
-
-  // @Get(":eventId/tickets")
-  // async getTicketsForEvent(@Param("eventId") eventId: string) {
-  //   return this.eventsService.getTicketsForEvent(eventId);
-  // }
-
-  // @Get(":eventId/special-guests")
-  // async getSpecialGuestsForEvent(@Param("eventId") eventId: string) {
-  //   return this.eventsService.getSpecialGuestsForEvent(eventId);
-  // }
 }
