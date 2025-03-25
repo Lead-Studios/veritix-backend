@@ -10,35 +10,39 @@ import { Request } from 'express';
 export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}
 
-  @Post('events/:eventId')
+  @Post(':userId/events/:eventId')
   async addNotification(
     @Req() req: Request,
-    @Param('eventId') eventId: string,
+    @Param('eventId') eventId: number,
+    @Param('userId') userId: number,
     @Body() createNotificationDto: CreateNotificationDto,
-  ): Promise<Notification> {
-    const user = req.user as any;
-    const userId = user.id; 
+  ): Promise<{data: Notification, message: string}> {
+    // const user = req.user as any;
+    // const userId = user.userId; 
     return this.notificationService.create(userId, eventId, createNotificationDto);
   }
 
-  @Get()
+  @Get(":userId")
   async getUserNotifications(
     @Req() req: Request,
     @Query('page') page = 1,
-    @Query('limit') limit = 10
+    @Query('limit') limit = 10,
+    @Param('userId') userId: number,
   ): Promise<{ notifications: Notification[]; total: number }> {
-    const user = req.user as any;
-    const userId = user.id; 
+    // const user = req.user as any;
+    // const userId = user.id; 
     return this.notificationService.findAll(userId, page, limit);
   }
 
-  @Patch(':notificationId/read')
+  @Patch(':userId/:notificationId/read')
   async markAsRead(
     @Req() req: Request,
-    @Param('notificationId') notificationId: string
-  ): Promise<Notification> {
-    const user = req.user as any;
-    const userId = user.id; 
-    return this.notificationService.markAsRead(userId, notificationId);
+    @Param('notificationId') notificationId: number,
+    @Param('userId') userId: number,
+
+  ): Promise<{data: Notification, message: string}> {
+    // const user = req.user as any;
+    // const userId = user.id; 
+    return this.notificationService.markAsRead(userId, notificationId)
   }
 }

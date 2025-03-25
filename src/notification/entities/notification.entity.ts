@@ -8,15 +8,15 @@ export enum NotificationSatus {
 @Entity()
 export class Notification {
     @PrimaryGeneratedColumn()
-    id: string;
+    id: number;
 
     @Column()
     @Index()  
-    userId: string;
+    userId: number;
 
     @Column()
     @Index()  
-    eventId: string;
+    eventId: number;
 
     @Column()
     message: string;
