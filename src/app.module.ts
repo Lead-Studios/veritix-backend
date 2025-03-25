@@ -15,9 +15,7 @@ import { EventsModule } from "./events/events.module";
 import { PostersModule } from "./posters/posters.module";
 import databaseConfig from "src/config/database.config";
 import jwtConfig from "src/config/jwt.config";
-import * as dotenv from "dotenv";
 import { EventDashboardModule } from "./dashboard/dashboard.module";
-dotenv.config() 
 @Module({
   imports: [
     ConfigModule.forRoot({
