@@ -3,7 +3,7 @@ import { AuthService } from "./providers/auth.service";
 import { SignInDto } from "./dto/create-auth.dto";
 import { RefreshTokenDto } from "./dto/refresh-token.dto";
 
-@Controller("/api/v1/auth")
+@Controller("auth")
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 

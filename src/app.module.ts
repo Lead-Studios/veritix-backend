@@ -2,49 +2,50 @@ import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
-import { UsersModule } from "./users/users.module";
-import { DatabaseModule } from "./database.module";
+// import { DatabaseModule } from "./database.module";
 import { AuthModule } from "./auth/auth.module";
-import { UsersController } from "./users/users.controller";
 import { SponsorsModule } from "./sponsors/sponsors.module";
-import envConfiguration from "config/envConfiguration";
+import { UsersModule } from "./users/users.module";
 import { ConfigModule, ConfigService } from "@nestjs/config";
-import { EventsModule } from "./events/events.module";
+import { PdfService } from "./utils/pdf.service";
 import { TicketModule } from "./tickets/tickets.module";
 import { SpecialGuestModule } from "./special-guests/special-guests.module";
-import { PostersModule } from './posters/posters.module'
+import { EventsModule } from "./events/events.module";
+import { PostersModule } from "./posters/posters.module";
+import databaseConfig from "src/config/database.config";
+import jwtConfig from "src/config/jwt.config";
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      load: [envConfiguration],
       isGlobal: true,
+      envFilePath: ".env.development",
+      load: [jwtConfig],
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        type: "postgres",
+        type: configService.get<"postgres">("database.type"),
         host: configService.get<string>("database.host"),
         port: configService.get<number>("database.port"),
         username: configService.get<string>("database.username"),
         password: configService.get<string>("database.password"),
-        database: configService.get<string>("database.name"),
-        entities: [__dirname + "/**/*.entity{.ts,.js}"],
+        database: configService.get<string>("database.database"),
+        synchronize: configService.get<boolean>("database.synchronize"),
         autoLoadEntities: true,
-        synchronize: configService.get('NODE_ENV') === 'development',
-      })
+      }),
     }),
     SponsorsModule,
     UsersModule,
     AuthModule,
-    DatabaseModule,
-    EventsModule,
     TicketModule,
     SpecialGuestModule,
+    EventsModule,
     PostersModule,
   ],
-  controllers: [AppController, UsersController],
-  providers: [AppService],
+  controllers: [AppController],
+  providers: [AppService, PdfService],
+  exports: [PdfService, AppService],
 })
 export class AppModule {}

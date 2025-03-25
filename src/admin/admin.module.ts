@@ -22,9 +22,9 @@ import { User } from "src/users/entities/user.entity";
     forwardRef(() => UsersModule),
     PassportModule.register({ defaultStrategy: "admin-jwt" }),
     JwtModule.registerAsync({
-      imports: [ConfigModule],
+      // imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
-        secret: configService.get<string>("JWT_ADMIN_SECRET"),
+        secret: configService.get<string>("jwt.secret"),
         signOptions: {
           expiresIn: configService.get<string>("JWT_ADMIN_EXPIRATION", "15m"),
         },
