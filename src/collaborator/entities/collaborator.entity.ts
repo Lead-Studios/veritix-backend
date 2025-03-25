@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from "typeorm";
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from "typeorm";
 import { Event } from "../../events/entities/event.entity";
 
 @Entity()
@@ -12,7 +19,7 @@ export class Collaborator {
   @Column()
   email: string;
 
-  @Column({ nullable: true })
+  @Column()
   imageUrl: string;
 
   @ManyToOne(() => Event, (event) => event.collaborators)
@@ -20,4 +27,10 @@ export class Collaborator {
 
   @Column()
   eventId: string;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }
