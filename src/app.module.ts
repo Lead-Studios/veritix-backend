@@ -15,7 +15,7 @@ import { EventsModule } from "./events/events.module";
 import { PostersModule } from "./posters/posters.module";
 import databaseConfig from "src/config/database.config";
 import jwtConfig from "src/config/jwt.config";
-
+import { EventDashboardModule } from "./dashboard/dashboard.module";
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -45,6 +45,7 @@ import jwtConfig from "src/config/jwt.config";
     EventsModule,
     PostersModule,
     NotificationModule,
+    EventDashboardModule
   ],
   controllers: [AppController],
   providers: [AppService, PdfService],

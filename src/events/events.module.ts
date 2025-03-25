@@ -7,9 +7,10 @@ import { Event } from "./entities/event.entity";
 // import { SpecialGuest } from "../special-guests/entities/special-guest.entity";
 import { JwtAuthGuard } from "../../security/guards/jwt-auth.guard";
 import { RolesGuard } from "../../security/guards/rolesGuard/roles.guard";
+import { Collaborator } from "src/collaborator/entities/collaborator.entity";
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Event, /* Ticket, SpecialGuest */])],
+  imports: [TypeOrmModule.forFeature([Event, Collaborator /* Ticket, SpecialGuest */])],
   controllers: [EventsController],
   providers: [EventsService, JwtAuthGuard, RolesGuard],
   exports: [EventsService],

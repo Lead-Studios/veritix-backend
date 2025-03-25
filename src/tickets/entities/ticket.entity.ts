@@ -4,6 +4,7 @@ import {
   Column,
   ManyToOne,
   CreateDateColumn,
+  JoinColumn,
 } from "typeorm";
 import { Event } from "../../events/entities/event.entity";
 
@@ -16,8 +17,12 @@ export class Ticket {
   name: string;
 
   @ManyToOne(() => Event, (event) => event.tickets, { onDelete: "CASCADE" })
+  @JoinColumn({ name: "eventId" })
   event: Event;
 
+  @Column()
+  eventId: string;
+  
   @Column({ type: "int" })
   quantity: number;
 
