@@ -8,8 +8,9 @@ import {
 } from "typeorm";
 import { Ticket } from "../../tickets/entities/ticket.entity";
 import { SpecialGuest } from "../../special-guests/entities/special-guest.entity";
-import { Sponsor } from "src/sponsors/sponsor.entity";
-import { Poster } from "src/posters/entities/poster.entity";
+import { Sponsor } from "../../sponsors/sponsor.entity";
+import { Poster } from "../../posters/entities/poster.entity";
+import { Collaborator } from "../../collaborator/entities/collaborator.entity";
 
 @Entity()
 export class Event {
@@ -88,15 +89,15 @@ export class Event {
   })
   specialGuests: SpecialGuest[] | null;
 
+  @OneToMany(() => Collaborator, (collaborator) => collaborator.event)
+  collaborators: Collaborator[];
+
   @Column({ default: false })
   isArchived: boolean;
 
   @DeleteDateColumn()
   deletedAt?: Date;
 
-  @OneToMany(
-    () => Poster,
-    (poster) => poster.event,
-  )
-  posters: Poster[]
+  @OneToMany(() => Poster, (poster) => poster.event)
+  posters: Poster[];
 }
