@@ -1,4 +1,3 @@
-
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
@@ -18,9 +17,9 @@ export class EventsService {
   }
 
   async getAllEvents(
-    page: number,
-    limit: number,
-    filters: { name?: string; category?: string; location?: string },
+    page?: number,
+    limit?: number,
+    filters?: { name?: string; category?: string; location?: string },
   ): Promise<PaginatedResult<Event>> {
     const query = this.eventRepository.createQueryBuilder("event");
 
@@ -88,4 +87,3 @@ export class EventsService {
     if (!result.affected) throw new NotFoundException("Event not found");
   }
 }
-
