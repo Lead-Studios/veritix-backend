@@ -11,6 +11,7 @@ import { SpecialGuest } from "../../special-guests/entities/special-guest.entity
 import { Sponsor } from "../../sponsors/sponsor.entity";
 import { Poster } from "../../posters/entities/poster.entity";
 import { Collaborator } from "../../collaborator/entities/collaborator.entity";
+import { EventGallery } from "src/event-gallery/entities/event-gallery.entity";
 
 @Entity()
 export class Event {
@@ -100,4 +101,7 @@ export class Event {
 
   @OneToMany(() => Poster, (poster) => poster.event)
   posters: Poster[];
+
+  @OneToMany(() => EventGallery, (eventGallery) => eventGallery.event)
+  eventGallery: EventGallery[];
 }
