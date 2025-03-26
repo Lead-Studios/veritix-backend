@@ -37,6 +37,7 @@ export class GenerateTokenProvider {
       this.SignToken(user.id, this.jwtConfiguration.expiresIn, {
         userId: user.id,
         email: user.email,
+        role: user.role
       }),
       this.SignToken(user.id, this.jwtConfiguration.refreshExpiresIn, {
         userId: user.id,
