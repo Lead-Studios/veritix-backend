@@ -27,7 +27,7 @@ export class AdminEventController {
 
   @Get("retrieve/all-event")
   async getAllEvents() {
-    return this.eventsService.getAllEvents();
+    return this.eventsService.getAllEvents(1, 10, {}); // Provide default values for page, limit, and filters
   }
 
   @Get("retrieve/event/:id")

@@ -1,14 +1,20 @@
-import { Injectable } from '@nestjs/common';
-import { PaymentServiceInterface } from '../interfaces/payment-service.interface';
-import Stripe from 'stripe';
+import { Injectable } from "@nestjs/common";
+import { PaymentServiceInterface } from "../interfaces/payment-service.interface";
+import Stripe from "stripe";
 
 @Injectable()
 export class StripePaymentService implements PaymentServiceInterface {
   private stripe: Stripe;
 
   constructor() {
-    this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: null,
+    const apiKey = process.env.STRIPE_API_KEY; // Ensure this environment variable is set
+    if (!apiKey) {
+      throw new Error(
+        "Stripe API key is not defined in environment variables.",
+      );
+    }
+    this.stripe = new Stripe(apiKey, {
+      apiVersion: "2025-02-24.acacia", // Updated to match the expected type
     });
   }
 
@@ -16,14 +22,14 @@ export class StripePaymentService implements PaymentServiceInterface {
     try {
       const paymentIntent = await this.stripe.paymentIntents.create({
         amount: Math.round(amount * 100),
-        currency: 'usd',
+        currency: "usd",
         payment_method: paymentDetails.paymentMethodId,
         confirm: true,
       });
 
-      return paymentIntent.status === 'succeeded';
+      return paymentIntent.status === "succeeded";
     } catch (error) {
-      console.error('Payment processing error:', error);
+      console.error("Payment processing error:", error);
       return false;
     }
   }
