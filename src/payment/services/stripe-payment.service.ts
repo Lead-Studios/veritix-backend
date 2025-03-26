@@ -6,10 +6,30 @@ import Stripe from 'stripe';
 export class StripePaymentService implements PaymentServiceInterface {
   private stripe: Stripe;
 
+  // constructor() {
+  //   const stripeKey = process.env.STRIPE_SECRET_KEY;
+  //   if (!stripeKey) {
+  //     throw new Error('Stripe secret key is missing');
+  //   }
+
+  //   this.stripe = new Stripe(stripeKey, {
+  //     apiVersion: null,
+  //   });
+  // }
   constructor() {
-    this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: null,
-    });
+    try {
+      const stripeKey = process.env.STRIPE_SECRET_KEY;
+      if (!stripeKey) {
+        console.warn('⚠️ Stripe secret key is missing — skipping Stripe setup.');
+        return; // Skip initialization
+      }
+  
+      this.stripe = new Stripe(stripeKey, {
+        apiVersion: null,
+      });
+    } catch (error) {
+      console.warn('⚠️ Stripe setup failed — skipping Stripe:', error.message);
+    }
   }
 
   async processPayment(amount: number, paymentDetails: any): Promise<boolean> {
