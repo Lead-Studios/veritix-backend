@@ -10,7 +10,7 @@ import {
 export class CreateEventDto {
   @IsString()
   @IsNotEmpty()
-  name: string;
+  eventName: string;
 
   @IsString()
   @IsNotEmpty()
