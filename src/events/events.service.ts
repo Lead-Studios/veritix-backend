@@ -18,9 +18,9 @@ export class EventsService {
   }
 
   async getAllEvents(
-    page: number,
-    limit: number,
-    filters: { name?: string; category?: string; location?: string },
+    page?: number,
+    limit?: number,
+    filters?: { name?: string; category?: string; location?: string },
   ): Promise<PaginatedResult<Event>> {
     const query = this.eventRepository.createQueryBuilder("event");
 
@@ -131,4 +131,6 @@ export class EventsService {
       limit,
     };
   }
+
+  c853433e47ca51f47fb67b7d9df970af4d574;
 }

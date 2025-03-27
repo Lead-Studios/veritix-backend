@@ -14,12 +14,15 @@ import { EventsService } from "./events.service";
 import { CreateEventDto } from "./dto/create-event.dto";
 import { JwtAuthGuard } from "../../security/guards/jwt-auth.guard";
 import { RolesGuard } from "../../security/guards/rolesGuard/roles.guard";
+import { RoleDecorator } from "security/decorators/roles.decorator";
+import { UserRole } from "src/common/enums/users-roles.enum";
 
 @Controller("events")
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class EventsController {
   constructor(private readonly eventsService: EventsService) {}
 
+  @RoleDecorator(UserRole.Admin)
   @Post()
   async createEvent(@Body() dto: CreateEventDto) {
     return this.eventsService.createEvent(dto);
@@ -33,7 +36,11 @@ export class EventsController {
     @Query("category") category?: string,
     @Query("location") location?: string,
   ) {
-    return this.eventsService.getAllEvents(page, limit, { name, category, location });
+    return this.eventsService.getAllEvents(page, limit, {
+      name,
+      category,
+      location,
+    });
   }
 
   @Get(":id")
@@ -41,6 +48,7 @@ export class EventsController {
     return this.eventsService.getEventById(id);
   }
 
+  @RoleDecorator(UserRole.Admin)
   @Put(":id")
   async updateEvent(
     @Param("id") id: string,
@@ -49,6 +57,7 @@ export class EventsController {
     return this.eventsService.updateEvent(id, dto);
   }
 
+  @RoleDecorator(UserRole.Admin)
   @Delete(":id")
   async deleteEvent(@Param("id") id: string) {
     return this.eventsService.deleteEvent(id);
