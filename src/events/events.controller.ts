@@ -62,4 +62,19 @@ export class EventsController {
   async deleteEvent(@Param("id") id: string) {
     return this.eventsService.deleteEvent(id);
   }
+
+  @Get('search')
+  async searchEvents(
+    @Query('query') query: string,
+    @Query('category') category?: string,
+    @Query('location') location?: string,
+    @Query('page') page = 1,
+    @Query('limit') limit = 10,
+  ) {
+    if (!query) {
+      throw new Error('Query parameter is required');
+    }
+
+    return this.eventsService.searchEvents(query, category, location, +page, +limit);
+  }
 }

@@ -41,6 +41,7 @@
     "date-fns": "^4.1.0",
     "dep": "^0.18.3",
     "dotenv": "^16.4.7",
+    "fuzzball": "^2.2.2",
     "jsonwebtoken": "^9.0.2",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",

@@ -4,6 +4,7 @@ import { Repository } from "typeorm";
 import { Event } from "./entities/event.entity";
 import { CreateEventDto } from "./dto/create-event.dto";
 import { PaginatedResult } from "../common/interfaces/result.interface";
+import * as fuzzball from "fuzzball";
 
 @Injectable()
 export class EventsService {
@@ -86,4 +87,50 @@ export class EventsService {
     const result = await this.eventRepository.delete(id);
     if (!result.affected) throw new NotFoundException("Event not found");
   }
+
+  async searchEvents(
+    query: string,
+    category?: string,
+    location?: string,
+    page = 1,
+    limit = 10,
+  ) {
+    const offset = (page - 1) * limit;
+
+    // Fetch events from the database
+    const events = await this.eventRepository.find({
+      where: {
+        ...(category && { category }),
+        ...(location && { location }),
+      } as Partial<Event>, // Ensure TypeORM understands the structure
+    });
+
+    // Apply fuzzy matching on the event name
+    const filteredEvents = events.filter((event) => {
+      const score = fuzzball.ratio(
+        query.toLowerCase(),
+        event.eventName.toLowerCase(),
+      );
+      return score > 70; // Threshold for fuzzy matching
+    });
+
+    // Sort by relevance (descending score)
+    filteredEvents.sort(
+      (a, b) =>
+        fuzzball.ratio(query.toLowerCase(), b.eventName.toLowerCase()) -
+        fuzzball.ratio(query.toLowerCase(), a.eventName.toLowerCase()),
+    );
+
+    // Paginate results
+    const paginatedEvents = filteredEvents.slice(offset, offset + limit);
+
+    return {
+      data: paginatedEvents,
+      total: filteredEvents.length,
+      page,
+      limit,
+    };
+  }
+
+  c853433e47ca51f47fb67b7d9df970af4d574;
 }
