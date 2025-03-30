@@ -12,6 +12,7 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         type: "postgres",
+        url: configService.get<string>('DB_URL') ?? undefined,
         host: configService.get<string>("DB_HOST"),
         port: configService.get<number>("DB_PORT"),
         username: configService.get<string>("DB_USERNAME"),
