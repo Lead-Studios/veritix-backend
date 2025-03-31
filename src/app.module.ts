@@ -30,6 +30,7 @@ import { ContactUsModule } from './contact-us/contact-us.module';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         type: configService.get<"postgres">("database.type"),
+        url: configService.get<string>("database.url"),
         host: configService.get<string>("database.host"),
         port: configService.get<number>("database.port"),
         username: configService.get<string>("database.username"),
