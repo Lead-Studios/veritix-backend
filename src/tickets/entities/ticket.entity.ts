@@ -38,6 +38,9 @@ export class Ticket {
   @Column({ default: false })
   isReserved: boolean;
 
+  @Column({ default: false })
+  isUsed: boolean;
+
   // new fields for ticket history and receipt
   @Column({ nullable: true })
   transactionId: string;

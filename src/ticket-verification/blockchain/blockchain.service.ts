@@ -33,7 +33,7 @@ export class BlockchainService {
       // Initialize wallet for write operations if private key is available
       if (privateKey) {
         this.wallet = new ethers.Wallet(privateKey, this.provider)
-        this.contract = this.contract.connect(this.wallet)
+        this.contract = this.contract.connect(this.wallet) as ethers.Contract
       }
     } catch (error) {
       console.error("Failed to initialize blockchain connection:", error)

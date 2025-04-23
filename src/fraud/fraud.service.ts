@@ -72,12 +72,12 @@ export class FraudService {
 
     // Send notifications if needed
     if (action !== "approve") {
-      await this.notificationService.sendFraudNotifications({
-        userId: analyzeTransactionDto.userId,
-        transactionId,
-        action,
-        reason: flags.join(", "),
-      })
+      // await this.notificationService.sendFraudNotifications({
+      //   userId: analyzeTransactionDto.userId,
+      //   transactionId,
+      //   action,
+      //   reason: flags.join(", "),
+      // })
     }
 
     return {

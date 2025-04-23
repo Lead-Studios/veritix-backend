@@ -1,6 +1,6 @@
 import { Injectable, HttpException, HttpStatus } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
-import { type Repository, LessThanOrEqual, MoreThanOrEqual } from "typeorm"
+import { type Repository, LessThanOrEqual, MoreThanOrEqual, Not } from "typeorm"
 import { PricingRule, PricingRuleType, DiscountType } from "./entities/pricing-rule.entity"
 import { DiscountCode } from "./entities/discount-code.entity"
 import { PricingTier } from "./entities/pricing-tier.entity"
@@ -9,7 +9,7 @@ import type { CreateDiscountCodeDto } from "./dto/create-discount-code.dto"
 import type { CreatePricingTierDto } from "./dto/create-pricing-tier.dto"
 import type { CalculatePriceDto } from "./dto/calculate-price.dto"
 import type { ValidateDiscountCodeDto } from "./dto/validate-discount-code.dto"
-import type { EventsService } from "../events/events.service"
+import type { EventsService } from "../../events/events.service"
 import type { UsersService } from "../users/users.service"
 import { differenceInDays, differenceInHours } from "date-fns"
 
@@ -29,7 +29,7 @@ export class PricingService {
   // Pricing Rules Methods
   async createPricingRule(createPricingRuleDto: CreatePricingRuleDto): Promise<PricingRule> {
     // Validate event exists
-    const event = await this.eventsService.findOne(createPricingRuleDto.eventId)
+    const event = await this.eventsService.getEventById(createPricingRuleDto.eventId)
     if (!event) {
       throw new HttpException("Event not found", HttpStatus.NOT_FOUND)
     }
@@ -119,7 +119,7 @@ export class PricingService {
   // Discount Codes Methods
   async createDiscountCode(createDiscountCodeDto: CreateDiscountCodeDto): Promise<DiscountCode> {
     // Validate event exists
-    const event = await this.eventsService.findOne(createDiscountCodeDto.eventId)
+    const event = await this.eventsService.getEventById(createDiscountCodeDto.eventId)
     if (!event) {
       throw new HttpException("Event not found", HttpStatus.NOT_FOUND)
     }
@@ -190,7 +190,7 @@ export class PricingService {
         where: {
           code: updateDiscountCodeDto.code,
           eventId: updateDiscountCodeDto.eventId,
-          id: { $ne: id },
+          id: Not(id),
         },
       })
 
@@ -213,7 +213,7 @@ export class PricingService {
   // Pricing Tiers Methods
   async createPricingTier(createPricingTierDto: CreatePricingTierDto): Promise<PricingTier> {
     // Validate event exists
-    const event = await this.eventsService.findOne(createPricingTierDto.eventId)
+    const event = await this.eventsService.getEventById(createPricingTierDto.eventId)
     if (!event) {
       throw new HttpException("Event not found", HttpStatus.NOT_FOUND)
     }
@@ -286,7 +286,7 @@ export class PricingService {
     const { eventId, userId, quantity, discountCode, ticketType, ticketIds } = calculatePriceDto
 
     // Get event details
-    const event = await this.eventsService.findOne(eventId)
+    const event = await this.eventsService.getEventById(eventId)
     if (!event) {
       throw new HttpException("Event not found", HttpStatus.NOT_FOUND)
     }
@@ -334,9 +334,9 @@ export class PricingService {
     }
 
     // Apply early bird discounts if applicable
-    if (event.date) {
+    if (event.eventDate) {
       const now = new Date()
-      const daysUntilEvent = differenceInDays(new Date(event.date), now)
+      const daysUntilEvent = differenceInDays(new Date(event.eventDate), now)
 
       const earlyBirdRules = await this.pricingRuleRepository.find({
         where: {
@@ -360,9 +360,9 @@ export class PricingService {
     }
 
     // Apply last minute discounts if applicable
-    if (event.date) {
+    if (event.eventDate) {
       const now = new Date()
-      const hoursUntilEvent = differenceInHours(new Date(event.date), now)
+      const hoursUntilEvent = differenceInHours(new Date(event.eventDate), now)
 
       const lastMinuteRules = await this.pricingRuleRepository.find({
         where: {
@@ -558,7 +558,7 @@ export class PricingService {
       name: rule.name,
       description: rule.description,
       eventId: rule.eventId,
-      eventName: rule.event.name,
+      eventName: rule.event.eventName,
       discountType: rule.discountType,
       discountValue: rule.discountValue,
       ruleType: rule.ruleType,
@@ -567,14 +567,14 @@ export class PricingService {
 
   async getEventDiscounts(eventId: string, userId?: string): Promise<any> {
     // Get event details
-    const event = await this.eventsService.findOne(eventId)
+    const event = await this.eventsService.getEventById(eventId)
     if (!event) {
       throw new HttpException("Event not found", HttpStatus.NOT_FOUND)
     }
 
     const now = new Date()
-    const daysUntilEvent = event.date ? differenceInDays(new Date(event.date), now) : null
-    const hoursUntilEvent = event.date ? differenceInHours(new Date(event.date), now) : null
+    const daysUntilEvent = event.eventDate ? differenceInDays(new Date(event.eventDate), now) : null
+    const hoursUntilEvent = event.eventDate ? differenceInHours(new Date(event.eventDate), now) : null
 
     // Get all applicable discounts for this event
     const earlyBirdRules = daysUntilEvent

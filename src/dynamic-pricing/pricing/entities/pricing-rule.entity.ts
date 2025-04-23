@@ -7,7 +7,7 @@ import {
   UpdateDateColumn,
   JoinColumn,
 } from "typeorm"
-import { Event } from "../../events/entities/event.entity"
+import { Event } from "../../../events/entities/event.entity"
 
 export enum PricingRuleType {
   EARLY_BIRD = "early_bird",

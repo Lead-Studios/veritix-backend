@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
-import { Notification } from "./entities/notification.entity"
+import { Notification } from "../../notification/entities/notification.entity"
 
 @Injectable()
 export class NotificationsService {
@@ -18,11 +18,11 @@ export class NotificationsService {
     data?: any
   }): Promise<Notification> {
     const notification = new Notification()
-    notification.userId = notificationData.userId
-    notification.title = notificationData.title
-    notification.message = notificationData.message
-    notification.type = notificationData.type
-    notification.data = notificationData.data
+    // notification.userId = notificationData.userId
+    // notification.title = notificationData.title
+    // notification.message = notificationData.message
+    // notification.type = notificationData.type
+    // notification.data = notificationData.data
 
     return this.notificationsRepository.save(notification)
   }

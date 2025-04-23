@@ -6,6 +6,7 @@ import {
   BadRequestException,
   forwardRef,
   Inject,
+  Logger,
 } from "@nestjs/common";
 import { CreateUserDto } from "./dto/create-user.dto";
 // import { UpdateUserDto } from './dto/update-user.dto';
@@ -36,9 +37,8 @@ export class UsersService {
     private readonly authService: AuthService,
 
     private hashingProvider: HashingProvider, // Inject the HashingProvider for password hashing
-
-  
   ) {}
+  private readonly logger = new Logger(UsersService.name);
 
  
 
@@ -46,6 +46,7 @@ export class UsersService {
     createUserDto: CreateUserDto,
   ): Promise<{ message: string; user: CreateUserDto }> {
     const user = await this.createUserProvider.createUser(createUserDto);
+    this.logger.log(`User created: ${JSON.stringify(user, null, 2)}`);
     return {
       message: 'A new user has been created successfully',
       user: user, 
@@ -53,7 +54,13 @@ export class UsersService {
   }
 
   public async GetOneByEmail(email: string) {
-    return await this.findOneByEmailProvider.FindByEmail(email);
+    const user = await this.findOneByEmailProvider.FindByEmail(email);
+    if (!user) {
+      this.logger.warn(`User with email ${email} not found`);
+      throw new NotFoundException(`User with email ${email} not found`);
+    }
+    this.logger.log(`User found: ${JSON.stringify(user, null, 2)}`);
+    return user;
   }
 
   // Find all users with pagination

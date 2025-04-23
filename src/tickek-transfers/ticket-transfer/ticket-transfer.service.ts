@@ -4,7 +4,7 @@ import type { Repository } from "typeorm"
 import { TicketTransfer, TransferStatus, TransferType } from "./entities/ticket-transfer.entity"
 import type { CreateTransferDto } from "./dto/create-transfer.dto"
 import type { TicketsService } from "../tickets/tickets.service"
-import type { UsersService } from "../users/users.service"
+import type { UsersService } from "../../users/users.service"
 import type { NotificationsService } from "../notifications/notifications.service"
 import { randomBytes } from "crypto"
 import { addHours } from "date-fns"
@@ -54,7 +54,7 @@ export class TicketTransferService {
 
     // Handle recipient (email or id)
     if (createTransferDto.recipientId) {
-      const recipient = await this.usersService.findOne(createTransferDto.recipientId)
+      const recipient = await this.usersService.findById(Number(createTransferDto.recipientId))
       if (!recipient) {
         throw new HttpException("Recipient not found", HttpStatus.NOT_FOUND)
       }
@@ -62,9 +62,9 @@ export class TicketTransferService {
       transfer.recipientEmail = recipient.email
     } else if (createTransferDto.recipientEmail) {
       // Find if user exists with this email
-      const recipient = await this.usersService.findByEmail(createTransferDto.recipientEmail)
+      const recipient = await this.usersService.GetOneByEmail(createTransferDto.recipientEmail)
       if (recipient) {
-        transfer.recipientId = recipient.id
+        transfer.recipientId = recipient.id.toString()
       }
       transfer.recipientEmail = createTransferDto.recipientEmail
     } else {

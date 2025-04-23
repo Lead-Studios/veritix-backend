@@ -139,6 +139,7 @@ export class TicketsService {
           return {
             ticketId: id,
             owner: info.owner,
+            event: eventId,
             seat: info.seat,
             resalable: info.isResalable,
             issuedAt: new Date(Number(info.issuedAt) * 1000).toISOString(),

@@ -22,7 +22,7 @@ import { ContactUsModule } from './contact-us/contact-us.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ".env.development",
+      envFilePath: ".env",
       load: [databaseConfig, jwtConfig], 
     }),
     TypeOrmModule.forRootAsync({

@@ -14,7 +14,7 @@ import {
 import type { TicketTransferService } from "./ticket-transfer.service"
 import type { CreateTransferDto } from "./dto/create-transfer.dto"
 import type { AcceptTransferDto } from "./dto/accept-transfer.dto"
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard"
+import { JwtAuthGuard } from "../../../security/guards/jwt-auth.guard"
 import { TransferStatus } from "./entities/ticket-transfer.entity"
 
 @Controller("ticket-transfers")

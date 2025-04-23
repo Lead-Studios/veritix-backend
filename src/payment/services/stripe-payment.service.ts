@@ -1,13 +1,14 @@
 import { Injectable } from "@nestjs/common";
 import { PaymentServiceInterface } from "../interfaces/payment-service.interface";
 import Stripe from "stripe";
+import { config } from "dotenv";
 
 @Injectable()
 export class StripePaymentService implements PaymentServiceInterface {
   private stripe: Stripe;
 
   constructor() {
-    const apiKey = process.env.STRIPE_API_KEY; // Ensure this environment variable is set
+    const apiKey = config().parsed?.STRIPE_API_KEY;
     if (!apiKey) {
       throw new Error(
         "Stripe API key is not defined in environment variables.",
