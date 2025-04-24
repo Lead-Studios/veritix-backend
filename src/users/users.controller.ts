@@ -61,7 +61,7 @@ export class UsersController {
     const user = request.user as any;
   
     if (!user?.userId) {
-      throw new JsonWebTokenError('Invalid user information');
+      throw new UnauthorizedException('Invalid user information');
     }
 
     // Convert to number using safe parsing

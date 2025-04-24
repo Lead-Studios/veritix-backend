@@ -48,7 +48,7 @@ export class TokenVerificationProvider {
       }
 
       if (!user.isVerified) {
-        await this.userServices.updateUser(user.id, { id: userId }, { isVerified: true });
+        await this.userServices.updateUser(user.id, { id: user.id }, { isVerified: true });
       } else {
         return { message: "Email already verified" };
       }

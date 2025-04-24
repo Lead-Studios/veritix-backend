@@ -16,7 +16,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
   private readonly logger = new Logger(JwtStrategy.name);
 
   async validate(payload: any) {
-    const userId = payload.sub || payload.userId;
+    const userId = Number(payload.sub || payload.userId);
     if (!userId) {
       throw new UnauthorizedException("Invalid token");
     }
