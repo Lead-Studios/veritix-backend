@@ -44,12 +44,13 @@ export class UsersService {
 
   public async create(
     createUserDto: CreateUserDto,
-  ): Promise<{ message: string; user: CreateUserDto }> {
-    const user = await this.createUserProvider.createUser(createUserDto);
+  ): Promise<{ message: string; user: CreateUserDto, token: string }> {
+    const { user, token } = await this.createUserProvider.createUser(createUserDto);
     this.logger.log(`User created: ${JSON.stringify(user, null, 2)}`);
     return {
       message: 'A new user has been created successfully',
       user: user, 
+      token: token,
     };
   }
 
@@ -117,6 +118,7 @@ export class UsersService {
   public async updateUser(
     id: number,
     updateUserDto: UpdateUserDto,
+    internalFields?: Partial<Pick<User, "isVerified">>,
   ): Promise<User | null> {
     const user = await this.userRepository.findOne({ where: { id } });
     if (!user) {
@@ -134,10 +136,18 @@ export class UsersService {
     }
 
     // Ensure only specified fields are updated, excluding id
-    const allowedUpdates = ["name", "email"];
+    const allowedUpdates = ["name", "email", "userName"];
     for (const key of Object.keys(updateUserDto)) {
       if (allowedUpdates.includes(key)) {
         (user as any)[key] = (updateUserDto as any)[key];
+      }
+    }
+
+    // Handle internal fields if provided
+    if (internalFields && internalFields.isVerified !== undefined) {
+      // check if user has been verified
+      if (!user.isVerified) {
+        user.isVerified = internalFields.isVerified;
       }
     }
 
@@ -159,7 +169,13 @@ export class UsersService {
       email: updateData.email,
     };
 
-    await this.userRepository.update(id, allowedUpdates);
+    try {
+      await this.userRepository.update(id, allowedUpdates);
+    } catch (error) {
+      this.logger.error(`Error updating user: ${error.message}`);
+      throw new BadRequestException('Failed to update user');
+    }
+    this.logger.log(`User updated: ${JSON.stringify(allowedUpdates, null, 2)}`);
     return this.findById(id);
   }
 

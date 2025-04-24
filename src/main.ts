@@ -3,6 +3,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { HttpLogger } from './common/middlewares/httpLogger.middleware';
 import { Logger } from '@nestjs/common';
+import { DatabaseExceptionFilter } from './common/filters';
 
 async function bootstrap() {
   const logger = new Logger('MAIN');
@@ -17,6 +18,7 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, document);
 
   app.use(new HttpLogger().use)
+  app.useGlobalFilters(new DatabaseExceptionFilter());
 
   await app.listen(process.env.PORT, () =>
     logger.log(`App running on port ${process.env.PORT}`),

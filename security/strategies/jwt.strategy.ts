@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { Injectable, UnauthorizedException, Logger } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
 import { ExtractJwt, Strategy } from "passport-jwt";
 import { ConfigService } from "@nestjs/config";
@@ -13,14 +13,24 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
       
     });
   }
+  private readonly logger = new Logger(JwtStrategy.name);
 
   async validate(payload: any) {
     const userId = payload.sub || payload.userId;
     if (!userId) {
       throw new UnauthorizedException("Invalid token");
     }
-    console.log('JWT Secret:', this.configService.get<string>('jwt.secret'));
+    this.logger.log(`User ID from token: ${userId}`);
+    // Check if userId is a valid number
+    if (isNaN(userId) || !Number.isInteger(userId) || userId <= 0) {
+      this.logger.error("Invalid userId:", userId);
+      throw new UnauthorizedException("Invalid userId");
+    }
 
-    return { userId: Number(userId), email: payload.email, role: payload.role };
+    return {
+      userId: userId,
+      email: payload.email,
+      role: payload.role,
+    };
   };
 }

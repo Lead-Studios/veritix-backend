@@ -2,8 +2,9 @@ import {
   forwardRef,
   Inject,
   Injectable,
-  RequestTimeoutException,
   UnauthorizedException,
+  ServiceUnavailableException,
+  Logger,
 } from "@nestjs/common";
 import { UsersService } from "src/users/users.service";
 import { HashingProvider } from "./hashing-provider";
@@ -13,51 +14,58 @@ import { SignInDto } from "../dto/create-auth.dto";
 @Injectable()
 export class SignInProvider {
   constructor(
-    // circular dependency injection
     @Inject(forwardRef(() => UsersService))
-    private readonly userServices: UsersService,
+    private readonly usersService: UsersService,
 
-    // intra dependency injection of hash provider
     private readonly hashingProvider: HashingProvider,
-
-    // inter dependency injection of genrate token provider
     private readonly generateTokensProvider: GenerateTokenProvider,
-
-    // inter dependency injection of genrate token provide
-    
   ) {}
+  private readonly logger = new Logger(SignInProvider.name);
 
   public async signIn(signInDto: SignInDto) {
-    // find the user in the database by the email
-    // throw an error
-    const user = await this.userServices.GetOneByEmail(signInDto.email);
+    const { email, password } = signInDto;
+    this.logger.log(`User ${email} is attempting to sign in`);
+
+    // 1. Retrieve user
+    const user = await this.usersService.GetOneByEmail(email.trim().toLowerCase());
     if (!user) {
-      throw new UnauthorizedException("Email/Password is incorrect");
+      this.logger.warn(`User not found`)
+      throw new UnauthorizedException("Email or password is incorrect.");
     }
 
-    const account = user; // Determine which one exists
-
-    if (!account) {
-      throw new UnauthorizedException("No account found with this email");
-    }
-
-    // compare the password to the hash
-    let isEqual: boolean = false;
+    // 2. Compare passwords
+    let isMatch: boolean;
     try {
-      isEqual = await this.hashingProvider.comparePassword(
-        signInDto.password,
+      isMatch = await this.hashingProvider.comparePassword(
+        password,
         user.password,
       );
     } catch (error) {
-      throw new RequestTimeoutException(error, {
-        description: "error connecting to the database",
-      });
+      this.logger.error(`Error verifying password: ${error.message}`, error.stack);
+      throw new ServiceUnavailableException(
+        "Could not verify password. Please try again.",
+      );
     }
-    // send a confirmation
-    if (!isEqual) {
-      throw new UnauthorizedException("Email/Password is incorrect");
+
+    if (!isMatch) {
+      this.logger.warn(`Incorrect password`)
+      throw new UnauthorizedException("Email or password is incorrect.");
     }
+
+    // 3. Generate tokens
     const tokens = await this.generateTokensProvider.generateTokens(user);
-    return {tokens, user};
+
+    // 4. Return result
+    return {
+      user: {
+        email: user.email,
+        username: user.userName,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        isVerified: user.isVerified,
+        isActive: user.isActive,
+      },
+      tokens,
+    };
   }
 }

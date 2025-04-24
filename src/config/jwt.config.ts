@@ -7,4 +7,5 @@ export default registerAs('jwt', () => ({
   issuer: process.env.JWT_TOKEN_ISSUER || 'BE_SERVER',
   expiresIn: process.env.JWT_EXPIRATION || '3600s',
   refreshExpiresIn: process.env.JWT_REFRESH_TOKEN_TTL || '7d',
+  verificationExpiresIn: process.env.JWT_VERIFICATION_TOKEN_TTL || '30m',
 }));

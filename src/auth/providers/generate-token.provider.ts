@@ -18,18 +18,10 @@ export class GenerateTokenProvider {
     expiresIn: string | number,
     payload?: T,
   ) {
-    return await this.jwtService.signAsync(
-      {
-        sub: userId,
-        ...payload,
-      },
-      {
-        secret: this.jwtConfiguration.secret,
-        audience: this.jwtConfiguration.audience,
-        issuer: this.jwtConfiguration.issuer,
-        expiresIn,
-      },
-    );
+    return await this.jwtService.signAsync({
+      ...payload,
+      expiresIn,
+    });
   }
 
   public async generateTokens(user: User) {
@@ -45,5 +37,18 @@ export class GenerateTokenProvider {
     ]);
 
     return { access_token, refresh_token };
+  }
+
+  public async generateVerificationToken(user: User) {
+    const verification_token = await this.SignToken(
+      user.id,
+      this.jwtConfiguration.verificationExpiresIn,
+      {
+        userId: user.id,
+        email: user.email,
+      },
+    );
+
+    return verification_token;
   }
 }
