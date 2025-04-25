@@ -15,7 +15,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { DeepPartial, Repository } from "typeorm";
 import { CreateUserDto } from "../dto/create-user.dto";
 import { HashingProvider } from "../../auth/providers/hashing-provider";
-import { GenerateTokenProvider } from "../../auth/providers/generate-token.provider";
+import { GenerateTokenProvider } from "../../common/utils/generate-token.provider";
 
 @Injectable()
 export class CreateUsersProvider {

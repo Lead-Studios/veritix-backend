@@ -15,8 +15,6 @@ import { HashingProvider } from "./providers/hashing-services";
 import { AdminController } from "./admin.controller";
 import { UsersModule } from "src/users/users.module";
 import { User } from "src/users/entities/user.entity";
-
-// New imports for campaign functionality
 import { CampaignEmail } from "./entities/campaign-email.entity";
 import { CampaignService } from "./providers/campaign.service";
 import { DashboardService } from "./providers/dashboard.service";
@@ -24,6 +22,8 @@ import { TicketService } from "./providers/ticket.service";
 import { AdminCampaignController } from "./admin-campaign.controller";
 import { Event } from "src/events/entities/event.entity";
 import { Ticket } from "src/tickets/entities/ticket.entity";
+import { GenerateTokenProvider } from "../common/utils/generate-token.provider";
+import { TokenVerificationProvider } from "./providers/verification.provider";
 
 @Module({
   imports: [
@@ -34,8 +34,11 @@ import { Ticket } from "src/tickets/entities/ticket.entity";
       // imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>("jwt.secret"),
+        resetPasswordSecret: configService.get<string>("jwt.resetPasswordSecret"),
         signOptions: {
-          expiresIn: configService.get<string>("JWT_ADMIN_EXPIRATION", "15m"),
+          expiresIn: configService.get<string>("jwt.expiresIn"),
+          issuer: configService.get<string>("jwt.issuer"),
+          audience: configService.get<string>("jwt.audience"),
         },
       }),
       inject: [ConfigService],
@@ -50,6 +53,8 @@ import { Ticket } from "src/tickets/entities/ticket.entity";
     CampaignService,
     DashboardService,
     TicketService,
+    GenerateTokenProvider,
+    TokenVerificationProvider,
     {
       provide: HashingProvider,
       useClass: BcryptProvider,

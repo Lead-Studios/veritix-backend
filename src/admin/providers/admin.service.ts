@@ -1,6 +1,6 @@
-import { forwardRef, Injectable, Logger, Inject } from "@nestjs/common";
+import { forwardRef, Injectable, Logger, Inject, InternalServerErrorException, ConflictException, BadRequestException, UnauthorizedException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import type { Repository } from "typeorm";
+import type { DeepPartial, Repository } from "typeorm";
 import { UserNotFoundException } from "src/common/exceptions/user-not-found.exception";
 import { ReportPeriodEnum } from "src/common/enums/report-period.enum";
 import { InvalidReportParametersException } from "src/common/exceptions/invalid-report.exception-parameters";
@@ -10,6 +10,10 @@ import type { ReportFilterDto } from "../dto/report-filter.dto";
 import type { ReportResponseDto } from "../dto/report-response.dto";
 import { Admin } from "../entities/admin.entity";
 import { UsersService } from "src/users/users.service";
+import { CreateAdminDto } from "../dto/create-admin.dto";
+import { HashingProvider } from "./hashing-services";
+import { GenerateTokenProvider } from "../../common/utils/generate-token.provider";
+import { UpdateAdminDto } from "../dto/update-admin.dto";
 
 @Injectable()
 export class AdminService {
@@ -25,9 +29,6 @@ export class AdminService {
   setVerificationToken(id: any, tokenHash: string, tokenExpiry: Date) {
     throw new Error("Method not implemented.");
   }
-  verifyEmail(id: number) {
-    throw new Error("Method not implemented.");
-  }
   private readonly logger = new Logger(AdminService.name);
 
   constructor(
@@ -38,9 +39,66 @@ export class AdminService {
 
     @Inject(forwardRef(() => UsersService))
     private readonly usersService: UsersService,
+
+    private readonly hashingProvider: HashingProvider,
+    private readonly generateTokenProvider: GenerateTokenProvider,
   ) {}
 
-  async findOneByEmail(email: string): Promise<Admin | undefined> {
+  async createUser(createAdminDto: CreateAdminDto): Promise<{ admin: Admin; token: string }> {
+        this.logger.log(`Creating user with email: ${createAdminDto.email}`);
+        const { email } = createAdminDto;
+        let existingUser: Admin;
+    
+        try {
+          existingUser = await this.findOneByEmail(email);
+        } catch (error: unknown) {
+          if (error instanceof Error) {
+            this.logger.error(`Error finding user: ${error.message}`);
+            this.logger.error(
+              `Error stack: ${error.stack}`,
+            );
+            throw new InternalServerErrorException(
+              "An unexpected error occurred while finding user.",
+            );
+          }
+          this.logger.error("An unknown error occurred while finding user.");
+          this.logger.error(
+            `Error: ${JSON.stringify(error, null, 2)}`,
+            { description: "An unknown error occurred" },
+          );
+          throw new InternalServerErrorException("An unknown error occurred.");
+        }
+    
+        if (existingUser) {
+          this.logger.warn(
+            `User with email ${createAdminDto.email} already exists.`);
+          throw new ConflictException(
+            "User already exists. Use a different email",
+          );
+        }
+        const hashedPassword = await this.hashingProvider.hashPassword(
+          createAdminDto.password,
+        );
+        try {
+          const newUser: DeepPartial<Admin> = this.adminRepository.create({
+            ...createAdminDto,
+            password: hashedPassword,
+          });
+    
+          const savedUser = await this.adminRepository.save(newUser);
+    
+          // Generate token and send an email to the user for verification
+          const verification_token = await this.generateTokenProvider.generateVerificationToken(savedUser);
+          this.logger.log(`Verification token generated for user: ${JSON.stringify(verification_token, null, 2)}`);
+    
+          return { admin: savedUser, token: verification_token };
+        } catch (error: any) {
+          this.logger.error(`Error saving user: ${error.message}`);
+          throw error;
+        }
+      }
+
+  async findOneByEmail(email: string): Promise<Admin | null> {
     return this.adminRepository.findOne({ where: { email } });
   }
 
@@ -60,6 +118,45 @@ export class AdminService {
       throw error;
     }
   }
+
+  async updateAdminUser(
+      id: number,
+      updateUserDto: UpdateAdminDto,
+      internalFields?: Partial<Pick<User, "isVerified">>,
+    ): Promise<Admin | null> {
+      const user = await this.adminRepository.findOne({ where: { id } });
+      if (!user) {
+        return null;
+      }
+  
+      // Check if email is unique before updating
+      if (updateUserDto.email) {
+        const existingUser = await this.adminRepository.findOne({
+          where: { email: updateUserDto.email },
+        });
+        if (existingUser && existingUser.id !== id) {
+          throw new UnauthorizedException("You are not authorized to perform this action");
+        }
+      }
+  
+      // Ensure only specified fields are updated, excluding id
+      const allowedUpdates = ["name", "email", "userName", "password"];
+      for (const key of Object.keys(updateUserDto)) {
+        if (allowedUpdates.includes(key)) {
+          (user as any)[key] = (updateUserDto as any)[key];
+        }
+      }
+  
+      // Handle internal fields if provided
+      if (internalFields && internalFields.isVerified !== undefined) {
+        // check if user has been verified
+        if (!user.isVerified) {
+          user.isVerified = internalFields.isVerified;
+        }
+      }
+  
+      return this.adminRepository.save(user);
+    }
 
   async findUserById(id: number): Promise<UserResponseDto> {
     try {

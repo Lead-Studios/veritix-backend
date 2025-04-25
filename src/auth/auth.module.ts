@@ -5,7 +5,7 @@ import { HashingProvider } from "./providers/hashing-provider";
 import { BcryptProvider } from "./providers/bcrypt-provider";
 import { UsersModule } from "src/users/users.module";
 import { SignInProvider } from "./providers/sign-in.provider";
-import { GenerateTokenProvider } from "./providers/generate-token.provider";
+import { GenerateTokenProvider } from "../common/utils/generate-token.provider";
 import jwtConfig from "src/config/jwt.config";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { JwtModule } from "@nestjs/jwt";

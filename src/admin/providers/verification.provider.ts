@@ -9,14 +9,14 @@ import {
 import { JwtService } from "@nestjs/jwt";
 import { ConfigType } from "@nestjs/config";
 import jwtConfig from "src/config/jwt.config";
-import { UsersService } from "src/users/users.service";
+import { AdminService } from "./admin.service";
 import { GenerateTokenProvider } from "../../common/utils/generate-token.provider";
 
 @Injectable()
 export class TokenVerificationProvider {
   constructor(
-    @Inject(forwardRef(() => UsersService))
-    private readonly userServices: UsersService,
+    @Inject(forwardRef(() => AdminService))
+    private readonly adminServices: AdminService,
     private readonly jwtService: JwtService,
     private readonly generateTokenProvider: GenerateTokenProvider,
 
@@ -26,7 +26,7 @@ export class TokenVerificationProvider {
   private readonly logger = new Logger(TokenVerificationProvider.name);
 
   public async verifyToken(token: string) {
-    this.logger.log(`Token: ${token}`);
+    this.logger.log(`Verifying Token: ${token}`);
     try {
       const { userId, email } = await this.jwtService.verifyAsync(
         token,
@@ -38,17 +38,15 @@ export class TokenVerificationProvider {
       );
 
       // Check if the user exists
-      const user = await this.userServices.findOneById(userId);
+      const user = await this.adminServices.findOneByEmail(email);
+      this.logger.log(`User found: ${JSON.stringify(user, null, 2)}`);
       
-      if (user.id !== userId) {
+      if (user.id !== userId || user.email !== email) {
         throw new UnauthorizedException("Token does not match user");
-      }
-      if (user.email !== email) {
-        throw new UnauthorizedException("Token does not match email");
       }
 
       if (!user.isVerified) {
-        await this.userServices.updateUser(user.id, { id: user.id }, { isVerified: true });
+        await this.adminServices.updateAdminUser(user.id, {}, { isVerified: true });
       } else {
         return { message: "Email already verified" };
       }
@@ -65,16 +63,49 @@ export class TokenVerificationProvider {
     }
   }
 
-  public async sendToken(email: string) {
+  async verifyPasswordResetToken(token: string) {
+    this.logger.log('Verifying password reset token');
+    try {
+      const { email } = await this.jwtService.verifyAsync(
+        token,
+        {
+          secret: this.jwtConfiguration.resetPasswordSecret,
+          audience: this.jwtConfiguration.audience,
+          issuer: this.jwtConfiguration.issuer,
+        },
+      );
+      this.logger.log(`User email: ${email}`);
+
+      // Check if the user exists
+      const user = await this.adminServices.findOneByEmail(email);
+      if (!user) {
+        throw new UnauthorizedException('Invalid token');
+      }
+
+      return { 
+        isValid: true,
+        email: user.email 
+      };
+    } catch (error) {
+      this.logger.error(`Error verifying reset token: ${error.message}`, error.stack);
+      if (error.name === 'TokenExpiredError') {
+        throw new UnauthorizedException('Reset token has expired. Please request another one');
+      }
+      throw new UnauthorizedException('Invalid reset token');
+    }
+  }
+
+  async sendToken(email: string) {
     const message = 'Further instructions would be sent to this inbox. Be sure to check your spam or junk folders.';
     // Check if the user exists
-    const user = await this.userServices.GetOneByEmail(email);
+    const user = await this.adminServices.findOneByEmail(email);
     if (!user) {
       this.logger.warn(`User not found for: ${email}`);
       return {
         message,
       };
     }
+    this.logger.log(`User found: ${JSON.stringify(user, null, 2)}`);
 
     if (user.isVerified) {
       throw new  ConflictException('Account already verified.');

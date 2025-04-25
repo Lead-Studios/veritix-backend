@@ -1,8 +1,9 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigType } from "@nestjs/config";
-import jwtConfig from "src/config/jwt.config";
-import { User } from "src/users/entities/user.entity";
+import jwtConfig from "../../config/jwt.config";
+import { User } from "../../users/entities/user.entity";
+import { Admin } from "../../admin/entities/admin.entity";
 
 @Injectable()
 export class GenerateTokenProvider {
@@ -24,7 +25,7 @@ export class GenerateTokenProvider {
     });
   }
 
-  public async generateTokens(user: User) {
+  public async generateTokens(user: User | Admin) {
     const [access_token, refresh_token] = await Promise.all([
       this.SignToken(user.id, this.jwtConfiguration.expiresIn, {
         userId: user.id,
@@ -39,7 +40,7 @@ export class GenerateTokenProvider {
     return { access_token, refresh_token };
   }
 
-  public async generateVerificationToken(user: User) {
+  public async generateVerificationToken(user: User | Admin) {
     const verification_token = await this.SignToken(
       user.id,
       this.jwtConfiguration.verificationExpiresIn,
@@ -50,5 +51,21 @@ export class GenerateTokenProvider {
     );
 
     return verification_token;
+  }
+
+  public async generatePasswordResetToken(user: User | Admin) {
+    const reset_token = await this.jwtService.signAsync(
+      {
+        email: user.email,
+      },
+      {
+        secret: this.jwtConfiguration.resetPasswordSecret,
+        expiresIn: this.jwtConfiguration.passwordExpiresIn,
+        audience: this.jwtConfiguration.audience,
+        issuer: this.jwtConfiguration.issuer,
+      }
+    );
+
+    return reset_token;
   }
 }

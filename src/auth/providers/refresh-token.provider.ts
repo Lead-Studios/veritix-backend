@@ -6,7 +6,7 @@ import {
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigType } from "@nestjs/config";
-import { GenerateTokenProvider } from "./generate-token.provider";
+import { GenerateTokenProvider } from "../../common/utils/generate-token.provider";
 import jwtConfig from "src/config/jwt.config";
 import { UsersService } from "src/users/users.service";
 import { RefreshTokenDto } from "../dto/refresh-token.dto";
