@@ -28,7 +28,7 @@ export class User {
   @Column("varchar", { nullable: true })
   lastName: string;
 
-  @Column("varchar", { nullable: true })
+  @Column("varchar", { nullable: true, default: '' })
   profileImageUrl: string;
 
   @Column({
@@ -40,6 +40,9 @@ export class User {
 
   @Column("boolean", { default: true })
   isActive: boolean;
+
+  @Column("boolean", { default: false })
+  isVerified: boolean;
 
   @CreateDateColumn()
   createdAt:Date;

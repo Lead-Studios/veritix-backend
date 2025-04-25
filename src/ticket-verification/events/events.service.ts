@@ -72,6 +72,12 @@ export class EventsService {
     const updatedEvent = {
       ...this.events[eventIndex],
       ...updateEventDto,
+      ticketTypes: updateEventDto.ticketTypes?.map(ticket => ({
+        id: ticket.id || `TICKET_${Date.now()}`,
+        name: ticket.name,
+        price: ticket.price,
+        available: ticket.available
+      })) || this.events[eventIndex].ticketTypes,
       updatedAt: new Date().toISOString(),
     }
 

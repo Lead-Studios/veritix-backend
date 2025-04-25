@@ -7,7 +7,7 @@ import {
   UpdateDateColumn,
   JoinColumn,
 } from "typeorm"
-import { Event } from "../../events/entities/event.entity"
+import { Event } from "../../../events/entities/event.entity"
 import { DiscountType } from "./pricing-rule.entity"
 
 @Entity()

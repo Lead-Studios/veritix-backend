@@ -7,8 +7,8 @@ import {
   UpdateDateColumn,
   JoinColumn,
 } from "typeorm"
-import { User } from "../../users/entities/user.entity"
-import { Ticket } from "../../tickets/entities/ticket.entity"
+import { User } from "../../../users/entities/user.entity"
+import { Ticket } from "../../../tickets/entities/ticket.entity"
 
 export enum TransferStatus {
   PENDING = "pending",

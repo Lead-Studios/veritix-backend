@@ -5,8 +5,8 @@ import { PricingService } from "./pricing.service"
 import { PricingRule } from "./entities/pricing-rule.entity"
 import { DiscountCode } from "./entities/discount-code.entity"
 import { PricingTier } from "./entities/pricing-tier.entity"
-import { EventsModule } from "../events/events.module"
-import { UsersModule } from "../users/users.module"
+import { EventsModule } from "../../events/events.module"
+import { UsersModule } from "../../users/users.module"
 
 @Module({
   imports: [TypeOrmModule.forFeature([PricingRule, DiscountCode, PricingTier]), EventsModule, UsersModule],

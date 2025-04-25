@@ -33,6 +33,7 @@ import { request } from "http";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { User } from "./entities/user.entity";
+import { JsonWebTokenError } from "jsonwebtoken";
 
 @Controller("users")
 export class UsersController {
@@ -60,15 +61,15 @@ export class UsersController {
     const user = request.user as any;
   
     if (!user?.userId) {
-      throw new UnauthorizedException('User information missing');
+      throw new UnauthorizedException('Invalid user information');
     }
 
     // Convert to number using safe parsing
     const userId = Number(user.userId) || Number(user.sub);
     
     if (isNaN(userId) || !Number.isInteger(userId) || userId <= 0) {
-      console.error('Invalid user ID from JWT:', user.userId);
-      throw new Error('Invalid user identification');
+      this.logger.error('Invalid userId:', user.userId);
+      throw new JsonWebTokenError('Invalid userId');
     }
     return this.usersService.findOneById(userId);
   }
@@ -83,8 +84,10 @@ export class UsersController {
     const user = request.user as any;
     
     if (!user || !user.userId) {
-      throw new Error('Invalid user information');
+      this.logger.error('Invalid user information:', JSON.stringify(user, null, 2));
+      throw new JsonWebTokenError('Invalid user information');
     }
+
     
     // Pass the numeric userId to the service
     return this.usersService.updateProfile(user.userId, updateProfileDto);

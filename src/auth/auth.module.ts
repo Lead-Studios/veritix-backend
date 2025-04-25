@@ -12,6 +12,7 @@ import { JwtModule } from "@nestjs/jwt";
 import { RefreshTokenProvider } from "./providers/refresh-token.provider";
 import { PassportModule } from "@nestjs/passport";
 import { JwtStrategy } from "../../security/strategies/jwt.strategy";
+import { TokenVerificationProvider } from "./providers/verification.provider";
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { JwtStrategy } from "../../security/strategies/jwt.strategy";
     SignInProvider,
     GenerateTokenProvider,
     RefreshTokenProvider,
+    TokenVerificationProvider,
   ],
   exports: [
     AuthService,
@@ -50,6 +52,7 @@ import { JwtStrategy } from "../../security/strategies/jwt.strategy";
     PassportModule,
     JwtModule,
     JwtStrategy,
+    GenerateTokenProvider,
   ],
 })
 export class AuthModule {}

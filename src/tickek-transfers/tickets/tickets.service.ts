@@ -1,7 +1,7 @@
 import { Injectable, HttpException, HttpStatus } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
-import { Ticket } from "./entities/ticket.entity"
+import { Ticket } from "../../tickets/entities/ticket.entity"
 
 @Injectable()
 export class TicketsService {
