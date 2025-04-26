@@ -8,7 +8,7 @@ import {
 } from "@nestjs/common";
 import { UsersService } from "src/users/users.service";
 import { HashingProvider } from "./hashing-provider";
-import { GenerateTokenProvider } from "./generate-token.provider";
+import { GenerateTokenProvider } from "../../common/utils/generate-token.provider";
 import { SignInDto } from "../dto/create-auth.dto";
 
 @Injectable()

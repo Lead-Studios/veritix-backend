@@ -6,20 +6,32 @@ import {
   Request,
   HttpCode,
   Get,
+  Query,
+  UseInterceptors,
+  ClassSerializerInterceptor,
 } from "@nestjs/common";
-import { AdminJwtAuthGuard } from "./guards/admin-jwt-auth.guard";
-import { AdminLocalAuthGuard } from "./guards/admin-local-auth.guard";
 import { AdminAuthService } from "./providers/admin-auth.services";
+import { CreateAdminDto } from "./dto/create-admin.dto";
+import { EmailDto } from "./dto/email.dto";
+import { SignInDto } from "./dto/signIn.dto";
+import { JwtAuthGuard } from "../../security/guards/jwt-auth.guard";
+import { ChangePasswordDto } from "./dto/change-password.dto";
 
-@Controller("admin/auth")
+@Controller("admin/")
 export class AdminAuthController {
   constructor(private adminAuthService: AdminAuthService) {}
 
-  @UseGuards(AdminLocalAuthGuard)
+  @Post("create")
+  @UseInterceptors(ClassSerializerInterceptor)
+  @HttpCode(201)
+  async createAdmin(@Body() createAdminDto: CreateAdminDto) {
+    return this.adminAuthService.createAdminUser(createAdminDto);
+  }
+
   @Post("login")
   @HttpCode(200)
-  async login(@Request() req) {
-    return this.adminAuthService.login(req.user);
+  async login(@Body() userDetails: SignInDto) {
+    return this.adminAuthService.login(userDetails);
   }
 
   @Post("refresh-token")
@@ -37,32 +49,29 @@ export class AdminAuthController {
   @Post("reset-password")
   @HttpCode(200)
   async resetPassword(
-    @Body("email") email: string,
-    @Body("token") token: string,
-    @Body("newPassword") newPassword: string,
+    @Query('token') token: string,
+    @Body() passwordDto: ChangePasswordDto,
   ) {
-    return this.adminAuthService.resetPassword(email, token, newPassword);
+    return this.adminAuthService.resetPassword(token, passwordDto);
   }
 
-  @Post("send-verification")
-  @UseGuards(AdminJwtAuthGuard)
+  @Post("send-token")
   @HttpCode(200)
-  async sendVerification(@Request() req) {
-    return this.adminAuthService.sendVerificationEmail(req.user.id);
+  async sendVerification(@Body() emailDto: EmailDto) {
+    return this.adminAuthService.sendVerificationEmail(emailDto);
   }
 
-  @Post("verify-email")
+  @Get("verify-email")
   @HttpCode(200)
   async verifyEmail(
-    @Body("email") email: string,
-    @Body("token") token: string,
+    @Query("token") token: string,
   ) {
-    return this.adminAuthService.verifyEmail(email, token);
+    return this.adminAuthService.verifyEmail(token);
   }
 
-  @Get("me")
-  @UseGuards(AdminJwtAuthGuard)
-  getProfile(@Request() req) {
-    return req.user;
+  @Get("profile-details")
+  @UseGuards(JwtAuthGuard)
+  async getProfile(@Request() req) {
+    return this.adminAuthService.getProfile(req.user.email);
   }
 }

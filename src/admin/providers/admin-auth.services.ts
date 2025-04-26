@@ -3,12 +3,21 @@ import {
   UnauthorizedException,
   BadRequestException,
   NotFoundException,
+  Logger,
+  ServiceUnavailableException,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { AdminService } from "./admin.service";
 import { ConfigService } from "@nestjs/config";
 import { v4 as uuidv4 } from "uuid";
 import { HashingProvider } from "./hashing-services";
+import { CreateAdminDto } from "../dto/create-admin.dto";
+import { TokenVerificationProvider } from "./verification.provider";
+import { EmailDto } from "../dto/email.dto";
+import { SignInDto } from "src/auth/dto/create-auth.dto";
+import { GenerateTokenProvider } from "src/common/utils/generate-token.provider";
+import { Admin } from "../entities/admin.entity";
+import { ChangePasswordDto } from "src/users/dto/update-profile.dto";
 
 @Injectable()
 export class AdminAuthService {
@@ -17,7 +26,10 @@ export class AdminAuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly hashingProvider: HashingProvider,
+    private readonly tokenProvider: TokenVerificationProvider,
+    private readonly generateTokenProvider: GenerateTokenProvider,
   ) {}
+  private readonly logger = new Logger(AdminAuthService.name);
 
   async validateAdmin(email: string, password: string) {
     const admin = await this.adminService.findOneByEmail(email);
@@ -25,7 +37,7 @@ export class AdminAuthService {
       throw new UnauthorizedException("Invalid credentials");
     }
 
-    if (!admin.emailVerified) {
+    if (!admin.isVerified) {
       throw new UnauthorizedException("Email not verified");
     }
 
@@ -40,29 +52,59 @@ export class AdminAuthService {
     return admin;
   }
 
-  async login(admin: any) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-    const payload = { email: admin.email, sub: admin.id, role: "admin" };
+  async login(signInDto: SignInDto) {
+      const { email, password } = signInDto;
+      this.logger.log(`User ${email} is attempting to sign in`);
+  
+      // 1. Retrieve user
+      const user = await this.adminService.findOneByEmail(email.trim().toLowerCase());
+      if (!user) {
+        this.logger.warn(`User not found`)
+        throw new UnauthorizedException("Email or password is incorrect.");
+      }
+  
+      // 2. Compare passwords
+      let isMatch: boolean;
+      try {
+        isMatch = await this.hashingProvider.comparePassword(
+          password,
+          user.password,
+        );
+      } catch (error) {
+        this.logger.error(`Error verifying password: ${error.message}`, error.stack);
+        throw new ServiceUnavailableException(
+          "Could not verify password. Please try again.",
+        );
+      }
+  
+      if (!isMatch) {
+        this.logger.warn(`Incorrect password`)
+        throw new UnauthorizedException("Email or password is incorrect.");
+      }
+  
+      // 3. Generate tokens
+      const tokens = await this.generateTokenProvider.generateTokens(user);
+  
+      // 4. Return result
+      return {
+        adminUser: {
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          isVerified: user.isVerified,
+        },
+        tokens,
+      };
+    }
 
-    const accessToken = this.jwtService.sign(payload);
-    const refreshToken = this.jwtService.sign(payload, {
-      expiresIn: this.configService.get<string>(
-        "JWT_ADMIN_REFRESH_EXPIRATION",
-        "7d",
-      ),
-      secret: this.configService.get<string>("JWT_ADMIN_REFRESH_SECRET"),
-    });
-
-    // Store refresh token hash in database
-    const refreshTokenHash =
-      await this.hashingProvider.hashPassword(refreshToken);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
-    await this.adminService.setRefreshToken(admin.id, refreshTokenHash);
+  async createAdminUser(createAdminDto: CreateAdminDto): Promise<{ message: string; user: CreateAdminDto, token: string }> {
+    const { admin, token } = await this.adminService.createUser(createAdminDto);
 
     return {
-      accessToken,
-      refreshToken,
-    };
+      message: 'User created successfully',
+      user: admin,
+      token,
+    }
   }
 
   async refreshToken(refreshToken: string) {
@@ -99,110 +141,79 @@ export class AdminAuthService {
   }
 
   async forgotPassword(email: string) {
-    const admin = await this.adminService.findOneByEmail(email);
-    if (!admin) {
-      // For security reasons, we don't disclose whether the email exists
-      return {
-        message:
-          "If your email is registered, you will receive a password reset link",
-      };
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-    const resetToken = uuidv4();
-    const resetTokenExpiry = new Date();
-    resetTokenExpiry.setHours(resetTokenExpiry.getHours() + 1); // Token valid for 1 hour
-
-    // Store hashed reset token
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    const resetTokenHash = await this.hashingProvider.hashPassword(resetToken);
-    await this.adminService.setResetToken(
-      admin.id,
-      resetTokenHash,
-      resetTokenExpiry,
-    );
-
+  const admin = await this.adminService.findOneByEmail(email);
+  if (!admin) {
     return {
-      message:
-        "If your email is registered, you will receive a password reset link",
+      message: "If your email is registered, you will receive a password reset link",
     };
   }
 
-  async resetPassword(email: string, token: string, newPassword: string) {
+  const resetToken = await this.generateTokenProvider.generatePasswordResetToken(admin);
+  this.logger.log(`Password reset token generated for ${admin.email}: ${resetToken}`);
+
+  // Here you would send the reset token via email
+  // const resetLink = `${frontendUrl}/reset-password?token=${resetToken}`;
+
+  return {
+    message: "If your email is registered, you will receive a password reset link",
+  };
+}
+
+  async resetPassword(token: string, passwordDto: ChangePasswordDto) {
+    try {
+    const { email } = await this.tokenProvider.verifyPasswordResetToken(token);
+    
     const admin = await this.adminService.findOneByEmail(email);
-    if (!admin || !admin.resetToken || !admin.resetTokenExpiry) {
-      throw new BadRequestException("Invalid or expired reset token");
-    }
 
-    // Check if token is expired
-    if (new Date() > admin.resetTokenExpiry) {
-      throw new BadRequestException("Reset token has expired");
-    }
-
-    // Verify the token
-    const isTokenValid = await this.hashingProvider.comparePassword(
-      token,
-      admin.resetToken,
+    // Check if new password matches current password
+    const isSamePassword = await this.hashingProvider.comparePassword(
+      passwordDto.newPassword,
+      admin.password
     );
-    if (!isTokenValid) {
-      throw new BadRequestException("Invalid reset token");
+    
+    if (isSamePassword) {
+      throw new BadRequestException(
+        "New password must be different from current password"
+      );
     }
 
-    // Hash the new password
-    const hashedPassword = await this.hashingProvider.hashPassword(newPassword);
+    const hashedPassword = await this.hashingProvider.hashPassword(passwordDto.newPassword);
+    
+    const updatedUser = await this.adminService.updateAdminUser(admin.id, { password: hashedPassword });
+    this.logger.log(`Updated user: ${JSON.stringify(updatedUser, null, 2)}`);
 
-    // Update password and clear reset token
-    await this.adminService.updatePassword(admin.id, hashedPassword);
+    return { 
+      message: "Password updated successfully",
+    };
+  } catch (error) {
+    throw error;
+  }
+}
 
-    return { message: "Password updated successfully" };
+  async sendVerificationEmail(emailDto: EmailDto) {
+    return this.tokenProvider.sendToken(emailDto.email);
   }
 
-  async sendVerificationEmail(adminId: number) {
-    const admin: any = await this.adminService.findOneById(adminId);
-    if (!admin) {
-      throw new NotFoundException("Admin not found");
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-    const verificationToken = uuidv4();
-    const tokenHash =
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      await this.hashingProvider.hashPassword(verificationToken);
-    const tokenExpiry = new Date();
-    tokenExpiry.setHours(tokenExpiry.getHours() + 24); // Token valid for 24 hours
-
-    await this.adminService.setVerificationToken(
-      admin.id,
-      tokenHash,
-      tokenExpiry,
-    );
-
-    return { message: "Verification email sent" };
+  async verifyEmail(token: string) {
+    return this.tokenProvider.verifyToken(token);
   }
 
-  async verifyEmail(email: string, token: string) {
-    const admin = await this.adminService.findOneByEmail(email);
-    if (!admin || !admin.verificationToken || !admin.verificationTokenExpiry) {
-      throw new BadRequestException("Invalid or expired verification token");
+  async getProfile(email: string): Promise<Partial<Admin> | null> {
+    const user = await this.adminService.findOneByEmail(email.trim().toLowerCase());
+
+    if (!user) {
+      throw new NotFoundException('Account not found');
     }
 
-    // Check if token is expired
-    if (new Date() > admin.verificationTokenExpiry) {
-      throw new BadRequestException("Verification token has expired");
+    return {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      isVerified: user.isVerified,
+      role: user.role,
+      createdAt: user.createdAt,
     }
-
-    // Verify the token
-    const isTokenValid = await this.hashingProvider.comparePassword(
-      token,
-      admin.verificationToken,
-    );
-    if (!isTokenValid) {
-      throw new BadRequestException("Invalid verification token");
-    }
-
-    // Mark email as verified and clear verification token
-    await this.adminService.verifyEmail(admin.id);
-
-    return { message: "Email verified successfully" };
+    
   }
 }

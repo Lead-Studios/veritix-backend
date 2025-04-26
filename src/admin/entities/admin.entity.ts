@@ -27,7 +27,7 @@ export class Admin {
   role: string;
 
   @Column({ default: false })
-  emailVerified: boolean;
+  isVerified: boolean;
 
   @Column({ nullable: true })
   refreshToken: string;
