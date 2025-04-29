@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { Module, Logger, OnModuleInit } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
@@ -56,4 +56,17 @@ import { ContactUsModule } from './contact-us/contact-us.module';
   providers: [AppService, PdfService],
   exports: [PdfService, AppService],
 })
-export class AppModule {}
+export class AppModule implements OnModuleInit {
+  constructor(private configService: ConfigService) {}
+  private readonly logger = new Logger(AppModule.name);
+
+  onModuleInit() {
+    const dbType = this.configService.get('database.type');
+    const dbHost = this.configService.get('database.host');
+    const dbUrl = this.configService.get('database.url');
+    this.logger.log(`Database Type: ${dbType}`);
+    this.logger.log(`Database Host: ${dbHost}`);
+    this.logger.log(`Database URL: ${dbUrl}`);
+    this.logger.log(`Connection to ${dbType} database established successfully through ${dbUrl}.`);
+  }
+}
