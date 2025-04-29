@@ -10,11 +10,24 @@ import { RolesGuard } from "../../security/guards/rolesGuard/roles.guard";
 import { Collaborator } from "src/collaborator/entities/collaborator.entity";
 import { EventRevenueAnalyticsController } from "./event-revenue-analytics.controller";
 import { EventRevenueAnalyticsService } from "./event-revenue-analytics.service";
+import { CategoryModule } from "src/category/category.module";
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Event, Collaborator, Ticket, /* Ticket, SpecialGuest */])],
+  imports: [
+    TypeOrmModule.forFeature([
+      Event,
+      Collaborator,
+      Ticket /* Ticket, SpecialGuest */,
+    ]),
+    CategoryModule,
+  ],
   controllers: [EventsController, EventRevenueAnalyticsController],
-  providers: [EventsService, JwtAuthGuard, RolesGuard, EventRevenueAnalyticsService],
+  providers: [
+    EventsService,
+    JwtAuthGuard,
+    RolesGuard,
+    EventRevenueAnalyticsService,
+  ],
   exports: [EventsService, EventRevenueAnalyticsService],
 })
 export class EventsModule {}

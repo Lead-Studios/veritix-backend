@@ -3,6 +3,7 @@ import {
   PrimaryGeneratedColumn,
   Column,
   OneToMany,
+  ManyToOne,
   ManyToMany,
   DeleteDateColumn,
 } from "typeorm";
@@ -12,6 +13,7 @@ import { Sponsor } from "../../sponsors/sponsor.entity";
 import { Poster } from "../../posters/entities/poster.entity";
 import { Collaborator } from "../../collaborator/entities/collaborator.entity";
 import { EventGallery } from "src/event-gallery/entities/event-gallery.entity";
+import { Category } from "src/category/category.entity";
 
 @Entity()
 export class Event {
@@ -104,4 +106,7 @@ export class Event {
 
   @OneToMany(() => EventGallery, (eventGallery) => eventGallery.event)
   eventGallery: EventGallery[];
+
+  @ManyToOne(() => Category)
+  category: Category;
 }

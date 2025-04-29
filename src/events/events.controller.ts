@@ -28,6 +28,16 @@ export class EventsController {
     return this.eventsService.createEvent(dto);
   }
 
+  @Post()
+  create(@Body() dto: CreateEventDto) {
+    return this.eventsService.create(dto);
+  }
+
+  @Get()
+  findAll() {
+    return this.eventsService.findAll();
+  }
+
   @Get()
   async getAllEvents(
     @Query("page", ParseIntPipe) page: number = 1,
@@ -63,18 +73,24 @@ export class EventsController {
     return this.eventsService.deleteEvent(id);
   }
 
-  @Get('search')
+  @Get("search")
   async searchEvents(
-    @Query('query') query: string,
-    @Query('category') category?: string,
-    @Query('location') location?: string,
-    @Query('page') page = 1,
-    @Query('limit') limit = 10,
+    @Query("query") query: string,
+    @Query("category") category?: string,
+    @Query("location") location?: string,
+    @Query("page") page = 1,
+    @Query("limit") limit = 10,
   ) {
     if (!query) {
-      throw new Error('Query parameter is required');
+      throw new Error("Query parameter is required");
     }
 
-    return this.eventsService.searchEvents(query, category, location, +page, +limit);
+    return this.eventsService.searchEvents(
+      query,
+      category,
+      location,
+      +page,
+      +limit,
+    );
   }
 }
