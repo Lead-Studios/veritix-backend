@@ -8,9 +8,7 @@ import { SpecialGuest } from './special-guests/entities/special-guest.entity';
 import { Collaborator } from './collaborator/entities/collaborator.entity';
 import { Poster } from './posters/entities/poster.entity';
 import { EventGallery } from './event-gallery/entities/event-gallery.entity';
-import { config } from 'dotenv';
 
-config();
 export const AppDataSource = new DataSource({
   type: 'postgres',
   host: process.env.DB_HOST,

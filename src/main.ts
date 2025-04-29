@@ -17,6 +17,17 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
+  if (process.env.NODE_ENV !== 'production') {
+    import ('dotenv').then((dotenv) => {
+      dotenv.config();
+      logger.log('Environment variables loaded from .env file');
+    });
+    setInterval(() => {
+      const used = process.memoryUsage().heapUsed / 1024 / 1024;
+      logger.log(`Memory Usage: ${Math.round(used * 100) / 100} MB`);
+    }, 60000);
+  }
+
   app.use(new HttpLogger().use)
   app.useGlobalFilters(new DatabaseExceptionFilter());
 

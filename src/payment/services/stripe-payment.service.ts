@@ -8,7 +8,7 @@ export class StripePaymentService implements PaymentServiceInterface {
   private stripe: Stripe;
 
   constructor() {
-    const apiKey = config().parsed?.STRIPE_API_KEY;
+    const apiKey = process.env.STRIPE_API_KEY;
     if (!apiKey) {
       throw new Error(
         "Stripe API key is not defined in environment variables.",
