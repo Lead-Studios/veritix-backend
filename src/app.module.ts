@@ -19,6 +19,7 @@ import { EventDashboardModule } from "./dashboard/dashboard.module";
 import { EventGalleryModule } from "./event-gallery/event-gallery.module";
 import { ContactUsModule } from './contact-us/contact-us.module';
 import { ConferenceModule } from './conference/conference.module';
+import { ContactModule } from './contact/contact.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -52,7 +53,8 @@ import { ConferenceModule } from './conference/conference.module';
     EventDashboardModule,
     EventGalleryModule,
     ContactUsModule,
-    ConferenceModule
+    ConferenceModule,
+    ContactModule
   ],
   controllers: [AppController],
   providers: [AppService, PdfService],
