@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { Repository, DeepPartial } from "typeorm";
 import { Event } from "./entities/event.entity";
 import { CreateEventDto } from "./dto/create-event.dto";
 import { PaginatedResult } from "../common/interfaces/result.interface";
@@ -8,12 +8,32 @@ import * as fuzzball from "fuzzball";
 
 @Injectable()
 export class EventsService {
+  eventRepo: any;
+  categoryService: any;
   constructor(
     @InjectRepository(Event) private eventRepository: Repository<Event>,
   ) {}
 
+  async create(dto: CreateEventDto) {
+    const category = await this.categoryService.findOne(dto.categoryId);
+    const event = this.eventRepo.create({
+      title: dto.title,
+      date: dto.date,
+      category,
+    });
+    return this.eventRepo.save(event);
+  }
+
+  findAll() {
+    return this.eventRepo.find();
+  }
+
   async createEvent(dto: CreateEventDto): Promise<Event> {
-    const newEvent = this.eventRepository.create(dto);
+    const category = await this.categoryService.findOne(dto.categoryId);
+    const newEvent = this.eventRepository.create({
+      ...dto,
+      category,
+    });
     return this.eventRepository.save(newEvent);
   }
 
@@ -70,7 +90,12 @@ export class EventsService {
   }
 
   async updateEvent(id: string, dto: Partial<CreateEventDto>): Promise<Event> {
-    await this.eventRepository.update(id, dto);
+    if (dto.categoryId) {
+      const category = await this.categoryService.findOne(dto.categoryId);
+      dto.category = category.id; // Ensure proper typing for category
+      delete dto.categoryId;
+    }
+    await this.eventRepository.update(id, dto as DeepPartial<Event>);
     return this.getEventById(id);
   }
 
@@ -100,7 +125,9 @@ export class EventsService {
     // Fetch events from the database
     const events = await this.eventRepository.find({
       where: {
-        ...(category && { category }),
+        ...(category && {
+          category: await this.categoryService.findOne(category),
+        }),
         ...(location && { location }),
       } as Partial<Event>, // Ensure TypeORM understands the structure
     });

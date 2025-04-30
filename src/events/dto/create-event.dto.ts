@@ -5,6 +5,7 @@ import {
   IsObject,
   IsOptional,
   IsNotEmpty,
+  IsUUID,
 } from "class-validator";
 
 export class CreateEventDto {
@@ -60,4 +61,14 @@ export class CreateEventDto {
     twitter?: string;
     instagram?: string;
   };
+
+  @IsString()
+  @IsNotEmpty()
+  title: string;
+
+  @IsNotEmpty()
+  date: Date;
+
+  @IsUUID()
+  categoryId: string;
 }
