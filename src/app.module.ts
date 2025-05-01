@@ -20,6 +20,7 @@ import { EventGalleryModule } from "./event-gallery/event-gallery.module";
 import { ContactUsModule } from './contact-us/contact-us.module';
 import { ConferenceModule } from './conference/conference.module';
 import { ContactModule } from './contact/contact.module';
+import { ConferenceSponsorsModule } from './conference-sponsors/conference-sponsors.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -54,7 +55,8 @@ import { ContactModule } from './contact/contact.module';
     EventGalleryModule,
     ContactUsModule,
     ConferenceModule,
-    ContactModule
+    ContactModule,
+    ConferenceSponsorsModule
   ],
   controllers: [AppController],
   providers: [AppService, PdfService],
