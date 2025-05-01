@@ -10,11 +10,14 @@ import { Poster } from './posters/entities/poster.entity';
 import { EventGallery } from './event-gallery/entities/event-gallery.entity';
 import { Category } from './category/category.entity';
 import { Conference } from './conference/entities/conference.entity';
+import { config } from 'dotenv';
 
+// Load environment variables from .env file
+config();
 export const AppDataSource = new DataSource({
   type: 'postgres',
+  url: process.env.DB_URL || undefined,
   host: process.env.DB_HOST,
-  url: process.env.DB_URL,
   port: Number(process.env.DB_PORT) || 5432,
   username: process.env.DB_USERNAME,
   password: process.env.DB_PASSWORD,
