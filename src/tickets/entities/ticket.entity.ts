@@ -11,8 +11,8 @@ import { Conference } from "src/conference/entities/conference.entity";
 
 @Entity()
 export class Ticket {
-  @PrimaryGeneratedColumn("uuid")
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
   @Column()
   name: string;
@@ -60,18 +60,4 @@ export class Ticket {
   @Column()
   conferenceId: number;
 
-  @Column()
-  quantity: number;
-
-  @Column()
-  price: number;
-
-  @Column('text')
-  description: string;
-
-  @Column()
-  deadlineDate: Date;
-
-  @Column({ default: false })
-  isReserved: boolean;
 }
