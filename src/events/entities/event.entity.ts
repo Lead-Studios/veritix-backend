@@ -104,6 +104,6 @@ export class Event {
   @OneToMany(() => EventGallery, (eventGallery) => eventGallery.event)
   eventGallery: EventGallery[];
 
-  @ManyToOne(() => Category, (category => category.events))
+  @ManyToOne(() => Category, category => category.events)
   category: Category;
 }
