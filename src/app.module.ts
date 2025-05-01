@@ -2,7 +2,6 @@ import { Module, Logger, OnModuleInit } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
-// import { DatabaseModule } from "./database.module";
 import { AuthModule } from "./auth/auth.module";
 import { SponsorsModule } from "./sponsors/sponsors.module";
 import { UsersModule } from "./users/users.module";
@@ -20,6 +19,8 @@ import { EventGalleryModule } from "./event-gallery/event-gallery.module";
 import { ContactUsModule } from './contact-us/contact-us.module';
 import { ConferenceModule } from './conference/conference.module';
 import { ContactModule } from './contact/contact.module';
+import { AnalyticsModule } from './analytics/analytics.module'; 
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -54,7 +55,8 @@ import { ContactModule } from './contact/contact.module';
     EventGalleryModule,
     ContactUsModule,
     ConferenceModule,
-    ContactModule
+    ContactModule,
+    AnalyticsModule, 
   ],
   controllers: [AppController],
   providers: [AppService, PdfService],

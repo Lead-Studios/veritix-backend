@@ -5,11 +5,14 @@ import {
   ManyToOne,
   CreateDateColumn,
   JoinColumn,
+  Index,
 } from "typeorm";
 import { Event } from "../../events/entities/event.entity";
 import { Conference } from "src/conference/entities/conference.entity";
 
 @Entity()
+@Index(['conferenceId'])
+@Index(['purchaseDate'])
 export class Ticket {
   @PrimaryGeneratedColumn()
   id: number;
@@ -42,7 +45,6 @@ export class Ticket {
   @Column({ default: false })
   isUsed: boolean;
 
-  // new fields for ticket history and receipt
   @Column({ nullable: true })
   transactionId: string;
 
@@ -52,12 +54,10 @@ export class Ticket {
   @Column({ nullable: true })
   userId: string;
 
-  //NEW FIELD FOR CONFERENCE 
-  @ManyToOne(() => Conference, conference => conference.tickets)
+  @ManyToOne(() => Conference, (conference) => conference.tickets)
   @JoinColumn({ name: 'conferenceId' })
   conference: Conference;
 
   @Column()
   conferenceId: number;
-
 }
