@@ -8,7 +8,8 @@ import { SpecialGuest } from './special-guests/entities/special-guest.entity';
 import { Collaborator } from './collaborator/entities/collaborator.entity';
 import { Poster } from './posters/entities/poster.entity';
 import { EventGallery } from './event-gallery/entities/event-gallery.entity';
-import { Category } from './category/category.entity'
+import { Category } from './category/category.entity';
+import { Conference } from './conference/entities/conference.entity';
 
 export const AppDataSource = new DataSource({
   type: 'postgres',
@@ -18,7 +19,7 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USERNAME,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  entities: [User, Ticket, Admin, Event, Sponsor, SpecialGuest, Collaborator, Poster, EventGallery, Category],
+  entities: [User, Ticket, Admin, Event, Sponsor, SpecialGuest, Collaborator, Poster, EventGallery, Category, Conference],
   migrations: ['src/migrations/*.ts'],
   synchronize: false,
   logging: true,
