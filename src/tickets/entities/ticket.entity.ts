@@ -7,6 +7,7 @@ import {
   JoinColumn,
 } from "typeorm";
 import { Event } from "../../events/entities/event.entity";
+import { Conference } from "src/conference/entities/conference.entity";
 
 @Entity()
 export class Ticket {
@@ -50,4 +51,27 @@ export class Ticket {
 
   @Column({ nullable: true })
   userId: string;
+
+  //NEW FIELD FOR CONFERENCE 
+  @ManyToOne(() => Conference, conference => conference.tickets)
+  @JoinColumn({ name: 'conferenceId' })
+  conference: Conference;
+
+  @Column()
+  conferenceId: number;
+
+  @Column()
+  quantity: number;
+
+  @Column()
+  price: number;
+
+  @Column('text')
+  description: string;
+
+  @Column()
+  deadlineDate: Date;
+
+  @Column({ default: false })
+  isReserved: boolean;
 }
