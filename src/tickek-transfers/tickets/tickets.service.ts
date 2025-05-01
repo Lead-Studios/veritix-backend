@@ -14,7 +14,7 @@ export class TicketsService {
 
   async findOne(id: string): Promise<Ticket> {
     const ticket = await this.ticketsRepository.findOne({
-      where: { id },
+      where: { id: Number(id) },
       relations: ["event", "user"],
     })
 
