@@ -12,8 +12,8 @@ import { SpecialGuest } from "../../special-guests/entities/special-guest.entity
 import { Sponsor } from "../../sponsors/sponsor.entity";
 import { Poster } from "../../posters/entities/poster.entity";
 import { Collaborator } from "../../collaborator/entities/collaborator.entity";
-import { EventGallery } from "src/event-gallery/entities/event-gallery.entity";
-import { Category } from "src/category/category.entity";
+import { EventGallery } from "../../event-gallery/entities/event-gallery.entity";
+import { Category } from "../../category/category.entity";
 
 @Entity()
 export class Event {
@@ -22,9 +22,6 @@ export class Event {
 
   @Column()
   eventName: string;
-
-  @Column()
-  eventCategory: string;
 
   @Column({ type: "timestamp" })
   eventDate: Date;
@@ -107,6 +104,6 @@ export class Event {
   @OneToMany(() => EventGallery, (eventGallery) => eventGallery.event)
   eventGallery: EventGallery[];
 
-  @ManyToOne(() => Category)
+  @ManyToOne(() => Category, (category => category.events))
   category: Category;
 }
