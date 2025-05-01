@@ -10,6 +10,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from "typeorm";
+import { ConferenceGallery } from "src/conference-gallery/entities/conference-gallery.entity";
 
 @Entity("conferences")
 export class Conference {
@@ -31,8 +32,11 @@ export class Conference {
   @Column({ name: "conference_description", type: "text" })
   conferenceDescription: string;
 
-  @Column({ name: "conference_image" })
-  conferenceImage: string;
+  @OneToMany(
+    () => ConferenceGallery,
+    (conferenceGallery) => conferenceGallery.conference,
+  )
+  conferenceGallery: ConferenceGallery[];
 
   // Location details
   @Column()
@@ -81,14 +85,14 @@ export class Conference {
   instagram: string;
 
   @Column()
-  organizerId: number;  // This will hold the ID of the organizer (User)
+  organizerId: number; // This will hold the ID of the organizer (User)
 
-  @ManyToOne(() => User, user => user.conferences)  // Assuming you have a User entity
-  @JoinColumn({ name: 'organizerId' })
-  organizer: User;  // You can also define a relationship to the User entity (optional)
+  @ManyToOne(() => User, (user) => user.conferences) // Assuming you have a User entity
+  @JoinColumn({ name: "organizerId" })
+  organizer: User; // You can also define a relationship to the User entity (optional)
 
   // One-to-many relation to tickets
-  @OneToMany(() => Ticket, ticket => ticket.conference)
+  @OneToMany(() => Ticket, (ticket) => ticket.conference)
   tickets: Ticket[];
 
   @CreateDateColumn({ name: "created_at" })
