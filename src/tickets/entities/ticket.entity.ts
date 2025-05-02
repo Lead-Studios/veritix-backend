@@ -4,15 +4,53 @@ import {
   Column,
   ManyToOne,
   CreateDateColumn,
+  UpdateDateColumn,
   JoinColumn,
 } from "typeorm";
 import { Event } from "../../events/entities/event.entity";
 import { Conference } from "src/conference/entities/conference.entity";
+import { User } from '../../users/entities/user.entity';
 
-@Entity()
+@Entity('tickets')
 export class Ticket {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column()
+  conferenceId: string;
+
+  @Column()
+  userId: string;
+
+  @Column()
+  quantity: number;
+
+  @Column('decimal', { precision: 10, scale: 2 })
+  pricePerTicket: number;
+
+  @Column('decimal', { precision: 10, scale: 2 })
+  totalAmount: number;
+
+  @Column({ default: false })
+  isPaid: boolean;
+
+  @Column({ nullable: true })
+  paymentIntentId: string;
+
+  @Column({ nullable: true })
+  receiptId: string;
+
+  @ManyToOne(() => User)
+  user: User;
+
+  @ManyToOne(() => Conference)
+  conference: Conference;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 
   @Column()
   name: string;
@@ -24,12 +62,6 @@ export class Ticket {
   @Column()
   eventId: string;
   
-  @Column({ type: "int" })
-  quantity: number;
-
-  @Column({ type: "decimal", precision: 10, scale: 2 })
-  price: number;
-
   @Column({ type: "text" })
   description: string;
 
@@ -48,16 +80,5 @@ export class Ticket {
 
   @CreateDateColumn()
   purchaseDate: Date;
-
-  @Column({ nullable: true })
-  userId: string;
-
-  //NEW FIELD FOR CONFERENCE 
-  @ManyToOne(() => Conference, conference => conference.tickets)
-  @JoinColumn({ name: 'conferenceId' })
-  conference: Conference;
-
-  @Column()
-  conferenceId: number;
 
 }

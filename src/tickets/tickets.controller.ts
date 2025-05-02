@@ -10,6 +10,7 @@ import {
   Query,
   Res,
   NotFoundException,
+  Req,
 } from "@nestjs/common";
 import { TicketService } from "./tickets.service";
 import { CreateTicketDto } from "./dto/create-ticket.dto";
@@ -18,11 +19,13 @@ import { RolesGuard } from "../../security/guards/rolesGuard/roles.guard";
 import { Ticket } from "./entities/ticket.entity";
 // import { Roles } from '../../security/decorators/roles.decorator';
 
-import { Response } from "express";
+import { Response, Request } from "express";
 import * as fs from "fs";
 import { User } from "src/users/entities/user.entity";
 import { RoleDecorator } from "security/decorators/roles.decorator";
 import { UserRole } from "src/common/enums/users-roles.enum";
+import { TicketPurchaseDto } from "./dto/ticket-purchase.dto";
+import { ReceiptDto } from "./dto/receipt.dto";
 
 @Controller("user/tickets")
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -120,5 +123,23 @@ export class TicketController {
     } catch (error) {
       throw new NotFoundException("Receipt generation failed");
     }
+  }
+
+  @Post("purchase")
+  @UseGuards(JwtAuthGuard)
+  async purchaseTickets(
+    @Req() req: Request,
+    @Body() purchaseDto: TicketPurchaseDto,
+  ): Promise<ReceiptDto> {
+    return this.ticketService.purchaseTickets(req.user.id, purchaseDto);
+  }
+
+  @Get("receipt/:receiptId")
+  @UseGuards(JwtAuthGuard)
+  async getReceipt(
+    @Req() req: Request,
+    @Param("receiptId") receiptId: string,
+  ): Promise<ReceiptDto> {
+    return this.ticketService.getReceipt(receiptId, req.user.id);
   }
 }

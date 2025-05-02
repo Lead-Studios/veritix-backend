@@ -2,6 +2,7 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  BadRequestException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
@@ -11,6 +12,11 @@ import { PdfService } from "src/utils/pdf.service";
 import { ConferenceService } from "src/conference/providers/conference.service";
 import { User } from "src/users/entities/user.entity";
 import { UpdateTicketDto } from "./dto/update-ticket.dto";
+import { Receipt } from "./entities/receipt.entity";
+import { TicketPurchaseDto } from "./dto/ticket-purchase.dto";
+import { ReceiptDto } from "./dto/receipt.dto";
+import { StripeService } from "../payment/stripe.service";
+import { Conference } from "../conference/entities/conference.entity";
 
 @Injectable()
 export class TicketService {
@@ -24,6 +30,14 @@ export class TicketService {
     private readonly pdfService: PdfService,
 
     private readonly conferenceService: ConferenceService,
+
+    @InjectRepository(Receipt)
+    private readonly receiptRepository: Repository<Receipt>,
+
+    @InjectRepository(Conference)
+    private readonly conferenceRepository: Repository<Conference>,
+
+    private readonly stripeService: StripeService,
   ) {}
 
   //FN TO CREATE A TICKET ONLY BY ORGANIZERS
@@ -152,5 +166,118 @@ export class TicketService {
     if (!ticket) throw new NotFoundException("Ticket not found");
 
     return this.pdfService.generateTicketReceipt(ticket);
+  }
+
+  async purchaseTickets(
+    userId: string,
+    purchaseDto: TicketPurchaseDto,
+  ): Promise<ReceiptDto> {
+    return await this.ticketRepository.manager.transaction(async (manager) => {
+      const conference = await manager.findOne(Conference, {
+        where: { id: purchaseDto.conferenceId },
+        lock: { mode: "pessimistic_write" }, // Lock the row to prevent race conditions
+      });
+
+      if (!conference) {
+        throw new NotFoundException("Conference not found");
+      }
+
+      if (conference.availableTickets < purchaseDto.ticketQuantity) {
+        throw new BadRequestException("Not enough tickets available");
+      }
+
+      // Calculate total amount
+      const totalAmount = conference.ticketPrice * purchaseDto.ticketQuantity;
+
+      // Create payment intent with Stripe
+      const paymentIntent = await this.stripeService.createPaymentIntent(
+        totalAmount,
+        "usd",
+        purchaseDto.billingDetails,
+      );
+
+      // Verify payment status
+      const paymentStatus = await this.stripeService.getPaymentIntent(
+        paymentIntent.id,
+      );
+      if (paymentStatus.status !== "succeeded") {
+        throw new BadRequestException("Payment not completed");
+      }
+
+      // Create ticket record
+      const ticket = manager.create(Ticket, {
+        conferenceId: conference.id,
+        userId,
+        quantity: purchaseDto.ticketQuantity,
+        pricePerTicket: conference.ticketPrice,
+        totalAmount,
+        paymentIntentId: paymentIntent.id,
+        isPaid: true,
+      });
+
+      await manager.save(Ticket, ticket);
+
+      // Update conference available tickets
+      conference.availableTickets -= purchaseDto.ticketQuantity;
+      await manager.save(Conference, conference);
+
+      // Create receipt
+      const receipt = manager.create(Receipt, {
+        ticketId: ticket.id,
+        userFullName: purchaseDto.billingDetails.fullName,
+        userEmail: purchaseDto.billingDetails.email,
+        conferenceName: conference.name,
+        conferenceDate: conference.date,
+        conferenceLocation: conference.location,
+        ticketQuantity: purchaseDto.ticketQuantity,
+        pricePerTicket: conference.ticketPrice,
+        totalAmount,
+        amountPaid: totalAmount,
+        transactionDate: new Date(),
+      });
+
+      await manager.save(Receipt, receipt);
+
+      // Update ticket with receipt ID
+      ticket.receiptId = receipt.id;
+      await manager.save(Ticket, ticket);
+
+      return this.mapReceiptToDto(receipt);
+    });
+  }
+
+  async getReceipt(receiptId: string, userId: string): Promise<ReceiptDto> {
+    const receipt = await this.receiptRepository.findOne({
+      where: { id: receiptId },
+      relations: ["ticket"],
+    });
+
+    if (!receipt) {
+      throw new NotFoundException("Receipt not found");
+    }
+
+    if (receipt.ticket.userId !== userId) {
+      throw new ForbiddenException(
+        "You do not have permission to access this receipt",
+      );
+    }
+
+    return this.mapReceiptToDto(receipt);
+  }
+
+  private mapReceiptToDto(receipt: Receipt): ReceiptDto {
+    return {
+      receiptId: receipt.id,
+      userFullName: receipt.userFullName,
+      userEmail: receipt.userEmail,
+      conferenceName: receipt.conferenceName,
+      conferenceDate: receipt.conferenceDate,
+      conferenceLocation: receipt.conferenceLocation,
+      ticketQuantity: receipt.ticketQuantity,
+      pricePerTicket: receipt.pricePerTicket,
+      totalAmount: receipt.totalAmount,
+      amountPaid: receipt.amountPaid,
+      transactionDate: receipt.transactionDate,
+    };
   }
 }
