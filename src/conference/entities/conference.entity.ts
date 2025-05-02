@@ -11,7 +11,7 @@ import {
   JoinColumn,
 } from "typeorm";
 
-@Entity("conferences")
+@Entity()
 export class Conference {
   @PrimaryGeneratedColumn("uuid")
   id: string;
