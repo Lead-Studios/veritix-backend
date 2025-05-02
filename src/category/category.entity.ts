@@ -1,18 +1,22 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
-import { Event } from "../events/entities/event.entity";
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+import { Event } from '../events/entities/event.entity';
 
 @Entity()
 export class Category {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ unique: true })
+  @Column()
   name: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'text', nullable: true })
   description: string;
 
-  @OneToMany(() => Event, (event) => event.category)
-  events: Event[];
 
+  @Column({ nullable: true })
+  icon?: string;
+
+
+  @OneToMany(() => Event, event => event.category)
+  events: Event[];
 }
