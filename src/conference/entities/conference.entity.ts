@@ -1,3 +1,4 @@
+import { SpecialSpeaker } from "src/special-speaker/entities/special-speaker.entity";
 import { Ticket } from "src/tickets/entities/ticket.entity";
 import { User } from "src/users/entities/user.entity";
 import {
@@ -96,4 +97,7 @@ export class Conference {
 
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt: Date;
+
+  @OneToMany(() => SpecialSpeaker, (speaker) => speaker.conference)
+  specialSpeakers: SpecialSpeaker[];
 }
