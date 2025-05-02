@@ -12,7 +12,7 @@ import {
   JoinColumn,
 } from "typeorm";
 
-@Entity("conferences")
+@Entity()
 export class Conference {
   @PrimaryGeneratedColumn("uuid")
   id: string;
@@ -82,14 +82,14 @@ export class Conference {
   instagram: string;
 
   @Column()
-  organizerId: number;  // This will hold the ID of the organizer (User)
+  organizerId: number; // This will hold the ID of the organizer (User)
 
-  @ManyToOne(() => User, user => user.conferences)  // Assuming you have a User entity
-  @JoinColumn({ name: 'organizerId' })
-  organizer: User;  // You can also define a relationship to the User entity (optional)
+  @ManyToOne(() => User, (user) => user.conferences) // Assuming you have a User entity
+  @JoinColumn({ name: "organizerId" })
+  organizer: User; // You can also define a relationship to the User entity (optional)
 
   // One-to-many relation to tickets
-  @OneToMany(() => Ticket, ticket => ticket.conference)
+  @OneToMany(() => Ticket, (ticket) => ticket.conference)
   tickets: Ticket[];
 
   @OneToMany(() => Collaborator, collaborator => collaborator.conference)

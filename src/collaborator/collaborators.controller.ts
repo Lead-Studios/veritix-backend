@@ -1,15 +1,26 @@
-import { Controller, Get, Post, Body, Param, Put, Delete, UseGuards, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { 
+  Controller, 
+  Get, 
+  Post, 
+  Body, 
+  Patch, 
+  Param, 
+  Delete, 
+  UseGuards,
+  Query 
+} from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { CollaboratorsService } from './collaborators.service';
 import { CreateCollaboratorDto } from './dto/create-collaborator.dto';
 import { UpdateCollaboratorDto } from './dto/update-collaborator.dto';
-import { RolesGuard } from './guards/roles.guard';
-import { MaxCollaboratorsGuard } from './guards/max-collaborator.guard';
-import { Role } from './enum/role.enum';
 import { JwtAuthGuard } from 'security/guards/jwt-auth.guard';
-import { CollaboratorService } from './collaborators.service';
-import { Roles } from './decorators/roles.decorator';
+import { RolesGuard } from 'security/guards/rolesGuard/roles.guard';
+import { RoleDecorator } from 'security/decorators/roles.decorator';
+import { UserRole } from 'src/common/enums/users-roles.enum';
+import { Collaborator } from './entities/collaborator.entity';
 
-@ApiTags('collaborators')
+@ApiTags('Collaborators')
+@ApiBearerAuth()
 @Controller('collaborators')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth()
@@ -17,68 +28,104 @@ export class CollaboratorController {
   constructor(private readonly collaboratorService: CollaboratorService) {}
 
   @Post()
-  @UseGuards(MaxCollaboratorsGuard)
-  @Roles(Role.ADMIN, Role.CONFERENCE_OWNER)
-  @ApiOperation({ summary: 'Create a new collaborator' })
-  @ApiResponse({ status: 201, description: 'The collaborator has been successfully created.' })
-  @ApiResponse({ status: 400, description: 'Bad request - validation error or max collaborators reached.' })
-  @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  @ApiResponse({ status: 403, description: 'Forbidden - insufficient permissions.' })
+  @RoleDecorator(UserRole.Admin)
+  @ApiOperation({ 
+    summary: 'Create collaborator', 
+    description: 'Add a new collaborator to an event'
+  })
+  @ApiResponse({ 
+    status: 201, 
+    description: 'Collaborator created successfully',
+    type: Collaborator
+  })
+  @ApiResponse({ status: 400, description: 'Invalid input' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Requires Admin role' })
   create(@Body() createCollaboratorDto: CreateCollaboratorDto) {
-    return this.collaboratorService.create(createCollaboratorDto);
+    return this.collaboratorsService.create(createCollaboratorDto);
   }
 
   @Get()
-  @Roles(Role.ADMIN)
-  @ApiOperation({ summary: 'Get all collaborators' })
-  @ApiResponse({ status: 200, description: 'Return all collaborators.' })
-  @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  @ApiResponse({ status: 403, description: 'Forbidden - insufficient permissions.' })
-  findAll() {
-    return this.collaboratorService.findAll();
+  @ApiOperation({ 
+    summary: 'Get all collaborators', 
+    description: 'Retrieve all collaborators across all events'
+  })
+  @ApiQuery({
+    name: 'eventId',
+    required: false,
+    description: 'Filter collaborators by event ID',
+    type: String
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'List of collaborators',
+    type: [Collaborator]
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  findAll(@Query('eventId') eventId?: string) {
+    return this.collaboratorsService.findAll(eventId);
   }
 
   @Get(':id')
-  @Roles(Role.ADMIN, Role.CONFERENCE_OWNER)
-  @ApiOperation({ summary: 'Get a collaborator by id' })
-  @ApiResponse({ status: 200, description: 'Return the collaborator.' })
-  @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  @ApiResponse({ status: 403, description: 'Forbidden - insufficient permissions.' })
-  @ApiResponse({ status: 404, description: 'Collaborator not found.' })
+  @ApiOperation({ 
+    summary: 'Get collaborator by ID', 
+    description: 'Retrieve a specific collaborator by their ID'
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Collaborator ID',
+    example: '123e4567-e89b-12d3-a456-426614174000'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Collaborator found',
+    type: Collaborator
+  })
+  @ApiResponse({ status: 404, description: 'Collaborator not found' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   findOne(@Param('id') id: string) {
-    return this.collaboratorService.findOne(id);
+    return this.collaboratorsService.findOne(id);
   }
 
-  @Get('conference/:conferenceId')
-  @Roles(Role.ADMIN, Role.CONFERENCE_OWNER)
-  @ApiOperation({ summary: 'Get all collaborators for a specific conference' })
-  @ApiResponse({ status: 200, description: 'Return all collaborators for the conference.' })
-  @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  @ApiResponse({ status: 403, description: 'Forbidden - insufficient permissions.' })
-  findByConference(@Param('conferenceId') conferenceId: string) {
-    return this.collaboratorService.findByConferenceId(conferenceId);
-  }
-
-  @Put(':id')
-  @Roles(Role.ADMIN, Role.CONFERENCE_OWNER)
-  @ApiOperation({ summary: 'Update a collaborator' })
-  @ApiResponse({ status: 200, description: 'The collaborator has been successfully updated.' })
-  @ApiResponse({ status: 400, description: 'Bad request - validation error.' })
-  @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  @ApiResponse({ status: 403, description: 'Forbidden - insufficient permissions.' })
-  @ApiResponse({ status: 404, description: 'Collaborator not found.' })
+  @Patch(':id')
+  @RoleDecorator(UserRole.Admin)
+  @ApiOperation({ 
+    summary: 'Update collaborator', 
+    description: 'Update details of an existing collaborator'
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Collaborator ID',
+    example: '123e4567-e89b-12d3-a456-426614174000'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Collaborator updated successfully',
+    type: Collaborator
+  })
+  @ApiResponse({ status: 404, description: 'Collaborator not found' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Requires Admin role' })
   update(@Param('id') id: string, @Body() updateCollaboratorDto: UpdateCollaboratorDto) {
-    return this.collaboratorService.update(id, updateCollaboratorDto);
+    return this.collaboratorsService.update(id, updateCollaboratorDto);
   }
 
   @Delete(':id')
-  @Roles(Role.ADMIN, Role.CONFERENCE_OWNER)
-  @ApiOperation({ summary: 'Delete a collaborator' })
-  @ApiResponse({ status: 200, description: 'The collaborator has been successfully deleted.' })
-  @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  @ApiResponse({ status: 403, description: 'Forbidden - insufficient permissions.' })
-  @ApiResponse({ status: 404, description: 'Collaborator not found.' })
+  @RoleDecorator(UserRole.Admin)
+  @ApiOperation({ 
+    summary: 'Delete collaborator', 
+    description: 'Remove a collaborator from an event'
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Collaborator ID',
+    example: '123e4567-e89b-12d3-a456-426614174000'
+  })
+  @ApiResponse({ status: 200, description: 'Collaborator deleted successfully' })
+  @ApiResponse({ status: 404, description: 'Collaborator not found' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Requires Admin role' })
   remove(@Param('id') id: string) {
-    return this.collaboratorService.remove(id);
+    return this.collaboratorsService.remove(id);
   }
 }
