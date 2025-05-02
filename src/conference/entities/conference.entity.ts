@@ -12,7 +12,7 @@ import {
 } from "typeorm";
 import { ConferenceGallery } from "src/conference-gallery/entities/conference-gallery.entity";
 
-@Entity("conferences")
+@Entity()
 export class Conference {
   @PrimaryGeneratedColumn("uuid")
   id: string;
