@@ -18,45 +18,41 @@ import {
   UnauthorizedException,
   Logger,
 } from "@nestjs/common";
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { AuthGuard } from '@nestjs/passport';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { RolesGuard } from 'security/guards/rolesGuard/roles.guard';
-import { UserRole } from 'src/common/enums/users-roles.enum';
-import { UpdateProfileDto, ChangePasswordDto, ProfileImageDto } from './dto/update-profile.dto';
-import { RoleDecorator } from 'security/decorators/roles.decorator';
-import { Request } from 'express';
 import { JwtAuthGuard } from "security/guards/jwt-auth.guard";
-import { request } from "http";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-import { User } from "./entities/user.entity";
-import { JsonWebTokenError } from "jsonwebtoken";
+import { UpdateProfileDto, ChangePasswordDto } from './dto/update-profile.dto';
 
+@ApiTags('Users')
 @Controller("users")
 export class UsersController {
-  [x: string]: any;
-  constructor(
-    @InjectRepository(User)
-    private usersRepository: Repository<User>,
-
-    private readonly usersService: UsersService
-  ) {}
+  constructor(private readonly usersService: UsersService) {}
 
   @Post()
   @UseInterceptors(ClassSerializerInterceptor)
+  @ApiOperation({ summary: 'Create new user' })
+  @ApiBody({ type: CreateUserDto })
+  @ApiResponse({ 
+    status: 201, 
+    description: 'User successfully created',
+    type: CreateUserDto 
+  })
+  @ApiResponse({ status: 400, description: 'Invalid input' })
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
   }
-  
 
-  /// USER PROFILE ENDPOINTS
-
-  // GET /users/details
   @Get('details')
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get current user details' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'User details retrieved successfully' 
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getUserDetails(@Req() request: Request) {
     const user = request.user as any;
   
@@ -74,9 +70,13 @@ export class UsersController {
     return this.usersService.findOneById(userId);
   }
 
-  // PUT /users/update-profile
   @Put('update-profile')
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update user profile' })
+  @ApiBody({ type: UpdateProfileDto })
+  @ApiResponse({ status: 200, description: 'Profile updated successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async updateProfile(
     @Req() request: Request,
     @Body() updateProfileDto: UpdateProfileDto
@@ -93,9 +93,14 @@ export class UsersController {
     return this.usersService.updateProfile(user.userId, updateProfileDto);
   }
 
-  // PUT /users/change-password
   @Put('/change-password')
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Change user password' })
+  @ApiBody({ type: ChangePasswordDto })
+  @ApiResponse({ status: 200, description: 'Password changed successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 400, description: 'Invalid password' })
   async changePassword(
     @Req() request: Request,
     @Body() dto: ChangePasswordDto
@@ -107,34 +112,36 @@ export class UsersController {
     return this.usersService.changePassword(user.userId, dto);
   }
 
-  @Post('/upload/profile-image')
-  @UseGuards(JwtAuthGuard)
-  @UseInterceptors(FileInterceptor('file'))
-  async uploadProfileImage(
-    @Req() request: Request,
-    @UploadedFile() file: any,
-  ) {
-
-    const user = request.user as any;
-
-    const userId = Number(user?.userId) || Number(user?.sub);
-
-    if (!userId) {
-      throw new UnauthorizedException('User information missing');
-    }
-
-    const profileImageDto: ProfileImageDto = {
-      imageUrl: file.path || file.filename || file.originalname
-    };
-
-    return this.usersService.updateProfileImage(userId, profileImageDto);
-  }
-
-
-  /// OTHER ENDPOINTS
-  // GET /users?limit=10&page=1
   @Get()
-  public async findAll(pagination?: {
+  @ApiOperation({ summary: 'Get all users' })
+  @ApiQuery({ 
+    name: 'page', 
+    required: false, 
+    type: Number,
+    description: 'Page number for pagination'
+  })
+  @ApiQuery({ 
+    name: 'limit', 
+    required: false, 
+    type: Number,
+    description: 'Number of items per page'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'List of users retrieved successfully',
+    schema: {
+      properties: {
+        users: {
+          type: 'array',
+          items: { $ref: '#/components/schemas/CreateUserDto' }
+        },
+        total: {
+          type: 'number'
+        }
+      }
+    }
+  })
+  public async findAll(@Query() pagination?: {
     limits: number;
     page: number;
   }): Promise<{ users: CreateUserDto[]; total: number }> {
@@ -148,18 +155,20 @@ export class UsersController {
     return { users: users, total };
   }
 
-  // DELETE /users/:id
-  @Delete(":id")
-  async softDelete(@Param("id", ParseIntPipe) id: number) {
-    return this.usersService.softDelete(id);
-  }
-
-  @Get(":id")
+  @Get(':id')
+  @ApiOperation({ summary: 'Get user by ID' })
+  @ApiParam({ name: 'id', description: 'User ID' })
+  @ApiResponse({ status: 200, description: 'User found' })
+  @ApiResponse({ status: 404, description: 'User not found' })
   findOne(@Param("id") id: string) {
     return this.usersService.findOneById(+id);
   }
 
-  @Delete(":id")
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete user' })
+  @ApiParam({ name: 'id', description: 'User ID' })
+  @ApiResponse({ status: 200, description: 'User deleted successfully' })
+  @ApiResponse({ status: 404, description: 'User not found' })
   remove(@Param("id") id: string) {
     return this.usersService.remove(+id);
   }
