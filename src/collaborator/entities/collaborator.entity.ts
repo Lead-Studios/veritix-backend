@@ -1,16 +1,11 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  CreateDateColumn,
-  UpdateDateColumn,
-} from "typeorm";
-import { Event } from "../../events/entities/event.entity";
+import { Conference } from 'src/conference/entities/conference.entity';
+import { Event } from 'src/events/entities/event.entity';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, CreateDateColumn, UpdateDateColumn, Unique } from 'typeorm';
 
-@Entity()
+@Entity('collaborators')
+@Unique(['email', 'conference']) // Ensure email is unique per conference
 export class Collaborator {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column()
@@ -20,13 +15,21 @@ export class Collaborator {
   email: string;
 
   @Column()
-  imageUrl: string;
+  image: string;
 
-  @ManyToOne(() => Event, (event) => event.collaborators)
+  @ManyToOne(() => Conference, conference => conference.collaborators, {
+    onDelete: 'CASCADE',
+  })
+  conference: Conference;
+
+  //Event
+  @ManyToOne(() => Event, event => event.collaborators, {
+    onDelete: 'CASCADE',
+  })
   event: Event;
 
   @Column()
-  eventId: string;
+  conferenceId: string;
 
   @CreateDateColumn()
   createdAt: Date;

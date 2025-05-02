@@ -1,49 +1,38 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-import { Collaborator } from "./entities/collaborator.entity";
-import { CreateCollaboratorDto } from "./dto/create-collaborator.dto";
-import * as fs from "fs";
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Collaborator } from './entities/collaborator.entity';
+import { CreateCollaboratorDto } from './dto/create-collaborator.dto';
+import { UpdateCollaboratorDto } from './dto/update-collaborator.dto';
 
 @Injectable()
-export class CollaboratorsService {
+export class CollaboratorService {
   constructor(
     @InjectRepository(Collaborator)
     private collaboratorRepository: Repository<Collaborator>,
   ) {}
 
-  async create(
-    file: Express.Multer.File,
-    createCollaboratorDto: CreateCollaboratorDto,
-  ): Promise<Collaborator> {
-    if (!file) {
-      throw new BadRequestException("Collaborator image is required");
+  async create(createCollaboratorDto: CreateCollaboratorDto): Promise<Collaborator> {
+    // Check if email is already used in thisis conference
+    const existingCollaborator = await this.collaboratorRepository.findOne({
+      where: {
+        email: createCollaboratorDto.email,
+        conferenceId: createCollaboratorDto.conferenceId,
+      },
+    });
+
+    if (existingCollaborator) {
+      throw new BadRequestException('Email already in use for this conference');
     }
 
-    try {
-      const collaborator = new Collaborator();
-      collaborator.imageUrl = file.path;
-      collaborator.name = createCollaboratorDto.name;
-      collaborator.email = createCollaboratorDto.email;
-      collaborator.eventId = createCollaboratorDto.eventId;
-      // Check collaborator limit
-      const count = await this.collaboratorRepository.count({
-        where: { eventId: createCollaboratorDto.eventId },
-      });
-
-      if (count >= 5) {
-        throw new BadRequestException(
-          "Maximum number of collaborators (5) reached for this event",
-        );
-      }
-      return this.collaboratorRepository.save(collaborator);
-    } catch (error) {
-      throw new BadRequestException("Failed to create collaborator");
+    // Double-check the 5 collaborator limit at the service level
+    const count = await this.countByConferenceId(createCollaboratorDto.conferenceId);
+    if (count >= 5) {
+      throw new BadRequestException('Conference already has the maximum of 5 collaborators');
     }
+
+    const collaborator = this.collaboratorRepository.create(createCollaboratorDto);
+    return this.collaboratorRepository.save(collaborator);
   }
 
   async findAll(): Promise<Collaborator[]> {
@@ -54,71 +43,71 @@ export class CollaboratorsService {
     const collaborator = await this.collaboratorRepository.findOne({
       where: { id },
     });
+    
     if (!collaborator) {
-      throw new NotFoundException("Collaborator not found");
+      throw new NotFoundException(`Collaborator with ID ${id} not found`);
     }
+    
     return collaborator;
   }
 
-  async findByEvent(eventId: string): Promise<Collaborator[]> {
-    return this.collaboratorRepository.find({ where: { eventId } });
+  async findByConferenceId(conferenceId: string): Promise<Collaborator[]> {
+    return this.collaboratorRepository.find({
+      where: { conferenceId },
+    });
   }
 
-  async update(
-    id: string,
-    file: Express.Multer.File,
-    updateCollaboratorDto: Partial<CreateCollaboratorDto>,
-  ): Promise<Collaborator> {
+  async countByConferenceId(conferenceId: string): Promise<number> {
+    return this.collaboratorRepository.count({
+      where: { conferenceId },
+    });
+  }
+
+  async update(id: string, updateCollaboratorDto: UpdateCollaboratorDto): Promise<Collaborator> {
     const collaborator = await this.findOne(id);
-    try {
-      if (collaborator.eventId !== updateCollaboratorDto.eventId) {
-        // Check collaborator limit
-        const count = await this.collaboratorRepository.count({
-          where: { eventId: updateCollaboratorDto.eventId },
-        });
+    
+    // If email is being updated, check if it's already in use
+    if (updateCollaboratorDto.email && updateCollaboratorDto.email !== collaborator.email) {
+      const existingCollaborator = await this.collaboratorRepository.findOne({
+        where: {
+          email: updateCollaboratorDto.email,
+          conferenceId: collaborator.conferenceId,
+        },
+      });
 
-        if (count >= 5) {
-          throw new BadRequestException(
-            "Maximum number of collaborators (5) reached for this event",
-          );
-        }
-      } else {
-        collaborator.eventId = updateCollaboratorDto.eventId;
+      if (existingCollaborator) {
+        throw new BadRequestException('Email already in use for this conference');
       }
-
-      if (updateCollaboratorDto.name) {
-        collaborator.name = updateCollaboratorDto.name;
-      }
-
-      if (updateCollaboratorDto.email) {
-        collaborator.email = updateCollaboratorDto.email;
-      }
-
-      if (file) {
-        // update image if new image is provided
-        if (collaborator.imageUrl && fs.existsSync(collaborator.imageUrl)) {
-          fs.unlinkSync(collaborator.imageUrl);
-        }
-        collaborator.imageUrl = file.path;
-      }
-      return this.collaboratorRepository.save(collaborator);
-    } catch (error) {
-      throw new BadRequestException("Failed to update collaborator");
     }
+    
+    // If conferenceId is being updated, check the 5 collaborator limit
+    if (updateCollaboratorDto.conferenceId && updateCollaboratorDto.conferenceId !== collaborator.conferenceId) {
+      const count = await this.countByConferenceId(updateCollaboratorDto.conferenceId);
+      if (count >= 5) {
+        throw new BadRequestException('Target conference already has the maximum of 5 collaborators');
+      }
+    }
+    
+    Object.assign(collaborator, updateCollaboratorDto);
+    return this.collaboratorRepository.save(collaborator);
   }
 
-  async remove(id: string): Promise<void> {
-    const collaborator = await this.findOne(id);
+  async remove(id: string, conferenceId?: string): Promise<void> {
     try {
-      if (collaborator.imageUrl && fs.existsSync(collaborator.imageUrl)) {
-        fs.unlinkSync(collaborator.imageUrl);
-        const result = await this.collaboratorRepository.delete(id);
-        if (!result.affected) {
-          throw new NotFoundException("Collaborator not found");
+        const collaborator = await this.findOne(id);
+
+        if (conferenceId && collaborator.conferenceId !== conferenceId) {
+        throw new BadRequestException(
+            `Collaborator does not belong to conference ${conferenceId}`,
+        );
         }
-      }
+
+        await this.collaboratorRepository.remove(collaborator);
     } catch (error) {
-      throw new BadRequestException("Failed to delete collaborator");
+        if (error instanceof NotFoundException || error instanceof BadRequestException) {
+        throw error;
+        }
+        throw new BadRequestException(`Failed to remove collaborator: ${error.message}`);
+     }
     }
-  }
 }
