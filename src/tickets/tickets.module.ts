@@ -10,14 +10,26 @@ import { Event } from "src/events/entities/event.entity";
 import { TicketPurchaseController } from "./ticket-purchase.controller";
 import { UsersModule } from "src/users/users.module";
 import { TicketPurchaseService } from "./provider/tickets-purchase.service";
+import { User } from "src/users/entities/user.entity";
+import { ConferenceService } from "src/conference/providers/conference.service";
+import { Conference } from "src/conference/entities/conference.entity";
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Ticket, TicketPurchase, Event,]), UsersModule],
+  imports: [
+    TypeOrmModule.forFeature([Ticket, TicketPurchase, Event, User, Conference]),
+    UsersModule,
+  ],
   controllers: [TicketController, TicketPurchaseController],
-  providers: [TicketService, PdfService, TicketPurchaseService, {
-    provide: 'PaymentServiceInterface',
-    useClass: StripePaymentService,
-  },],
-  exports: [TicketService, PdfService]
+  providers: [
+    TicketService,
+    PdfService,
+    TicketPurchaseService,
+    ConferenceService,
+    {
+      provide: "PaymentServiceInterface",
+      useClass: StripePaymentService,
+    },
+  ],
+  exports: [TicketService, PdfService],
 })
 export class TicketModule {}

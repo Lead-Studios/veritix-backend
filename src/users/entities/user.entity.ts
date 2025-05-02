@@ -1,9 +1,11 @@
 import { UserRole } from "src/common/enums/users-roles.enum";
+import { Conference } from "src/conference/entities/conference.entity";
 import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
@@ -37,6 +39,9 @@ export class User {
     default: UserRole.User,
   })
   role: UserRole;
+
+  @OneToMany(() => Conference, conference => conference.organizer)
+  conferences: Conference[];  // A user can organize multiple conferences
 
   @Column("boolean", { default: true })
   isActive: boolean;

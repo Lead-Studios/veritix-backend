@@ -19,7 +19,7 @@ export class TicketService {
       
       // Find the ticket
       const ticket = await this.ticketsRepository.findOne({
-        where: { id: resolveTicketDto.ticketId }
+        where: { id: Number(resolveTicketDto.ticketId) }
       });
       
       if (!ticket) {

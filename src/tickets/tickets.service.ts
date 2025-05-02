@@ -1,96 +1,151 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Ticket } from "./entities/ticket.entity";
 import { CreateTicketDto } from "./dto/create-ticket.dto";
 import { PdfService } from "src/utils/pdf.service";
+import { ConferenceService } from "src/conference/providers/conference.service";
+import { User } from "src/users/entities/user.entity";
+import { UpdateTicketDto } from "./dto/update-ticket.dto";
 
 @Injectable()
 export class TicketService {
   constructor(
     @InjectRepository(Ticket)
-    private readonly ticketRepository: Repository<Ticket>, 
+    private readonly ticketRepository: Repository<Ticket>,
 
-    private readonly pdfService : PdfService
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
+
+    private readonly pdfService: PdfService,
+
+    private readonly conferenceService: ConferenceService,
   ) {}
 
-  async createTicket(dto: CreateTicketDto): Promise<Ticket> {
-    const ticket = this.ticketRepository.create(dto);
-    return this.ticketRepository.save(ticket);
+  //FN TO CREATE A TICKET ONLY BY ORGANIZERS
+  public async createTicket(
+    createTicketDto: CreateTicketDto,
+    user: User,
+  ): Promise<Ticket> {
+    const conference = await this.conferenceService.findOne(
+      createTicketDto.eventId,
+    );
+    if (!conference || conference.organizerId !== user.id) {
+      throw new ForbiddenException(
+        "You do not have permission to create tickets for this conference",
+      );
+    }
+
+    const ticket = this.ticketRepository.create(createTicketDto);
+    return await this.ticketRepository.save(ticket);
   }
 
-  async getAllTickets(): Promise<Ticket[]> {
+  //
+  public async getAllTickets(): Promise<Ticket[]> {
     return this.ticketRepository.find();
   }
 
   async getTicketById(id: string): Promise<Ticket> {
-    const ticket = await this.ticketRepository.findOne({ where: { id } });
+    const ticket = await this.ticketRepository.findOne({
+      where: { id: Number(id) },
+    });
     if (!ticket) throw new NotFoundException("Ticket not found");
     return ticket;
   }
 
-  async getTicketByIDAndEvent(id:string, eventId:string): Promise<Ticket> {
+  async getTicketByIDAndEvent(id: string, eventId: string): Promise<Ticket> {
     const ticket = await this.ticketRepository.findOne({
-      where: { 
-        id,
-        event: { id: eventId }
+      where: {
+        id: Number(id),
+        event: { id: eventId },
       },
-      relations: ['event']
+      relations: ["event"],
     });
-    return ticket
+    return ticket;
   }
 
   async getTicketsByEvent(eventId: string): Promise<Ticket[]> {
     return this.ticketRepository.find({ where: { event: { id: eventId } } });
   }
 
-  async updateTicket(
-    id: string,
-    dto: Partial<CreateTicketDto>,
+  //FN TO UPDATE A TICKET
+  public async updateTicket(
+    id: number,
+    updateTicketDto: UpdateTicketDto,
+    user: User,
   ): Promise<Ticket> {
-    const ticket = await this.getTicketById(id);
-    Object.assign(ticket, dto);
+    const ticket = await this.ticketRepository.findOne({ where: { id } });
+    if (!ticket) {
+      throw new NotFoundException("Ticket not found");
+    }
+
+    const conference = await this.conferenceService.findOne(
+      String(ticket.conferenceId),
+    );
+    if (conference.organizerId !== user.id) {
+      throw new ForbiddenException(
+        "You do not have permission to update this ticket",
+      );
+    }
+
+    Object.assign(ticket, updateTicketDto);
     return this.ticketRepository.save(ticket);
   }
 
-  async deleteTicket(id: string): Promise<void> {
-    const result = await this.ticketRepository.delete(id);
-    if (result.affected === 0) throw new NotFoundException("Ticket not found");
-  }
-
-    //fn to get all ticket history for a user
-    public async getUserTicketHistory(userId: string): Promise<Ticket[]> {
-      return this.ticketRepository.find({
-        where: { userId },
-        relations: ['event'],
-        order: { purchaseDate: 'DESC' },
-      });
+  //FN TO DELETE A TICKET ONLY BY ORGANIZERS
+  public async deleteTicket(id: number, user: User): Promise<void> {
+    const ticket = await this.ticketRepository.findOne({ where: { id } });
+    if (!ticket) {
+      throw new NotFoundException("Ticket not found");
     }
 
-     // fn to get a single ticket history by ID
+    const conference = await this.conferenceService.findOne(ticket.eventId);
+    if (conference.organizerId !== user.id) {
+      throw new ForbiddenException(
+        "You do not have permission to delete this ticket",
+      );
+    }
+
+    await this.ticketRepository.remove(ticket);
+  }
+
+  //fn to get all ticket history for a user
+  public async getUserTicketHistory(userId: string): Promise<Ticket[]> {
+    return this.ticketRepository.find({
+      where: { userId },
+      relations: ["event"],
+      order: { purchaseDate: "DESC" },
+    });
+  }
+
+  // fn to get a single ticket history by ID
   public async getUserTicketById(userId: string, id: string): Promise<Ticket> {
     const ticket = await this.ticketRepository.findOne({
-      where: { id, userId },
-      relations: ['event'],
+      where: { id: Number(id), userId },
+      relations: ["event"],
     });
-    if (!ticket) throw new NotFoundException('Ticket not found');
+    if (!ticket) throw new NotFoundException("Ticket not found");
     return ticket;
   }
 
-   // fn to get ticket details
-   public async getTicketDetails(id: string): Promise<Ticket> {
+  // fn to get ticket details
+  public async getTicketDetails(id: string): Promise<Ticket> {
     const ticket = await this.ticketRepository.findOne({
-      where: { id },
-      relations: ['event'],
+      where: { id: Number(id) },
+      relations: ["event"],
     });
-    if (!ticket) throw new NotFoundException('Ticket details not found');
+    if (!ticket) throw new NotFoundException("Ticket details not found");
     return ticket;
   }
 
   //fn to generat ticket
   public async generateTicketReceipt(id: string): Promise<string> {
     const ticket = await this.ticketRepository.findOne({
-      where: { id },
+      where: { id: Number(id) },
       relations: ["event"],
     });
 
