@@ -25,7 +25,7 @@ export class Collaborator {
   })
   @Column()
   email: string;
-
+  
   @ApiProperty({
     description: 'Role of the collaborator',
     enum: CollaboratorRole,

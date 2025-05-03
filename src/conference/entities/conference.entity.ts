@@ -1,4 +1,5 @@
 import { SpecialSpeaker } from "src/special-speaker/entities/special-speaker.entity";
+import { Collaborator } from "src/collaborator/entities/collaborator.entity";
 import { Ticket } from "src/tickets/entities/ticket.entity";
 import { User } from "src/users/entities/user.entity";
 import {
@@ -91,6 +92,9 @@ export class Conference {
   // One-to-many relation to tickets
   @OneToMany(() => Ticket, (ticket) => ticket.conference)
   tickets: Ticket[];
+
+  @OneToMany(() => Collaborator, collaborator => collaborator.conference)
+  collaborators: Collaborator[];
 
   @CreateDateColumn({ name: "created_at" })
   createdAt: Date;
