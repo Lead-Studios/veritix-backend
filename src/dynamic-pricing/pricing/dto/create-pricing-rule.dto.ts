@@ -1,122 +1,83 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsNumber, IsEnum, IsUUID, IsBoolean, IsOptional, Min, Max } from 'class-validator';
-
-export enum PriceAdjustmentType {
-  PERCENTAGE = 'percentage',
-  FIXED = 'fixed'
-}
-
-export enum TriggerCondition {
-  TIME_BEFORE_EVENT = 'time_before_event',
-  TICKETS_SOLD_PERCENTAGE = 'tickets_sold_percentage',
-  SALES_VELOCITY = 'sales_velocity',
-  DEMAND_SCORE = 'demand_score'
-}
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUUID,
+  IsBoolean,
+  IsDate,
+  Min,
+} from "class-validator";
+import { Type } from "class-transformer";
+import { PricingRuleType, DiscountType } from "../entities/pricing-rule.entity";
 
 export class CreatePricingRuleDto {
-  @ApiProperty({
-    description: 'Name of the pricing rule',
-    example: 'Early Bird Discount'
-  })
   @IsString()
+  @IsNotEmpty()
   name: string;
 
-  @ApiProperty({
-    description: 'ID of the event this rule applies to',
-    example: '123e4567-e89b-12d3-a456-426614174000'
-  })
-  @IsUUID()
-  eventId: string;
-
-  @ApiProperty({
-    description: 'Type of price adjustment',
-    enum: PriceAdjustmentType,
-    example: PriceAdjustmentType.PERCENTAGE
-  })
-  @IsEnum(PriceAdjustmentType)
-  adjustmentType: PriceAdjustmentType;
-
-  @ApiProperty({
-    description: 'Value of the price adjustment (percentage or fixed amount)',
-    example: 15
-  })
-  @IsNumber()
-  adjustmentValue: number;
-
-  @ApiProperty({
-    description: 'Condition that triggers the price adjustment',
-    enum: TriggerCondition,
-    example: TriggerCondition.TIME_BEFORE_EVENT
-  })
-  @IsEnum(TriggerCondition)
-  triggerCondition: TriggerCondition;
-
-  @ApiProperty({
-    description: 'Value that activates the trigger condition',
-    example: 30
-  })
-  @IsNumber()
-  triggerValue: number;
-
-  @ApiPropertyOptional({
-    description: 'Minimum price after adjustment',
-    example: 50
-  })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  minimumPrice?: number;
-
-  @ApiPropertyOptional({
-    description: 'Maximum price after adjustment',
-    example: 200
-  })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  maximumPrice?: number;
-
-  @ApiProperty({
-    description: 'Priority of the rule (higher number = higher priority)',
-    example: 1
-  })
-  @IsNumber()
-  @Min(1)
-  @Max(100)
-  priority: number;
-
-  @ApiProperty({
-    description: 'Whether the rule is currently active',
-    example: true
-  })
-  @IsBoolean()
-  isActive: boolean;
-
-  @ApiPropertyOptional({
-    description: 'Description of the pricing rule',
-    example: 'Applies 15% discount when event is 30 days away'
-  })
-  @IsOptional()
   @IsString()
+  @IsOptional()
   description?: string;
 
-  @ApiPropertyOptional({
-    description: 'Specific ticket types this rule applies to',
-    example: ['VIP', 'Regular']
-  })
-  @IsOptional()
-  @IsString({ each: true })
-  applicableTicketTypes?: string[];
+  @IsUUID()
+  @IsNotEmpty()
+  eventId: string;
 
-  @ApiPropertyOptional({
-    description: 'Additional configuration options for the rule',
-    example: {
-      stackable: true,
-      roundingMethod: 'ceil',
-      decimalPlaces: 2
-    }
-  })
+  @IsEnum(PricingRuleType)
+  @IsNotEmpty()
+  ruleType: PricingRuleType;
+
+  @IsEnum(DiscountType)
+  @IsNotEmpty()
+  discountType: DiscountType;
+
+  @IsNumber()
+  @Min(0)
+  @IsNotEmpty()
+  discountValue: number;
+
+  @IsBoolean()
   @IsOptional()
-  configuration?: Record<string, any>;
+  isActive?: boolean;
+
+  @IsDate()
+  @Type(() => Date)
+  @IsOptional()
+  startDate?: Date;
+
+  @IsDate()
+  @Type(() => Date)
+  @IsOptional()
+  endDate?: Date;
+
+  // Early bird specific fields
+  @IsNumber()
+  @IsOptional()
+  daysBeforeEvent?: number;
+
+  // Dynamic pricing specific fields
+  @IsNumber()
+  @IsOptional()
+  salesThreshold?: number;
+
+  @IsNumber()
+  @IsOptional()
+  priceIncreaseAmount?: number;
+
+  // Loyalty specific fields
+  @IsNumber()
+  @IsOptional()
+  minimumPurchases?: number;
+
+  // Group discount specific fields
+  @IsNumber()
+  @IsOptional()
+  minimumTickets?: number;
+
+  // Last minute specific fields
+  @IsNumber()
+  @IsOptional()
+  hoursBeforeEvent?: number;
 }
-

@@ -23,7 +23,7 @@ export class Ticket {
 
   @Column()
   eventId: string;
-  
+
   @Column({ type: "int" })
   quantity: number;
 
@@ -52,12 +52,11 @@ export class Ticket {
   @Column({ nullable: true })
   userId: string;
 
-  //NEW FIELD FOR CONFERENCE 
-  @ManyToOne(() => Conference, conference => conference.tickets)
-  @JoinColumn({ name: 'conferenceId' })
+  // NEW FIELD FOR CONFERENCE
+  @ManyToOne(() => Conference, (conference) => conference.tickets)
+  @JoinColumn({ name: "conferenceId" })
   conference: Conference;
 
   @Column()
   conferenceId: number;
-
 }

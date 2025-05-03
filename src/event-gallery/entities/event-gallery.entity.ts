@@ -1,15 +1,15 @@
-import { 
-  Entity, 
-  PrimaryGeneratedColumn, 
-  Column, 
-  ManyToOne, 
-  JoinColumn 
-} from 'typeorm';
-import { Event } from '../../events/entities/event.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+} from "typeorm";
+import { Event } from "../../events/entities/event.entity";
 
 @Entity()
 export class EventGallery {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn("uuid")
   id: string;
 
   @Column()
@@ -18,15 +18,15 @@ export class EventGallery {
   @Column()
   description: string;
 
-  @ManyToOne(() => Event, event => event.eventGallery, { 
-    onDelete: 'CASCADE' 
+  @ManyToOne(() => Event, (event) => event.eventGallery, {
+    onDelete: "CASCADE",
   })
-  @JoinColumn({ name: 'eventId' })
+  @JoinColumn({ name: "eventId" })
   event: Event;
 
   @Column()
   eventId: string;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
   createdAt: Date;
 }

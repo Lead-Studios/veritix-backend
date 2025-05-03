@@ -12,11 +12,11 @@ export class AdminJwtStrategy extends PassportStrategy(Strategy, "admin-jwt") {
     private configService: ConfigService,
     private adminService: AdminService,
   ) {
-    const secret = configService.get<string>('jwt.secret');
+    const secret = configService.get<string>("jwt.secret");
     // console.log('JWT Secret:', secret); // Debug output to confirm the secret
 
     if (!secret) {
-      throw new Error('JWT secret is not defined in the configuration');
+      throw new Error("JWT secret is not defined in the configuration");
     }
 
     super({
@@ -32,7 +32,7 @@ export class AdminJwtStrategy extends PassportStrategy(Strategy, "admin-jwt") {
   //   const { password, refreshToken, resetToken, ...result } = admin;
   //   return result;
   // }
-  
+
   async validate(payload: any) {
     return { userId: payload.sub, username: payload.username };
   }

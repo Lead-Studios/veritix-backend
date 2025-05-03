@@ -27,7 +27,7 @@ import * as fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 import { ConferenceGallery } from "./entities/conference-gallery.entity";
 
-@Controller("gallery")
+@Controller("conference-gallery")
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ConferenceGalleryController {
   constructor(
@@ -43,7 +43,7 @@ export class ConferenceGalleryController {
           const uploadPath = path.join(
             process.cwd(),
             "uploads",
-            "event-gallery",
+            "conference-gallery",
           );
 
           if (!fs.existsSync(uploadPath)) {
@@ -85,10 +85,10 @@ export class ConferenceGalleryController {
 
     const imageUrl = path.join("uploads", "conference-gallery", file.filename);
 
-    const galleryImage = await this.conferenceGalleryService.create({
-      ...createConferenceGalleryDto,
-      imageUrl: imageUrl,
-    });
+    const galleryImage = await this.conferenceGalleryService.create(
+      createConferenceGalleryDto,
+      imageUrl,
+    );
 
     return this.mapToResponseDto(galleryImage);
   }
@@ -114,13 +114,47 @@ export class ConferenceGalleryController {
 
   @Put(":id")
   @RoleDecorator(UserRole.Organizer, UserRole.Admin)
+  @UseInterceptors(
+    FileInterceptor("file", {
+      // Use FileInterceptor for optional image update
+      storage: diskStorage({
+        destination: (req, file, cb) => {
+          const uploadPath = path.join(
+            process.cwd(),
+            "uploads",
+            "conference-gallery",
+          );
+          if (!fs.existsSync(uploadPath)) {
+            fs.mkdirSync(uploadPath, { recursive: true });
+          }
+          cb(null, uploadPath);
+        },
+        filename: (req, file, cb) => {
+          const uniqueSuffix = `${uuidv4()}${path.extname(file.originalname)}`;
+          cb(null, uniqueSuffix);
+        },
+      }),
+      fileFilter: (req, file, cb) => {
+        const allowedTypes = /jpeg|jpg|png|gif|webp/;
+        const extname = allowedTypes.test(
+          path.extname(file.originalname).toLowerCase(),
+        );
+        const mimetype = allowedTypes.test(file.mimetype);
+        if (extname && mimetype) return cb(null, true);
+        cb(new Error("Only image files are allowed!"), false);
+      },
+      limits: { fileSize: 5 * 1024 * 1024 },
+    }),
+  )
   async update(
     @Param("id") id: string,
     @Body() updateConferenceGalleryDto: UpdateConferenceGalleryDto,
+    @UploadedFile() file?: Express.Multer.File,
   ) {
     const galleryImage = await this.conferenceGalleryService.update(
       id,
       updateConferenceGalleryDto,
+      file,
     );
     return this.mapToResponseDto(galleryImage);
   }

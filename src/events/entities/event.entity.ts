@@ -14,121 +14,100 @@ import { Poster } from "../../posters/entities/poster.entity";
 import { Collaborator } from "../../collaborator/entities/collaborator.entity";
 import { EventGallery } from "../../event-gallery/entities/event-gallery.entity";
 import { Category } from "../../category/category.entity";
+import { EventStatus } from "src/common/enums/event-status.enum";
+import { GalleryItem } from "src/event-gallery/entities/gallery-item.entity";
 
 @Entity()
 export class Event {
-
   @PrimaryGeneratedColumn("uuid")
   id: string;
-
 
   @Column()
   eventName: string;
 
- 
   @Column({ type: "timestamp" })
   eventDate: Date;
 
- 
   @Column({ type: "timestamp" })
   eventClosingDate: Date;
-
 
   @Column({ type: "text" })
   eventDescription: string;
 
- 
   @Column()
   country: string;
 
-  
   @Column()
   state: string;
 
-  
   @Column()
   street: string;
 
- 
   @Column()
   localGovernment: string;
 
- 
   @Column({ nullable: true })
   direction: string;
 
- 
   @Column({ nullable: true })
   eventImage: string;
 
   @Column({ default: false })
   hideEventLocation: boolean;
 
- 
   @Column({ default: false })
   eventComingSoon: boolean;
 
-  
+  @Column()
+  status: EventStatus;
+
   @Column({ default: false })
   transactionCharge: boolean;
 
- 
   @Column({ nullable: true })
   bankName: string;
-
 
   @Column({ nullable: true })
   bankAccountNumber: string;
 
- 
   @Column({ nullable: true })
   accountName: string;
 
- 
   @Column({ nullable: true })
   facebook: string;
 
-umn({ nullable: true })
+  @Column({ nullable: true })
   twitter: string;
-
 
   @Column({ nullable: true })
   instagram: string;
 
-
-  @ManyToMany(() => Sponsor, (sponsor) => sponsor.events)
+  @ManyToMany(() => Sponsor, (sponsor) => sponsor.event)
   sponsors: Sponsor[];
 
   @OneToMany(() => Ticket, (ticket) => ticket.event)
   tickets: Ticket[];
 
-  
   @OneToMany(() => SpecialGuest, (specialGuest) => specialGuest.event, {
     nullable: true,
   })
   specialGuests: SpecialGuest[] | null;
 
-  
   @OneToMany(() => Collaborator, (collaborator) => collaborator.event)
   collaborators: Collaborator[];
-
 
   @Column({ default: false })
   isArchived: boolean;
 
-  
   @DeleteDateColumn()
   deletedAt?: Date;
 
-  
   @OneToMany(() => Poster, (poster) => poster.event)
   posters: Poster[];
 
-  
   @OneToMany(() => EventGallery, (eventGallery) => eventGallery.event)
   eventGallery: EventGallery[];
 
-  
   @ManyToOne(() => Category, (category) => category.events)
   category: Category;
 }

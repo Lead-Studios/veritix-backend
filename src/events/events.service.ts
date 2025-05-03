@@ -1,48 +1,76 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository, DeepPartial } from "typeorm";
+import { Repository, DeepPartial, Like, FindOptionsWhere } from "typeorm";
 import { Event } from "./entities/event.entity";
 import { CreateEventDto } from "./dto/create-event.dto";
 import { PaginatedResult } from "../common/interfaces/result.interface";
 import * as fuzzball from "fuzzball";
+import { CategoryService } from "src/category/category.service";
+import { UpdateEventDto } from "./dto/update-event.dto";
+import { EventStatus } from "src/common/enums/event-status.enum";
 
 @Injectable()
 export class EventsService {
-  eventRepo: any;
-  categoryService: any;
   constructor(
     @InjectRepository(Event) private eventRepository: Repository<Event>,
+    private readonly categoryService: CategoryService,
   ) {}
 
-  async create(dto: CreateEventDto) {
-    const category = await this.categoryService.findOne(dto.categoryId);
-    const event = this.eventRepo.create({
-      title: dto.title,
-      date: dto.date,
-      category,
-    });
-    return this.eventRepo.save(event);
-  }
+  async create(
+    dto: CreateEventDto,
+    coverImage?: Express.Multer.File,
+  ): Promise<Event> {
+    const category = await this.categoryService.findOne(dto.category);
+    if (!category) {
+      throw new BadRequestException(
+        `Category with ID ${dto.category} not found.`,
+      );
+    }
 
-  findAll() {
-    return this.eventRepo.find();
-  }
-
-  async createEvent(dto: CreateEventDto): Promise<Event> {
-    const category = await this.categoryService.findOne(dto.categoryId);
     const newEvent = this.eventRepository.create({
-      ...dto,
-      category,
+      eventName: dto.title,
+      eventDescription: dto.description,
+      eventDate: new Date(dto.startDate),
+      eventClosingDate: new Date(dto.endDate),
+      category: category,
+      status: dto.status ?? EventStatus.Draft,
+      eventImage: coverImage ? coverImage.path : null,
     });
     return this.eventRepository.save(newEvent);
   }
 
+  // findAll() {
+  //   return this.eventRepository.find();
+  // }
+
+  // async createEvent(dto: CreateEventDto): Promise<Event> {
+  //   const category = await this.categoryService.findOne(dto.category);
+  //   const newEvent = this.eventRepository.create({
+  //     ...dto,
+  //     category,
+  //   });
+  //   return this.eventRepository.save(newEvent);
+  // }
+
   async getAllEvents(
-    page?: number,
-    limit?: number,
-    filters?: { name?: string; category?: string; location?: string },
+    page: number = 1,
+    limit: number = 10,
+    filters?: {
+      name?: string;
+      category?: string;
+      location?: string;
+      status?: EventStatus;
+      startDate?: string;
+      endDate?: string;
+    },
   ): Promise<PaginatedResult<Event>> {
-    const query = this.eventRepository.createQueryBuilder("event");
+    const query = this.eventRepository
+      .createQueryBuilder("event")
+      .leftJoinAndSelect("event.category", "category");
 
     // Filtering logic
     if (filters.name) {
@@ -52,9 +80,13 @@ export class EventsService {
     }
 
     if (filters.category) {
-      query.andWhere("LOWER(event.eventCategory) LIKE LOWER(:category)", {
-        category: `%${filters.category}%`,
-      });
+      query.andWhere(
+        "category.id = :categoryId OR LOWER(category.name) LIKE LOWER(:categoryName)",
+        {
+          categoryId: filters.category,
+          categoryName: `%${filters.category}%`,
+        },
+      );
     }
 
     if (filters.location) {
@@ -83,19 +115,58 @@ export class EventsService {
   async getEventById(id: string): Promise<Event> {
     const event = await this.eventRepository.findOne({
       where: { id },
-      relations: ["tickets", "specialGuests"],
+      relations: [
+        "category",
+        "tickets",
+        "specialGuests",
+        "collaborators",
+        "sponsors",
+        "posters",
+        "eventGallery",
+      ],
     });
     if (!event) throw new NotFoundException("Event not found");
     return event;
   }
 
-  async updateEvent(id: string, dto: Partial<CreateEventDto>): Promise<Event> {
-    if (dto.categoryId) {
-      const category = await this.categoryService.findOne(dto.categoryId);
-      dto.category = category.id; // Ensure proper typing for category
-      delete dto.categoryId;
+  async updateEvent(
+    id: string,
+    dto: UpdateEventDto,
+    coverImage?: Express.Multer.File,
+  ): Promise<Event> {
+    const event = await this.getEventById(id);
+
+    const updatePayload: DeepPartial<Event> = {};
+
+    if (dto.title) updatePayload.eventName = dto.title;
+    if (dto.description) updatePayload.eventDescription = dto.description;
+    if (dto.startDate) updatePayload.eventDate = new Date(dto.startDate);
+    if (dto.endDate) updatePayload.eventClosingDate = new Date(dto.endDate);
+    if (dto.status) updatePayload.status = dto.status;
+
+    if (dto.category) {
+      const category = await this.categoryService.findOne(dto.category);
+      if (!category) {
+        throw new BadRequestException(
+          `Category with ID ${dto.category} not found.`,
+        );
+      }
+      updatePayload.category = category;
+    } else {
+      delete updatePayload.category;
     }
-    await this.eventRepository.update(id, dto as DeepPartial<Event>);
+
+    if (coverImage) {
+      // TODO: Optionally delete the old image file from storage
+      updatePayload.eventImage = coverImage.path;
+    } else {
+      // Ensure image is not accidentally removed if not provided in DTO
+      delete updatePayload.eventImage;
+    }
+
+    const updatedEvent = this.eventRepository.merge(event, updatePayload);
+    await this.eventRepository.save(updatedEvent);
+
     return this.getEventById(id);
   }
 
@@ -120,20 +191,30 @@ export class EventsService {
     page = 1,
     limit = 10,
   ) {
+    const whereOptions: FindOptionsWhere<Event> = {};
+
+    if (category) {
+      const categoryEntity = await this.categoryService
+        .findOne(category)
+        .catch(() => null);
+      if (categoryEntity) {
+        whereOptions.category = { id: categoryEntity.id };
+      } else {
+        return { data: [], total: 0, page, limit, totalPages: 0 };
+      }
+    }
+
+    if (location) {
+      whereOptions.country = Like(`%${location}%`);
+    }
+
     const offset = (page - 1) * limit;
 
-    // Fetch events from the database
-    const events = await this.eventRepository.find({
-      where: {
-        ...(category && {
-          category: await this.categoryService.findOne(category),
-        }),
-        ...(location && { location }),
-      } as Partial<Event>, // Ensure TypeORM understands the structure
-    });
+    const [allMatchingEvents, totalCountBeforeFuzzy] =
+      await this.eventRepository.findAndCount({ where: whereOptions });
 
     // Apply fuzzy matching on the event name
-    const filteredEvents = events.filter((event) => {
+    const filteredEvents = allMatchingEvents.filter((event) => {
       const score = fuzzball.ratio(
         query.toLowerCase(),
         event.eventName.toLowerCase(),
@@ -159,5 +240,49 @@ export class EventsService {
     };
   }
 
-  c853433e47ca51f47fb67b7d9df970af4d574;
+  async publish(id: string): Promise<Event> {
+    const event = await this.getEventById(id);
+    if (event.status === EventStatus.Published) {
+      return event;
+    }
+
+    event.status = EventStatus.Published;
+    return this.eventRepository.save(event);
+  }
+
+  async unpublish(id: string): Promise<Event> {
+    const event = await this.getEventById(id);
+    if (event.status !== EventStatus.Published) {
+      return event;
+    }
+    event.status = EventStatus.Draft;
+    return this.eventRepository.save(event);
+  }
+
+  async cancel(
+    id: string,
+    cancellationDetails: { reason: string; refundPolicy: string },
+  ): Promise<Event> {
+    const event = await this.getEventById(id);
+
+    event.status = EventStatus.Cancelled;
+
+    return this.eventRepository.save(event);
+  }
+
+  async postpone(
+    id: string,
+    postponementDetails: {
+      newStartDate: Date;
+      newEndDate: Date;
+      reason: string;
+    },
+  ): Promise<Event> {
+    const event = await this.getEventById(id);
+
+    event.eventDate = postponementDetails.newStartDate;
+    event.eventClosingDate = postponementDetails.newEndDate;
+
+    return this.eventRepository.save(event);
+  }
 }

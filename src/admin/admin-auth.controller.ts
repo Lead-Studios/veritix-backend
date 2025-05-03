@@ -49,7 +49,7 @@ export class AdminAuthController {
   @Post("reset-password")
   @HttpCode(200)
   async resetPassword(
-    @Query('token') token: string,
+    @Query("token") token: string,
     @Body() passwordDto: ChangePasswordDto,
   ) {
     return this.adminAuthService.resetPassword(token, passwordDto);
@@ -63,9 +63,7 @@ export class AdminAuthController {
 
   @Get("verify-email")
   @HttpCode(200)
-  async verifyEmail(
-    @Query("token") token: string,
-  ) {
+  async verifyEmail(@Query("token") token: string) {
     return this.adminAuthService.verifyEmail(token);
   }
 

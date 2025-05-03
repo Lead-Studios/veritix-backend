@@ -6,65 +6,64 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   JoinColumn,
-} from "typeorm"
-import { Event } from "../../../events/entities/event.entity"
-import { DiscountType } from "./pricing-rule.entity"
+} from "typeorm";
+import { Event } from "../../../events/entities/event.entity";
+import { DiscountType } from "./pricing-rule.entity";
 
 @Entity()
 export class DiscountCode {
   @PrimaryGeneratedColumn("uuid")
-  id: string
+  id: string;
 
   @Column()
-  code: string
+  code: string;
 
   @Column()
-  name: string
+  name: string;
 
   @Column({ nullable: true })
-  description: string
+  description: string;
 
   @ManyToOne(() => Event)
   @JoinColumn()
-  event: Event
+  event: Event;
 
   @Column()
-  eventId: string
+  eventId: string;
 
   @Column({
     type: "enum",
     enum: DiscountType,
   })
-  discountType: DiscountType
+  discountType: DiscountType;
 
   @Column({ type: "decimal", precision: 10, scale: 2 })
-  discountValue: number
+  discountValue: number;
 
   @Column({ default: true })
-  isActive: boolean
+  isActive: boolean;
 
   @Column({ nullable: true })
-  startDate: Date
+  startDate: Date;
 
   @Column({ nullable: true })
-  endDate: Date
+  endDate: Date;
 
   @Column({ default: -1 })
-  maxUses: number // -1 means unlimited
+  maxUses: number; // -1 means unlimited
 
   @Column({ default: 0 })
-  usedCount: number
+  usedCount: number;
 
   @Column({ default: 1 })
-  maxUsesPerUser: number
+  maxUsesPerUser: number;
 
   @Column({ nullable: true, type: "simple-array" })
-  allowedTicketTypes: string[]
+  allowedTicketTypes: string[];
 
   @CreateDateColumn()
-  createdAt: Date
+  createdAt: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date
+  updatedAt: Date;
 }
-

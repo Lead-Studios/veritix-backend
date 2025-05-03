@@ -17,8 +17,12 @@ import { Repository } from "typeorm";
 import { FindOneByEmailProvider } from "./providers/find-one-by-email.provider";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { AuthService } from "src/auth/providers/auth.service";
-import { HashingProvider } from 'src/admin/providers/hashing-services';
-import { ChangePasswordDto, ProfileImageDto, UpdateProfileDto } from './dto/update-profile.dto';
+import { HashingProvider } from "src/admin/providers/hashing-services";
+import {
+  ChangePasswordDto,
+  ProfileImageDto,
+  UpdateProfileDto,
+} from "./dto/update-profile.dto";
 
 @Injectable()
 export class UsersService {
@@ -40,16 +44,15 @@ export class UsersService {
   ) {}
   private readonly logger = new Logger(UsersService.name);
 
- 
-
   public async create(
     createUserDto: CreateUserDto,
-  ): Promise<{ message: string; user: CreateUserDto, token: string }> {
-    const { user, token } = await this.createUserProvider.createUser(createUserDto);
+  ): Promise<{ message: string; user: CreateUserDto; token: string }> {
+    const { user, token } =
+      await this.createUserProvider.createUser(createUserDto);
     this.logger.log(`User created: ${JSON.stringify(user, null, 2)}`);
     return {
-      message: 'A new user has been created successfully',
-      user: user, 
+      message: "A new user has been created successfully",
+      user: user,
       token: token,
     };
   }
@@ -94,16 +97,16 @@ export class UsersService {
 
   public async findOneById(id: number): Promise<User> {
     // Double-check ID validity
-    if (typeof id !== 'number' || isNaN(id) || id <= 0) {
+    if (typeof id !== "number" || isNaN(id) || id <= 0) {
       throw new NotFoundException(`Invalid user ID: ${id}`);
     }
-    
+
     const user = await this.userRepository.findOneBy({ id });
-    
+
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
-    
+
     return user;
   }
 
@@ -163,7 +166,6 @@ export class UsersService {
   }
 
   async updateProfile(id: number, updateData: UpdateProfileDto): Promise<User> {
-
     const allowedUpdates = {
       userName: updateData.userName,
       email: updateData.email,
@@ -173,29 +175,31 @@ export class UsersService {
       await this.userRepository.update(id, allowedUpdates);
     } catch (error) {
       this.logger.error(`Error updating user: ${error.message}`);
-      throw new BadRequestException('Failed to update user');
+      throw new BadRequestException("Failed to update user");
     }
     this.logger.log(`User updated: ${JSON.stringify(allowedUpdates, null, 2)}`);
     return this.findById(id);
   }
 
-  async changePassword(
-    id: number,
-    dto: ChangePasswordDto,
-  ): Promise<string> {
+  async changePassword(id: number, dto: ChangePasswordDto): Promise<string> {
     const user = await this.findById(id);
     const isValidPassword = await this.hashingProvider.comparePassword(
       dto.currentPassword,
       user.password,
     );
 
-    if (!isValidPassword) throw new BadRequestException('Invalid current password');
+    if (!isValidPassword)
+      throw new BadRequestException("Invalid current password");
 
     if (dto.currentPassword === dto.newPassword) {
-      throw new BadRequestException('New password must be different from the current password');
+      throw new BadRequestException(
+        "New password must be different from the current password",
+      );
     }
 
-    const hashedPassword = await this.hashingProvider.hashPassword(dto.newPassword);
+    const hashedPassword = await this.hashingProvider.hashPassword(
+      dto.newPassword,
+    );
     await this.userRepository.update(id, { password: hashedPassword });
     return (await this.findById(id)).password;
   }

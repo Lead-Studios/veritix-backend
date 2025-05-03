@@ -12,27 +12,32 @@ export class EventDashboardService {
   ) {}
 
   async getDashboardMetrics(eventId: string) {
-    const event = await this.eventRepository.findOne({ where: { id: eventId } });
+    const event = await this.eventRepository.findOne({
+      where: { id: eventId },
+    });
     if (!event) {
-      throw new Error('Event not found');
+      throw new Error("Event not found");
     }
 
-    const ticketsSold = await this.ticketRepository.count({ where: { eventId: event.id } });
+    const ticketsSold = await this.ticketRepository.count({
+      where: { eventId: event.id },
+    });
     const totalRevenue = await this.ticketRepository
-      .createQueryBuilder('ticket')
-      .select('SUM(ticket.price)', 'total')
-      .where('ticket.eventId = :eventId', { eventId })
+      .createQueryBuilder("ticket")
+      .select("SUM(ticket.price)", "total")
+      .where("ticket.eventId = :eventId", { eventId })
       .getRawOne();
 
     const totalRevenueValue = totalRevenue.total || 0;
     const totalProfit = totalRevenueValue - totalRevenueValue * 0.1;
     const totalTicketQuantity = await this.ticketRepository
-    .createQueryBuilder('ticket')
-    .select('SUM(ticket.quantity)', 'totalQuantity')
-    .where('ticket.eventId = :eventId', { eventId })
-    .getRawOne();
+      .createQueryBuilder("ticket")
+      .select("SUM(ticket.quantity)", "totalQuantity")
+      .where("ticket.eventId = :eventId", { eventId })
+      .getRawOne();
 
-  const availableTickets = (totalTicketQuantity.totalQuantity || 0) - ticketsSold;
+    const availableTickets =
+      (totalTicketQuantity.totalQuantity || 0) - ticketsSold;
 
     return {
       eventName: event.eventName,

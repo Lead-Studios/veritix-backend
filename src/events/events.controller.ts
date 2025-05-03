@@ -1,351 +1,380 @@
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Body, 
-  Patch, 
-  Param, 
-  Delete, 
-  UseGuards, 
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
   Query,
   UseInterceptors,
-  UploadedFile 
-} from '@nestjs/common';
-import { 
-  ApiTags, 
-  ApiOperation, 
-  ApiResponse, 
-  ApiBearerAuth, 
-  ApiParam, 
+  UploadedFile,
+} from "@nestjs/common";
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
   ApiQuery,
   ApiBody,
-  ApiConsumes 
-} from '@nestjs/swagger';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { EventsService } from './events.service';
-import { CreateEventDto } from './dto/create-event.dto';
-import { UpdateEventDto } from './dto/update-event.dto';
-import { JwtAuthGuard } from 'security/guards/jwt-auth.guard';
-import { RolesGuard } from 'security/guards/rolesGuard/roles.guard';
-import { RoleDecorator } from 'security/decorators/roles.decorator';
-import { UserRole } from 'src/common/enums/users-roles.enum';
-import { Event } from './entities/event.entity';
+  ApiConsumes,
+} from "@nestjs/swagger";
+import { FileInterceptor } from "@nestjs/platform-express";
+import { EventsService } from "./events.service";
+import { CreateEventDto } from "./dto/create-event.dto";
+import { UpdateEventDto } from "./dto/update-event.dto";
+import { JwtAuthGuard } from "security/guards/jwt-auth.guard";
+import { RolesGuard } from "security/guards/rolesGuard/roles.guard";
+import { RoleDecorator } from "security/decorators/roles.decorator";
+import { UserRole } from "src/common/enums/users-roles.enum";
+import { Event } from "./entities/event.entity";
+import { EventStatus } from "../common/enums/event-status.enum";
 
-@ApiTags('Events')
+@ApiTags("Events")
 @ApiBearerAuth()
-@Controller('events')
+@Controller("events")
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class EventsController {
   constructor(private readonly eventsService: EventsService) {}
 
   @Post()
-  @RoleDecorator(UserRole.ADMIN, UserRole.ORGANIZER)
-  @UseInterceptors(FileInterceptor('coverImage'))
+  @RoleDecorator(UserRole.Admin, UserRole.Organizer)
+  @UseInterceptors(FileInterceptor("coverImage"))
   @ApiOperation({
-    summary: 'Create new event',
-    description: 'Create a new event with all its details'
+    summary: "Create new event",
+    description: "Create a new event with all its details",
   })
-  @ApiConsumes('multipart/form-data')
+  @ApiConsumes("multipart/form-data")
   @ApiBody({
-    description: 'Event creation payload with optional cover image',
-    type: CreateEventDto
+    description: "Event creation payload with optional cover image",
+    type: CreateEventDto,
   })
   @ApiResponse({
     status: 201,
-    description: 'Event created successfully',
-    type: Event
+    description: "Event created successfully",
+    type: Event,
   })
-  @ApiResponse({ status: 400, description: 'Invalid input data' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - insufficient permissions' })
+  @ApiResponse({ status: 400, description: "Invalid input data" })
+  @ApiResponse({ status: 401, description: "Unauthorized" })
+  @ApiResponse({
+    status: 403,
+    description: "Forbidden - insufficient permissions",
+  })
   create(
     @Body() createEventDto: CreateEventDto,
-    @UploadedFile() coverImage?: Express.Multer.File
+    @UploadedFile() coverImage?: Express.Multer.File,
   ) {
     return this.eventsService.create(createEventDto, coverImage);
   }
 
   @Get()
   @ApiOperation({
-    summary: 'Get all events',
-    description: 'Retrieve all events with optional filtering and pagination'
+    summary: "Get all events",
+    description: "Retrieve all events with optional filtering and pagination",
   })
   @ApiQuery({
-    name: 'page',
+    name: "page",
     required: false,
-    description: 'Page number for pagination',
-    type: Number
+    description: "Page number for pagination",
+    type: Number,
   })
   @ApiQuery({
-    name: 'limit',
+    name: "limit",
     required: false,
-    description: 'Number of items per page',
-    type: Number
+    description: "Number of items per page",
+    type: Number,
   })
   @ApiQuery({
-    name: 'search',
+    name: "name",
     required: false,
-    description: 'Search term for event title or description'
+    description: "Search term for event title or description",
   })
   @ApiQuery({
-    name: 'category',
+    name: "location", // Added location filter
     required: false,
-    description: 'Filter by event category'
+    description: "Filter by event location (country, state, street, etc.)",
   })
   @ApiQuery({
-    name: 'startDate',
+    name: "category",
     required: false,
-    description: 'Filter events starting from this date'
+    description: "Filter by event category",
   })
   @ApiQuery({
-    name: 'endDate',
+    name: "startDate",
     required: false,
-    description: 'Filter events until this date'
+    description: "Filter events starting from this date",
   })
   @ApiQuery({
-    name: 'status',
+    name: "endDate",
     required: false,
-    description: 'Filter by event status'
+    description: "Filter events until this date",
+  })
+  @ApiQuery({
+    name: "status",
+    enum: EventStatus,
+    required: false,
+    description: "Filter by event status (e.g., Upcoming, Published, Draft)",
   })
   @ApiResponse({
     status: 200,
-    description: 'List of events with pagination metadata',
-    type: [Event]
+    description: "List of events with pagination metadata",
+    type: [Event],
   })
   findAll(
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
-    @Query('search') search?: string,
-    @Query('category') category?: string,
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
-    @Query('status') status?: string
+    @Query("page") page?: number,
+    @Query("limit") limit?: number,
+    @Query("name") name?: string,
+    @Query("location") location?: string,
+    @Query("category") category?: string,
+    @Query("startDate") startDate?: string,
+    @Query("endDate") endDate?: string,
+    @Query("status") status?: EventStatus,
   ) {
-    return this.eventsService.findAll({
-      page,
-      limit,
-      search,
+    return this.eventsService.getAllEvents(page, limit, {
+      name,
+      location,
       category,
       startDate,
       endDate,
-      status
+      status,
     });
   }
 
-  @Get(':id')
+  @Get(":id")
   @ApiOperation({
-    summary: 'Get event by ID',
-    description: 'Retrieve detailed information about a specific event'
+    summary: "Get event by ID",
+    description: "Retrieve detailed information about a specific event",
   })
   @ApiParam({
-    name: 'id',
-    description: 'Event ID',
-    example: '123e4567-e89b-12d3-a456-426614174000'
+    name: "id",
+    description: "Event ID",
+    example: "123e4567-e89b-12d3-a456-426614174000",
   })
   @ApiResponse({
     status: 200,
-    description: 'Event details retrieved successfully',
-    type: Event
+    description: "Event details retrieved successfully",
+    type: Event,
   })
-  @ApiResponse({ status: 404, description: 'Event not found' })
-  findOne(@Param('id') id: string) {
-    return this.eventsService.findOne(id);
+  @ApiResponse({ status: 404, description: "Event not found" })
+  findOne(@Param("id") id: string) {
+    return this.eventsService.getEventById(id);
   }
 
-  @Patch(':id')
-  @RoleDecorator(UserRole.ADMIN, UserRole.ORGANIZER)
-  @UseInterceptors(FileInterceptor('coverImage'))
+  @Patch(":id")
+  @RoleDecorator(UserRole.Admin, UserRole.Organizer)
+  @UseInterceptors(FileInterceptor("coverImage"))
   @ApiOperation({
-    summary: 'Update event',
-    description: 'Update an existing event\'s details'
+    summary: "Update event",
+    description: "Update an existing event's details",
   })
   @ApiParam({
-    name: 'id',
-    description: 'Event ID',
-    example: '123e4567-e89b-12d3-a456-426614174000'
+    name: "id",
+    description: "Event ID",
+    example: "123e4567-e89b-12d3-a456-426614174000",
   })
-  @ApiConsumes('multipart/form-data')
+  @ApiConsumes("multipart/form-data")
   @ApiBody({
-    description: 'Event update payload with optional cover image',
-    type: UpdateEventDto
+    description: "Event update payload with optional cover image",
+    type: UpdateEventDto,
   })
   @ApiResponse({
     status: 200,
-    description: 'Event updated successfully',
-    type: Event
+    description: "Event updated successfully",
+    type: Event,
   })
-  @ApiResponse({ status: 400, description: 'Invalid input data' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - insufficient permissions' })
-  @ApiResponse({ status: 404, description: 'Event not found' })
+  @ApiResponse({ status: 400, description: "Invalid input data" })
+  @ApiResponse({ status: 401, description: "Unauthorized" })
+  @ApiResponse({
+    status: 403,
+    description: "Forbidden - insufficient permissions",
+  })
+  @ApiResponse({ status: 404, description: "Event not found" })
   update(
-    @Param('id') id: string,
+    @Param("id") id: string,
     @Body() updateEventDto: UpdateEventDto,
-    @UploadedFile() coverImage?: Express.Multer.File
+    @UploadedFile() coverImage?: Express.Multer.File,
   ) {
-    return this.eventsService.update(id, updateEventDto, coverImage);
+    return this.eventsService.updateEvent(id, updateEventDto, coverImage);
   }
 
-  @Delete(':id')
-  @RoleDecorator(UserRole.ADMIN)
+  @Delete(":id")
+  @RoleDecorator(UserRole.Admin)
   @ApiOperation({
-    summary: 'Delete event',
-    description: 'Delete an event and all associated data'
+    summary: "Delete event",
+    description: "Delete an event and all associated data",
   })
   @ApiParam({
-    name: 'id',
-    description: 'Event ID',
-    example: '123e4567-e89b-12d3-a456-426614174000'
+    name: "id",
+    description: "Event ID",
+    example: "123e4567-e89b-12d3-a456-426614174000",
   })
-  @ApiResponse({ status: 200, description: 'Event deleted successfully' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - insufficient permissions' })
-  @ApiResponse({ status: 404, description: 'Event not found' })
-  remove(@Param('id') id: string) {
-    return this.eventsService.remove(id);
+  @ApiResponse({ status: 200, description: "Event deleted successfully" })
+  @ApiResponse({ status: 401, description: "Unauthorized" })
+  @ApiResponse({
+    status: 403,
+    description: "Forbidden - insufficient permissions",
+  })
+  @ApiResponse({ status: 404, description: "Event not found" })
+  remove(@Param("id") id: string) {
+    return this.eventsService.deleteEvent(id);
   }
 
-  @Post(':id/publish')
-  @RoleDecorator(UserRole.ADMIN, UserRole.ORGANIZER)
+  @Post(":id/publish")
+  @RoleDecorator(UserRole.Admin, UserRole.Organizer)
   @ApiOperation({
-    summary: 'Publish event',
-    description: 'Make an event visible to the public'
+    summary: "Publish event",
+    description: "Make an event visible to the public",
   })
   @ApiParam({
-    name: 'id',
-    description: 'Event ID',
-    example: '123e4567-e89b-12d3-a456-426614174000'
+    name: "id",
+    description: "Event ID",
+    example: "123e4567-e89b-12d3-a456-426614174000",
   })
   @ApiResponse({
     status: 200,
-    description: 'Event published successfully',
-    type: Event
+    description: "Event published successfully",
+    type: Event,
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - insufficient permissions' })
-  @ApiResponse({ status: 404, description: 'Event not found' })
-  publish(@Param('id') id: string) {
+  @ApiResponse({ status: 401, description: "Unauthorized" })
+  @ApiResponse({
+    status: 403,
+    description: "Forbidden - insufficient permissions",
+  })
+  @ApiResponse({ status: 404, description: "Event not found" })
+  publish(@Param("id") id: string) {
     return this.eventsService.publish(id);
   }
 
-  @Post(':id/unpublish')
-  @RoleDecorator(UserRole.ADMIN, UserRole.ORGANIZER)
+  @Post(":id/unpublish")
+  @RoleDecorator(UserRole.Admin, UserRole.Organizer)
   @ApiOperation({
-    summary: 'Unpublish event',
-    description: 'Hide an event from the public'
+    summary: "Unpublish event",
+    description: "Hide an event from the public",
   })
   @ApiParam({
-    name: 'id',
-    description: 'Event ID',
-    example: '123e4567-e89b-12d3-a456-426614174000'
+    name: "id",
+    description: "Event ID",
+    example: "123e4567-e89b-12d3-a456-426614174000",
   })
   @ApiResponse({
     status: 200,
-    description: 'Event unpublished successfully',
-    type: Event
+    description: "Event unpublished successfully",
+    type: Event,
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - insufficient permissions' })
-  @ApiResponse({ status: 404, description: 'Event not found' })
-  unpublish(@Param('id') id: string) {
+  @ApiResponse({ status: 401, description: "Unauthorized" })
+  @ApiResponse({
+    status: 403,
+    description: "Forbidden - insufficient permissions",
+  })
+  @ApiResponse({ status: 404, description: "Event not found" })
+  unpublish(@Param("id") id: string) {
     return this.eventsService.unpublish(id);
   }
 
-  @Post(':id/cancel')
-  @RoleDecorator(UserRole.ADMIN, UserRole.ORGANIZER)
+  @Post(":id/cancel")
+  @RoleDecorator(UserRole.Admin, UserRole.Organizer)
   @ApiOperation({
-    summary: 'Cancel event',
-    description: 'Cancel an event and handle all associated operations'
+    summary: "Cancel event",
+    description: "Cancel an event and handle all associated operations",
   })
   @ApiParam({
-    name: 'id',
-    description: 'Event ID',
-    example: '123e4567-e89b-12d3-a456-426614174000'
+    name: "id",
+    description: "Event ID",
+    example: "123e4567-e89b-12d3-a456-426614174000",
   })
   @ApiBody({
-    description: 'Cancellation details',
+    description: "Cancellation details",
     schema: {
-      type: 'object',
+      type: "object",
       properties: {
         reason: {
-          type: 'string',
-          description: 'Reason for cancellation',
-          example: 'Weather conditions'
+          type: "string",
+          description: "Reason for cancellation",
+          example: "Weather conditions",
         },
         refundPolicy: {
-          type: 'string',
-          description: 'Policy for handling refunds',
-          example: 'Full refund within 30 days'
-        }
-      }
-    }
+          type: "string",
+          description: "Policy for handling refunds",
+          example: "Full refund within 30 days",
+        },
+      },
+    },
   })
   @ApiResponse({
     status: 200,
-    description: 'Event cancelled successfully',
-    type: Event
+    description: "Event cancelled successfully",
+    type: Event,
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - insufficient permissions' })
-  @ApiResponse({ status: 404, description: 'Event not found' })
+  @ApiResponse({ status: 401, description: "Unauthorized" })
+  @ApiResponse({
+    status: 403,
+    description: "Forbidden - insufficient permissions",
+  })
+  @ApiResponse({ status: 404, description: "Event not found" })
   cancel(
-    @Param('id') id: string,
-    @Body() cancellationDetails: { reason: string; refundPolicy: string }
+    @Param("id") id: string,
+    @Body() cancellationDetails: { reason: string; refundPolicy: string },
   ) {
     return this.eventsService.cancel(id, cancellationDetails);
   }
 
-  @Post(':id/postpone')
-  @RoleDecorator(UserRole.ADMIN, UserRole.ORGANIZER)
+  @Post(":id/postpone")
+  @RoleDecorator(UserRole.Admin, UserRole.Organizer)
   @ApiOperation({
-    summary: 'Postpone event',
-    description: 'Change the date of an event and handle notifications'
+    summary: "Postpone event",
+    description: "Change the date of an event and handle notifications",
   })
   @ApiParam({
-    name: 'id',
-    description: 'Event ID',
-    example: '123e4567-e89b-12d3-a456-426614174000'
+    name: "id",
+    description: "Event ID",
+    example: "123e4567-e89b-12d3-a456-426614174000",
   })
   @ApiBody({
-    description: 'Postponement details',
+    description: "Postponement details",
     schema: {
-      type: 'object',
+      type: "object",
       properties: {
         newStartDate: {
-          type: 'string',
-          format: 'date-time',
-          description: 'New start date and time',
-          example: '2025-05-30T18:00:00Z'
+          type: "string",
+          format: "date-time",
+          description: "New start date and time",
+          example: "2025-05-30T18:00:00Z",
         },
         newEndDate: {
-          type: 'string',
-          format: 'date-time',
-          description: 'New end date and time',
-          example: '2025-05-30T23:00:00Z'
+          type: "string",
+          format: "date-time",
+          description: "New end date and time",
+          example: "2025-05-30T23:00:00Z",
         },
         reason: {
-          type: 'string',
-          description: 'Reason for postponement',
-          example: 'Venue maintenance'
-        }
-      }
-    }
+          type: "string",
+          description: "Reason for postponement",
+          example: "Venue maintenance",
+        },
+      },
+    },
   })
   @ApiResponse({
     status: 200,
-    description: 'Event postponed successfully',
-    type: Event
+    description: "Event postponed successfully",
+    type: Event,
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - insufficient permissions' })
-  @ApiResponse({ status: 404, description: 'Event not found' })
+  @ApiResponse({ status: 401, description: "Unauthorized" })
+  @ApiResponse({
+    status: 403,
+    description: "Forbidden - insufficient permissions",
+  })
+  @ApiResponse({ status: 404, description: "Event not found" })
   postpone(
-    @Param('id') id: string,
-    @Body() postponementDetails: { 
-      newStartDate: Date; 
+    @Param("id") id: string,
+    @Body()
+    postponementDetails: {
+      newStartDate: Date;
       newEndDate: Date;
       reason: string;
-    }
+    },
   ) {
     return this.eventsService.postpone(id, postponementDetails);
   }

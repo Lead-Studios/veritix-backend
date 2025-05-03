@@ -9,13 +9,13 @@ import {
   IsEnum,
 } from "class-validator";
 import { UserRole } from "src/common/enums/users-roles.enum";
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from "@nestjs/swagger";
 
 export class CreateUserDto {
   @ApiProperty({
-    description: 'User\'s first name',
+    description: "User's first name",
     minLength: 3,
-    example: 'John'
+    example: "John",
   })
   @IsString()
   @IsNotEmpty()
@@ -23,9 +23,9 @@ export class CreateUserDto {
   firstName: string;
 
   @ApiProperty({
-    description: 'User\'s last name',
+    description: "User's last name",
     minLength: 3,
-    example: 'Doe'
+    example: "Doe",
   })
   @IsString()
   @IsNotEmpty()
@@ -33,25 +33,26 @@ export class CreateUserDto {
   lastName: string;
 
   @ApiProperty({
-    description: 'User\'s username',
+    description: "User's username",
     minLength: 3,
-    example: 'johndoe'
+    example: "johndoe",
   })
   @IsString()
   @MinLength(3)
   userName: string;
 
   @ApiProperty({
-    description: 'User\'s email address',
-    example: 'john.doe@example.com'
+    description: "User's email address",
+    example: "john.doe@example.com",
   })
   @IsEmail()
   email: string;
 
   @ApiProperty({
-    description: 'User\'s password. Must include uppercase, lowercase, number, and special character',
+    description:
+      "User's password. Must include uppercase, lowercase, number, and special character",
     maxLength: 225,
-    example: 'StrongP@ss123'
+    example: "StrongP@ss123",
   })
   @IsString()
   @MaxLength(225)
@@ -65,9 +66,9 @@ export class CreateUserDto {
   password: string;
 
   @ApiProperty({
-    description: 'User\'s role in the system',
+    description: "User's role in the system",
     enum: UserRole,
-    example: UserRole.USER
+    example: UserRole.User,
   })
   @IsNotEmpty()
   @IsEnum(UserRole)
