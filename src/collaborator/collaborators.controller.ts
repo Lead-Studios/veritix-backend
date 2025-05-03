@@ -34,8 +34,9 @@ import { Collaborator } from "./entities/collaborator.entity";
 @ApiBearerAuth()
 @Controller("collaborators")
 @UseGuards(JwtAuthGuard, RolesGuard)
-export class CollaboratorsController {
-  constructor(private readonly collaboratorsService: CollaboratorsService) {}
+@ApiBearerAuth()
+export class CollaboratorController {
+  constructor(private readonly collaboratorService: CollaboratorService) {}
 
   @Post()
   @RoleDecorator(UserRole.Admin)
