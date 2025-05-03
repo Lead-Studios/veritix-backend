@@ -1,8 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { CreateContactUsDto } from './dto/create-contact-us.dto';
-import { ContactUs } from './entities/contact-us.entity';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { CreateContactUsDto } from "./dto/create-contact-us.dto";
+import { ContactUs } from "./entities/contact-us.entity";
+import { UpdateContactUsDto } from "./dto/update-contact-us.dto";
 
 @Injectable()
 export class ContactUsService {
@@ -18,7 +19,7 @@ export class ContactUsService {
 
   async findAll(): Promise<ContactUs[]> {
     return this.contactUsRepository.find({
-      order: { createdAt: 'DESC' }
+      order: { createdAt: "DESC" },
     });
   }
 
@@ -35,5 +36,17 @@ export class ContactUsService {
     if (result.affected === 0) {
       throw new NotFoundException(`Contact message with ID ${id} not found`);
     }
+  }
+
+  async update(
+    id: string,
+    updateContactUsDto: UpdateContactUsDto,
+  ): Promise<ContactUs> {
+    const contactUs = await this.contactUsRepository.findOne({ where: { id } });
+    if (!contactUs) {
+      throw new Error("Contact message not found");
+    }
+    Object.assign(contactUs, updateContactUsDto);
+    return this.contactUsRepository.save(contactUs);
   }
 }

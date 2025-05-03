@@ -9,28 +9,29 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
+import { Event } from '../../events/entities/event.entity';
 
 @Entity()
 export class User {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn("uuid")
+  id: string;
 
   @Column("varchar", { unique: true, nullable: false })
   userName: string;
 
-  @Column("varchar", { unique: true, nullable: false })
+  @Column()
   email: string;
 
-  @Column("varchar", { nullable: false })
+  @Column()
   password: string;
 
-  @Column("varchar", { nullable: true })
+  @Column()
   firstName: string;
 
-  @Column("varchar", { nullable: true })
+  @Column()
   lastName: string;
 
-  @Column("varchar", { nullable: true, default: '' })
+  @Column("varchar", { nullable: true })
   profileImageUrl: string;
 
   @Column({
@@ -40,17 +41,20 @@ export class User {
   })
   role: UserRole;
 
-  @OneToMany(() => Conference, conference => conference.organizer)
-  conferences: Conference[];  // A user can organize multiple conferences
+  @OneToMany(() => Conference, (conference) => conference.organizer)
+  conferences: Conference[]; // A user can organize multiple conferences
 
   @Column("boolean", { default: true })
   isActive: boolean;
 
-  @Column("boolean", { default: false })
+  @Column({ default: false })
   isVerified: boolean;
 
+  @OneToMany(() => Event, event => event.organizer)
+  events: Event[];
+
   @CreateDateColumn()
-  createdAt:Date;
+  createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;

@@ -68,7 +68,11 @@ export class AdminController {
 
   @Get("users/:id")
   @ApiOperation({ summary: "Retrieve a single user by ID" })
-  @ApiParam({ name: "id", description: "User ID" })
+  @ApiParam({
+    name: "id",
+    description: "User ID",
+    example: "123e4567-e89b-12d3-a456-426614174000",
+  })
   @ApiResponse({
     status: HttpStatus.OK,
     description: "User details",
@@ -84,7 +88,7 @@ export class AdminController {
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     description: "Internal server error",
   })
-  async getUserById(@Param("id") id: number): Promise<UserResponseDto> {
+  async getUserById(@Param("id") id: string): Promise<UserResponseDto> {
     try {
       this.logger.log(`GET /admin/users/${id} - Retrieving user by ID`);
       return await this.adminService.findUserById(id);

@@ -6,7 +6,10 @@ import {
   ManyToOne,
   ManyToMany,
   DeleteDateColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from "typeorm";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { Ticket } from "../../tickets/entities/ticket.entity";
 import { SpecialGuest } from "../../special-guests/entities/special-guest.entity";
 import { Sponsor } from "../../sponsors/sponsor.entity";
@@ -14,121 +17,82 @@ import { Poster } from "../../posters/entities/poster.entity";
 import { Collaborator } from "../../collaborator/entities/collaborator.entity";
 import { EventGallery } from "../../event-gallery/entities/event-gallery.entity";
 import { Category } from "../../category/category.entity";
+import { PricingRule } from "../../dynamic-pricing/pricing/entities/pricing-rule.entity";
+import { User } from "../../users/entities/user.entity";
+import { EventStatus } from "../../common/enums/event-status.enum";
+import { GalleryItem } from "../../event-gallery/entities/gallery-item.entity";
 
 @Entity()
 export class Event {
-
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
+  @Column()
+  title: string;
 
   @Column()
-  eventName: string;
+  description: string;
 
- 
-  @Column({ type: "timestamp" })
-  eventDate: Date;
-
- 
-  @Column({ type: "timestamp" })
-  eventClosingDate: Date;
-
-
-  @Column({ type: "text" })
-  eventDescription: string;
-
- 
   @Column()
-  country: string;
+  startDate: Date;
 
-  
   @Column()
-  state: string;
+  endDate: Date;
 
-  
   @Column()
-  street: string;
+  venue: string;
 
- 
   @Column()
-  localGovernment: string;
+  address: string;
 
- 
-  @Column({ nullable: true })
-  direction: string;
+  @Column()
+  category: string;
 
- 
-  @Column({ nullable: true })
-  eventImage: string;
+  @Column()
+  capacity: number;
 
-  @Column({ default: false })
-  hideEventLocation: boolean;
-
- 
-  @Column({ default: false })
-  eventComingSoon: boolean;
-
-  
-  @Column({ default: false })
-  transactionCharge: boolean;
-
- 
-  @Column({ nullable: true })
-  bankName: string;
-
+  @Column({ type: "enum", enum: EventStatus, default: EventStatus.DRAFT })
+  status: EventStatus;
 
   @Column({ nullable: true })
-  bankAccountNumber: string;
-
- 
-  @Column({ nullable: true })
-  accountName: string;
-
- 
-  @Column({ nullable: true })
-  facebook: string;
-
-umn({ nullable: true })
-  twitter: string;
-
+  cancellationReason: string;
 
   @Column({ nullable: true })
-  instagram: string;
-
-
-  @ManyToMany(() => Sponsor, (sponsor) => sponsor.events)
-  sponsors: Sponsor[];
-
-  @OneToMany(() => Ticket, (ticket) => ticket.event)
-  tickets: Ticket[];
-
-  
-  @OneToMany(() => SpecialGuest, (specialGuest) => specialGuest.event, {
-    nullable: true,
-  })
-  specialGuests: SpecialGuest[] | null;
-
-  
-  @OneToMany(() => Collaborator, (collaborator) => collaborator.event)
-  collaborators: Collaborator[];
-
+  postponementReason: string;
 
   @Column({ default: false })
   isArchived: boolean;
 
-  
-  @DeleteDateColumn()
-  deletedAt?: Date;
+  @ManyToOne(() => User, (user) => user.events)
+  organizer: User;
 
-  
+  @OneToMany(() => GalleryItem, (galleryItem) => galleryItem.event)
+  galleryItems: GalleryItem[];
+
+  @OneToMany(() => Ticket, (ticket) => ticket.event)
+  tickets: Ticket[];
+
+  @OneToMany(() => SpecialGuest, (specialGuest) => specialGuest.event)
+  specialGuests: SpecialGuest[];
+
+  @OneToMany(() => Sponsor, (sponsor) => sponsor.event)
+  sponsors: Sponsor[];
+
   @OneToMany(() => Poster, (poster) => poster.event)
   posters: Poster[];
 
-  
-  @OneToMany(() => EventGallery, (eventGallery) => eventGallery.event)
-  eventGallery: EventGallery[];
+  @OneToMany(() => Collaborator, (collaborator) => collaborator.event)
+  collaborators: Collaborator[];
 
-  
-  @ManyToOne(() => Category, (category) => category.events)
-  category: Category;
+  @OneToMany(() => PricingRule, (pricingRule) => pricingRule.event)
+  pricingRules: PricingRule[];
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+
+  @DeleteDateColumn()
+  deletedAt?: Date;
 }

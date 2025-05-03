@@ -13,11 +13,23 @@ import { TicketPurchaseService } from "./provider/tickets-purchase.service";
 import { User } from "src/users/entities/user.entity";
 import { ConferenceService } from "src/conference/providers/conference.service";
 import { Conference } from "src/conference/entities/conference.entity";
+import { Receipt } from "./entities/receipt.entity";
+import { StripeModule } from "../payment/stripe.module";
+import { PaymentModule } from '../payment/payment.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Ticket, TicketPurchase, Event, User, Conference]),
+    TypeOrmModule.forFeature([
+      Ticket,
+      TicketPurchase,
+      Event,
+      User,
+      Conference,
+      Receipt,
+    ]),
     UsersModule,
+    StripeModule,
+    PaymentModule,
   ],
   controllers: [TicketController, TicketPurchaseController],
   providers: [
