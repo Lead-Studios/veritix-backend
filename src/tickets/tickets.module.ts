@@ -15,6 +15,7 @@ import { ConferenceService } from "src/conference/providers/conference.service";
 import { Conference } from "src/conference/entities/conference.entity";
 import { Receipt } from "./entities/receipt.entity";
 import { StripeModule } from "../payment/stripe.module";
+import { PaymentModule } from '../payment/payment.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { StripeModule } from "../payment/stripe.module";
     ]),
     UsersModule,
     StripeModule,
+    PaymentModule,
   ],
   controllers: [TicketController, TicketPurchaseController],
   providers: [

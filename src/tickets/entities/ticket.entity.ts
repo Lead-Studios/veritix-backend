@@ -9,11 +9,11 @@ import {
 } from "typeorm";
 import { Event } from "../../events/entities/event.entity";
 import { Conference } from "src/conference/entities/conference.entity";
-import { User } from '../../users/entities/user.entity';
+import { User } from "../../users/entities/user.entity";
 
-@Entity('tickets')
+@Entity("tickets")
 export class Ticket {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn("uuid")
   id: string;
 
   @Column()
@@ -25,10 +25,10 @@ export class Ticket {
   @Column()
   quantity: number;
 
-  @Column('decimal', { precision: 10, scale: 2 })
+  @Column("decimal", { precision: 10, scale: 2 })
   pricePerTicket: number;
 
-  @Column('decimal', { precision: 10, scale: 2 })
+  @Column("decimal", { precision: 10, scale: 2 })
   totalAmount: number;
 
   @Column({ default: false })
@@ -61,7 +61,7 @@ export class Ticket {
 
   @Column()
   eventId: string;
-  
+
   @Column({ type: "text" })
   description: string;
 
@@ -81,4 +81,12 @@ export class Ticket {
   @CreateDateColumn()
   purchaseDate: Date;
 
+  @Column()
+  status: string;
+
+  @Column("decimal", { precision: 10, scale: 2 })
+  price: number;
+
+  @Column({ nullable: true })
+  qrCode: string;
 }

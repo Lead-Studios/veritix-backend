@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsNumber, IsEnum, IsUUID, IsBoolean, IsOptional, Min, Max } from 'class-validator';
-import { PriceAdjustmentType, TriggerCondition } from './create-pricing-rule.dto';
+import { PricingRuleType, DiscountType } from '../entities/pricing-rule.entity';
 
 export class UpdatePricingRuleDto {
   @ApiPropertyOptional({
@@ -20,38 +20,78 @@ export class UpdatePricingRuleDto {
   eventId?: string;
 
   @ApiPropertyOptional({
-    description: 'Updated type of price adjustment',
-    enum: PriceAdjustmentType,
-    example: PriceAdjustmentType.PERCENTAGE
+    description: 'Updated type of the pricing rule',
+    enum: PricingRuleType,
+    example: PricingRuleType.EARLY_BIRD
   })
   @IsOptional()
-  @IsEnum(PriceAdjustmentType)
-  adjustmentType?: PriceAdjustmentType;
+  @IsEnum(PricingRuleType)
+  ruleType?: PricingRuleType;
 
   @ApiPropertyOptional({
-    description: 'Updated value of the price adjustment',
+    description: 'Updated type of discount',
+    enum: DiscountType,
+    example: DiscountType.PERCENTAGE
+  })
+  @IsOptional()
+  @IsEnum(DiscountType)
+  discountType?: DiscountType;
+
+  @ApiPropertyOptional({
+    description: 'Updated value of the discount',
     example: 20
   })
   @IsOptional()
   @IsNumber()
-  adjustmentValue?: number;
+  discountValue?: number;
 
   @ApiPropertyOptional({
-    description: 'Updated condition that triggers the price adjustment',
-    enum: TriggerCondition,
-    example: TriggerCondition.TIME_BEFORE_EVENT
-  })
-  @IsOptional()
-  @IsEnum(TriggerCondition)
-  triggerCondition?: TriggerCondition;
-
-  @ApiPropertyOptional({
-    description: 'Updated value that activates the trigger condition',
+    description: 'Updated days before event',
     example: 45
   })
   @IsOptional()
   @IsNumber()
-  triggerValue?: number;
+  daysBeforeEvent?: number;
+
+  @ApiPropertyOptional({
+    description: 'Updated hours before event',
+    example: 12
+  })
+  @IsOptional()
+  @IsNumber()
+  hoursBeforeEvent?: number;
+
+  @ApiPropertyOptional({
+    description: 'Updated minimum tickets',
+    example: 15
+  })
+  @IsOptional()
+  @IsNumber()
+  minimumTickets?: number;
+
+  @ApiPropertyOptional({
+    description: 'Updated minimum purchases',
+    example: 8
+  })
+  @IsOptional()
+  @IsNumber()
+  minimumPurchases?: number;
+
+  @ApiPropertyOptional({
+    description: 'Updated sales threshold',
+    example: 150
+  })
+  @IsOptional()
+  @IsNumber()
+  salesThreshold?: number;
+
+  @ApiPropertyOptional({
+    description: 'Updated price increase amount',
+    example: 15
+  })
+  @IsOptional()
+  @IsNumber()
+  priceIncreaseAmount?: number;
 
   @ApiPropertyOptional({
     description: 'Updated minimum price after adjustment',
@@ -61,25 +101,6 @@ export class UpdatePricingRuleDto {
   @IsNumber()
   @Min(0)
   minimumPrice?: number;
-
-  @ApiPropertyOptional({
-    description: 'Updated maximum price after adjustment',
-    example: 250
-  })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  maximumPrice?: number;
-
-  @ApiPropertyOptional({
-    description: 'Updated priority of the rule',
-    example: 2
-  })
-  @IsOptional()
-  @IsNumber()
-  @Min(1)
-  @Max(100)
-  priority?: number;
 
   @ApiPropertyOptional({
     description: 'Update whether the rule is active',
@@ -96,23 +117,4 @@ export class UpdatePricingRuleDto {
   @IsOptional()
   @IsString()
   description?: string;
-
-  @ApiPropertyOptional({
-    description: 'Updated ticket types this rule applies to',
-    example: ['VIP', 'Regular', 'Early Access']
-  })
-  @IsOptional()
-  @IsString({ each: true })
-  applicableTicketTypes?: string[];
-
-  @ApiPropertyOptional({
-    description: 'Updated configuration options for the rule',
-    example: {
-      stackable: false,
-      roundingMethod: 'floor',
-      decimalPlaces: 0
-    }
-  })
-  @IsOptional()
-  configuration?: Record<string, any>;
 }

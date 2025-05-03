@@ -7,13 +7,16 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Collaborator } from "./entities/collaborator.entity";
 import { CreateCollaboratorDto } from "./dto/create-collaborator.dto";
+import { Event } from "../events/entities/event.entity";
 import * as fs from "fs";
 
 @Injectable()
 export class CollaboratorsService {
   constructor(
     @InjectRepository(Collaborator)
-    private collaboratorRepository: Repository<Collaborator>,
+    private readonly collaboratorRepository: Repository<Collaborator>,
+    @InjectRepository(Event)
+    private readonly eventRepository: Repository<Event>,
   ) {}
 
   async create(
@@ -25,14 +28,16 @@ export class CollaboratorsService {
     }
 
     try {
-      const collaborator = new Collaborator();
-      collaborator.imageUrl = file.path;
-      collaborator.name = createCollaboratorDto.name;
-      collaborator.email = createCollaboratorDto.email;
-      collaborator.eventId = createCollaboratorDto.eventId;
+      const event = await this.eventRepository.findOne({
+        where: { id: createCollaboratorDto.eventId },
+      });
+      if (!event) {
+        throw new NotFoundException("Event not found");
+      }
+
       // Check collaborator limit
       const count = await this.collaboratorRepository.count({
-        where: { eventId: createCollaboratorDto.eventId },
+        where: { event: { id: createCollaboratorDto.eventId } },
       });
 
       if (count >= 5) {
@@ -40,6 +45,13 @@ export class CollaboratorsService {
           "Maximum number of collaborators (5) reached for this event",
         );
       }
+
+      const collaborator = new Collaborator();
+      collaborator.imageUrl = file.path;
+      collaborator.name = createCollaboratorDto.name;
+      collaborator.email = createCollaboratorDto.email;
+      collaborator.event = event;
+
       return this.collaboratorRepository.save(collaborator);
     } catch (error) {
       throw new BadRequestException("Failed to create collaborator");
@@ -61,7 +73,10 @@ export class CollaboratorsService {
   }
 
   async findByEvent(eventId: string): Promise<Collaborator[]> {
-    return this.collaboratorRepository.find({ where: { eventId } });
+    return this.collaboratorRepository.find({
+      where: { event: { id: eventId } },
+      relations: ["event"],
+    });
   }
 
   async update(
@@ -71,10 +86,21 @@ export class CollaboratorsService {
   ): Promise<Collaborator> {
     const collaborator = await this.findOne(id);
     try {
-      if (collaborator.eventId !== updateCollaboratorDto.eventId) {
-        // Check collaborator limit
+      if (
+        updateCollaboratorDto.eventId &&
+        collaborator.event.id !== updateCollaboratorDto.eventId
+      ) {
+        const newEvent = await this.eventRepository.findOne({
+          where: { id: updateCollaboratorDto.eventId },
+        });
+
+        if (!newEvent) {
+          throw new NotFoundException("Event not found");
+        }
+
+        // Check collaborator limit for the new event
         const count = await this.collaboratorRepository.count({
-          where: { eventId: updateCollaboratorDto.eventId },
+          where: { event: { id: updateCollaboratorDto.eventId } },
         });
 
         if (count >= 5) {
@@ -82,8 +108,8 @@ export class CollaboratorsService {
             "Maximum number of collaborators (5) reached for this event",
           );
         }
-      } else {
-        collaborator.eventId = updateCollaboratorDto.eventId;
+
+        collaborator.event = newEvent;
       }
 
       if (updateCollaboratorDto.name) {
@@ -101,6 +127,7 @@ export class CollaboratorsService {
         }
         collaborator.imageUrl = file.path;
       }
+
       return this.collaboratorRepository.save(collaborator);
     } catch (error) {
       throw new BadRequestException("Failed to update collaborator");
@@ -112,10 +139,10 @@ export class CollaboratorsService {
     try {
       if (collaborator.imageUrl && fs.existsSync(collaborator.imageUrl)) {
         fs.unlinkSync(collaborator.imageUrl);
-        const result = await this.collaboratorRepository.delete(id);
-        if (!result.affected) {
-          throw new NotFoundException("Collaborator not found");
-        }
+      }
+      const result = await this.collaboratorRepository.delete(id);
+      if (!result.affected) {
+        throw new NotFoundException("Collaborator not found");
       }
     } catch (error) {
       throw new BadRequestException("Failed to delete collaborator");

@@ -15,12 +15,13 @@ export class GenerateTokenProvider {
   ) {}
 
   public async SignToken<T>(
-    userId: number,
+    userId: string | number,
     expiresIn: string | number,
     payload?: T,
   ) {
     return await this.jwtService.signAsync({
       ...payload,
+      userId: userId.toString(),
       expiresIn,
     });
   }
@@ -30,7 +31,7 @@ export class GenerateTokenProvider {
       this.SignToken(user.id, this.jwtConfiguration.expiresIn, {
         userId: user.id,
         email: user.email,
-        role: user.role
+        role: user.role,
       }),
       this.SignToken(user.id, this.jwtConfiguration.refreshExpiresIn, {
         userId: user.id,
@@ -63,7 +64,7 @@ export class GenerateTokenProvider {
         expiresIn: this.jwtConfiguration.passwordExpiresIn,
         audience: this.jwtConfiguration.audience,
         issuer: this.jwtConfiguration.issuer,
-      }
+      },
     );
 
     return reset_token;
