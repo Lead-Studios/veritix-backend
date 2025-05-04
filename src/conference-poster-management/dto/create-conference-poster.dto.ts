@@ -10,5 +10,5 @@ export class CreateConferencePosterDto {
   @IsUUID()
   conferenceId: string;  
   
-  image: any; // not validated by class-validator. Validation is handled by Multer
+  imageUrl: any; // not validated by class-validator. Validation is handled by Multer
 }
