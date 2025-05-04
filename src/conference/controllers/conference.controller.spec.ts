@@ -1,36 +1,55 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { CreateConferenceDto, UpdateConferenceDto } from '../dto';
-import { Conference } from '../entities/conference.entity';
-import { ConferenceController } from './conference.controller';
-import { ConferenceService } from '../providers/conference.service';
-import { JwtAuthGuard } from 'security/guards/jwt-auth.guard';
-import { RolesGuard } from 'security/guards/rolesGuard/roles.guard';
+import { Test, TestingModule } from "@nestjs/testing";
+import { CreateConferenceDto, UpdateConferenceDto } from "../dto";
+import {
+  Conference,
+  ConferenceVisibility,
+} from "../entities/conference.entity";
+import { ConferenceController } from "./conference.controller";
+import { ConferenceService } from "../providers/conference.service";
+import { JwtAuthGuard } from "security/guards/jwt-auth.guard";
+import { RolesGuard } from "security/guards/rolesGuard/roles.guard";
+import { UserRole } from "src/common/enums/users-roles.enum";
+import { User } from "src/users/entities/user.entity";
 
-const mockConference: Conference = {
-  id: 'test-id',
-  conferenceName: 'Test Conference',
-  conferenceCategory: 'Technology',
+const mockUser: User = {
+  id: "user-1",
+  email: "test@example.com",
+  password: "hashedPassword",
+  firstName: "Test",
+  lastName: "User",
+  role: UserRole.Organizer,
+  conferences: [],
+  createdAt: new Date(),
+  updatedAt: new Date(),
+} as unknown as User;
+
+const mockConference = {
+  id: "test-id",
+  conferenceName: "Test Conference",
+  conferenceCategory: "Technology",
   conferenceDate: new Date(),
   conferenceClosingDate: new Date(),
-  conferenceDescription: 'A test conference',
-  conferenceImage: 'https://example.com/image.jpg',
-  country: 'Nigeria',
-  state: 'Lagos',
-  street: '123 Main St',
-  localGovernment: 'Ikeja',
-  direction: 'Near the mall',
+  conferenceDescription: "A test conference",
+  conferenceImage: "https://example.com/image.jpg",
+  country: "Nigeria",
+  state: "Lagos",
+  street: "123 Main St",
+  localGovernment: "Ikeja",
+  direction: "Near the mall",
   hideLocation: false,
   comingSoon: false,
   transactionCharge: false,
-  bankName: 'Test Bank',
-  bankAccountNumber: '1234567890',
-  accountName: 'Test Account',
-  facebook: 'facebook.com/test',
-  twitter: 'twitter.com/test',
-  instagram: 'instagram.com/test',
+  bankName: "Test Bank",
+  bankAccountNumber: "1234567890",
+  accountName: "Test Account",
+  facebook: "facebook.com/test",
+  twitter: "twitter.com/test",
+  instagram: "instagram.com/test",
   createdAt: new Date(),
   updatedAt: new Date(),
-};
+  visibility: ConferenceVisibility.PUBLIC, // Added missing property
+  organizer: mockUser,
+} as unknown as Conference;
 
 const mockConferenceService = {
   create: jest.fn().mockResolvedValue(mockConference),
@@ -43,7 +62,7 @@ const mockConferenceService = {
 const mockJwtAuthGuard = { canActivate: jest.fn().mockReturnValue(true) };
 const mockRolesGuard = { canActivate: jest.fn().mockReturnValue(true) };
 
-describe('ConferenceController', () => {
+describe("ConferenceController", () => {
   let controller: ConferenceController;
   let service: ConferenceService;
 
@@ -67,35 +86,35 @@ describe('ConferenceController', () => {
     service = module.get<ConferenceService>(ConferenceService);
   });
 
-  it('should be defined', () => {
+  it("should be defined", () => {
     expect(controller).toBeDefined();
   });
 
-  describe('create', () => {
-    it('should create a conference', async () => {
+  describe("create", () => {
+    it("should create a conference", async () => {
       const createDto: CreateConferenceDto = {
-        conferenceName: 'Test Conference',
-        conferenceCategory: 'Technology',
+        conferenceName: "Test Conference",
+        conferenceCategory: "Technology",
         conferenceDate: new Date(),
         conferenceClosingDate: new Date(),
-        conferenceDescription: 'A test conference',
-        conferenceImage: 'https://example.com/image.jpg',
+        conferenceDescription: "A test conference",
+        conferenceImage: "https://example.com/image.jpg",
         location: {
-          country: 'Nigeria',
-          state: 'Lagos',
-          street: '123 Main St',
-          localGovernment: 'Ikeja',
-          direction: 'Near the mall',
+          country: "Nigeria",
+          state: "Lagos",
+          street: "123 Main St",
+          localGovernment: "Ikeja",
+          direction: "Near the mall",
         },
         bankDetails: {
-          bankName: 'Test Bank',
-          bankAccountNumber: '1234567890',
-          accountName: 'Test Account',
+          bankName: "Test Bank",
+          bankAccountNumber: "1234567890",
+          accountName: "Test Account",
         },
         socialMedia: {
-          facebook: 'facebook.com/test',
-          twitter: 'twitter.com/test',
-          instagram: 'instagram.com/test',
+          facebook: "facebook.com/test",
+          twitter: "twitter.com/test",
+          instagram: "instagram.com/test",
         },
       };
 
@@ -104,26 +123,26 @@ describe('ConferenceController', () => {
     });
   });
 
-  describe('findAll', () => {
-    it('should return an array of conferences', async () => {
+  describe("findAll", () => {
+    it("should return an array of conferences", async () => {
       expect(await controller.findAll()).toEqual([mockConference]);
       expect(service.findAll).toHaveBeenCalled();
     });
   });
 
-  describe('findOne', () => {
-    it('should return a single conference', async () => {
-      const id = 'test-id';
+  describe("findOne", () => {
+    it("should return a single conference", async () => {
+      const id = "test-id";
       expect(await controller.findOne(id)).toEqual(mockConference);
       expect(service.findOne).toHaveBeenCalledWith(id);
     });
   });
 
-  describe('update', () => {
-    it('should update a conference', async () => {
-      const id = 'test-id';
+  describe("update", () => {
+    it("should update a conference", async () => {
+      const id = "test-id";
       const updateDto: UpdateConferenceDto = {
-        conferenceName: 'Updated Conference',
+        conferenceName: "Updated Conference",
       };
 
       expect(await controller.update(id, updateDto)).toEqual(mockConference);
@@ -131,9 +150,9 @@ describe('ConferenceController', () => {
     });
   });
 
-  describe('remove', () => {
-    it('should remove a conference', async () => {
-      const id = 'test-id';
+  describe("remove", () => {
+    it("should remove a conference", async () => {
+      const id = "test-id";
       expect(await controller.remove(id)).toBeUndefined();
       expect(service.remove).toHaveBeenCalledWith(id);
     });

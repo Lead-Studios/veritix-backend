@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Collaborator } from './entities/collaborator.entity';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { CollaboratorService } from './collaborators.service';
+import { CollaboratorRole } from './dto/create-collaborator.dto';
 
 describe('CollaboratorService', () => {
   let service: CollaboratorService;
@@ -44,6 +45,8 @@ describe('CollaboratorService', () => {
         email: 'john@example.com',
         image: 'https://example.com/image.jpg',
         conferenceId: '123',
+        eventId: '456',
+        role: CollaboratorRole.VIEWER,
       };
       
       mockRepository.findOne.mockResolvedValue(null);
@@ -66,6 +69,8 @@ describe('CollaboratorService', () => {
         email: 'john@example.com',
         image: 'https://example.com/image.jpg',
         conferenceId: '123',
+        eventId: '456',
+        role: CollaboratorRole.VIEWER,
       };
       
       mockRepository.findOne.mockResolvedValue({ id: '1', ...createDto });
@@ -79,6 +84,8 @@ describe('CollaboratorService', () => {
         email: 'john@example.com',
         image: 'https://example.com/image.jpg',
         conferenceId: '123',
+        eventId: '456',
+        role: CollaboratorRole.VIEWER,
       };
       
       mockRepository.findOne.mockResolvedValue(null);
@@ -96,6 +103,8 @@ describe('CollaboratorService', () => {
         email: 'john@example.com',
         image: 'https://example.com/image.jpg',
         conferenceId: '123',
+        eventId: '456',
+        role: CollaboratorRole.VIEWER,
       };
       
       mockRepository.findOne.mockResolvedValue(collaborator);

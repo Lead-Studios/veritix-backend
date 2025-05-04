@@ -1,8 +1,20 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Conference } from '../entities/conference.entity';
-import { CreateConferenceDto, UpdateConferenceDto } from '../dto';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository, ILike } from "typeorm";
+import {
+  Conference,
+  ConferenceVisibility,
+} from "../entities/conference.entity";
+import {
+  CreateConferenceDto,
+  UpdateConferenceDto,
+  ConferenceFilterDto,
+} from "../dto";
+import { User } from "src/users/entities/user.entity";
 
 @Injectable()
 export class ConferenceService {
@@ -12,8 +24,9 @@ export class ConferenceService {
   ) {}
 
   async create(createConferenceDto: CreateConferenceDto): Promise<Conference> {
-    const { location, bankDetails, socialMedia, ...conferenceData } = createConferenceDto;
-    
+    const { location, bankDetails, socialMedia, ...conferenceData } =
+      createConferenceDto;
+
     const conference = this.conferenceRepository.create({
       ...conferenceData,
       // Flatten location properties
@@ -23,17 +36,17 @@ export class ConferenceService {
       localGovernment: location.localGovernment,
       direction: location.direction,
       hideLocation: location.hideLocation || false,
-      
+
       // Flatten bank details
       bankName: bankDetails.bankName,
       bankAccountNumber: bankDetails.bankAccountNumber,
       accountName: bankDetails.accountName,
-      
+
       // Flatten social media
       facebook: socialMedia?.facebook,
       twitter: socialMedia?.twitter,
       instagram: socialMedia?.instagram,
-      
+
       // Default values
       comingSoon: conferenceData.comingSoon || false,
       transactionCharge: conferenceData.transactionCharge || false,
@@ -47,47 +60,61 @@ export class ConferenceService {
   }
 
   async findOne(id: string): Promise<Conference> {
-    const conference = await this.conferenceRepository.findOne({ where: { id } });
-    
+    const conference = await this.conferenceRepository.findOne({
+      where: { id },
+    });
+
     if (!conference) {
       throw new NotFoundException(`Conference with ID ${id} not found`);
     }
-    
+
     return conference;
   }
 
-  async update(id: string, updateConferenceDto: UpdateConferenceDto): Promise<Conference> {
+  async update(
+    id: string,
+    updateConferenceDto: UpdateConferenceDto,
+  ): Promise<Conference> {
     const conference = await this.findOne(id);
-    
-    const { location, bankDetails, socialMedia, ...conferenceData } = updateConferenceDto;
-    
+
+    const { location, bankDetails, socialMedia, ...conferenceData } =
+      updateConferenceDto;
+
     // Update base conference data
     Object.assign(conference, conferenceData);
-    
+
     // Update location properties if provided
     if (location) {
       if (location.country) conference.country = location.country;
       if (location.state) conference.state = location.state;
       if (location.street) conference.street = location.street;
-      if (location.localGovernment) conference.localGovernment = location.localGovernment;
-      if (location.direction !== undefined) conference.direction = location.direction;
-      if (location.hideLocation !== undefined) conference.hideLocation = location.hideLocation;
+      if (location.localGovernment)
+        conference.localGovernment = location.localGovernment;
+      if (location.direction !== undefined)
+        conference.direction = location.direction;
+      if (location.hideLocation !== undefined)
+        conference.hideLocation = location.hideLocation;
     }
-    
+
     // Update bank details if provided
     if (bankDetails) {
       if (bankDetails.bankName) conference.bankName = bankDetails.bankName;
-      if (bankDetails.bankAccountNumber) conference.bankAccountNumber = bankDetails.bankAccountNumber;
-      if (bankDetails.accountName) conference.accountName = bankDetails.accountName;
+      if (bankDetails.bankAccountNumber)
+        conference.bankAccountNumber = bankDetails.bankAccountNumber;
+      if (bankDetails.accountName)
+        conference.accountName = bankDetails.accountName;
     }
-    
+
     // Update social media if provided
     if (socialMedia) {
-      if (socialMedia.facebook !== undefined) conference.facebook = socialMedia.facebook;
-      if (socialMedia.twitter !== undefined) conference.twitter = socialMedia.twitter;
-      if (socialMedia.instagram !== undefined) conference.instagram = socialMedia.instagram;
+      if (socialMedia.facebook !== undefined)
+        conference.facebook = socialMedia.facebook;
+      if (socialMedia.twitter !== undefined)
+        conference.twitter = socialMedia.twitter;
+      if (socialMedia.instagram !== undefined)
+        conference.instagram = socialMedia.instagram;
     }
-    
+
     return this.conferenceRepository.save(conference);
   }
 
@@ -105,4 +132,80 @@ export class ConferenceService {
     
     return conference;
   }
+  async findAllWithFilters(filter: ConferenceFilterDto, user?: User) {
+    const {
+      name,
+      category,
+      location,
+      visibility,
+      page = 1,
+      limit = 10,
+    } = filter;
+
+    let where: any = {};
+
+    // Apply visibility filter
+    if (visibility) {
+      where.visibility = visibility;
+    } else {
+      // Default to public conferences if no visibility specified
+      where.visibility = ConferenceVisibility.PUBLIC;
+    }
+
+    // Apply search filters
+    if (name) where.conferenceName = ILike(`%${name}%`);
+    if (category) where.conferenceCategory = ILike(`%${category}%`);
+
+    // Apply location filter across all location fields
+    if (location) {
+      where = [
+        { ...where, country: ILike(`%${location}%`) },
+        { ...where, state: ILike(`%${location}%`) },
+        { ...where, street: ILike(`%${location}%`) },
+        { ...where, localGovernment: ILike(`%${location}%`) },
+      ];
+    }
+
+    const [results, totalCount] = await this.conferenceRepository.findAndCount({
+      where,
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { conferenceDate: "DESC" },
+      relations: ["organizer"],
+    });
+
+    // Transform results to match the required format
+    const transformedResults = results.map((conference) => ({
+      id: conference.id,
+      name: conference.conferenceName,
+      category: conference.conferenceCategory,
+      date: conference.conferenceDate,
+      location: {
+        country: conference.country,
+        state: conference.state,
+        street: conference.street,
+        lga: conference.localGovernment,
+      },
+      image: conference.conferenceImage,
+      description: conference.conferenceDescription,
+      visibility: conference.visibility,
+      organizer: {
+        id: conference.organizer.id,
+        name: conference.organizer.userName,
+        firstName: conference.organizer.firstName,
+        lastName: conference.organizer.lastName,
+      },
+    }));
+
+    return {
+      data: transformedResults,
+      meta: {
+        page,
+        limit,
+        totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+      },
+    }
+  }
 }
+

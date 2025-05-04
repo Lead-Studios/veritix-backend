@@ -34,6 +34,14 @@ export class CreateCollaboratorDto {
   eventId: string;
 
   @ApiProperty({
+    description: 'Conference ID associated with the collaborator',
+    example: '456e4567-e89b-12d3-a456-426614174000'
+  })
+  @IsNotEmpty()
+  @IsUUID()
+  conferenceId: string;
+
+  @ApiProperty({
     description: 'Role of the collaborator for the event',
     enum: CollaboratorRole,
     example: CollaboratorRole.EVENT_MANAGER

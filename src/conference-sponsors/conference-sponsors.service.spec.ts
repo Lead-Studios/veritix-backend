@@ -66,7 +66,7 @@ describe('ConferenceSponsorsService', () => {
     sponsors: [],
     createdAt: new Date(),
     updatedAt: new Date(),
-  } as Conference;
+  } as unknown as  Conference;
 
   const mockConferenceSponsor: ConferenceSponsor = {
     id: 'sponsor-1',
