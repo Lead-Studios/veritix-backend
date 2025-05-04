@@ -108,7 +108,7 @@ export class ConferenceSponsorsController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Get all sponsors" })
   @ApiResponse({ status: 200, description: "Return all sponsors." })

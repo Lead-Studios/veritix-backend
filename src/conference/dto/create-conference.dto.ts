@@ -3,6 +3,7 @@ import { Type } from 'class-transformer';
 import { SocialMediaDto } from './socialMedia.dto';
 import { BankDetailsDto } from './bankDetails.dto';
 import { LocationDto } from './location.dto';
+import { ConferenceVisibility } from '../entities/conference.entity';
 
 export class CreateConferenceDto {
   @IsString()
@@ -28,6 +29,10 @@ export class CreateConferenceDto {
   @IsUrl()
   @IsNotEmpty()
   conferenceImage: string;
+
+  @IsString()
+  @IsNotEmpty()
+  visibility: ConferenceVisibility;
 
   @IsNotEmpty()
   location: LocationDto;

@@ -5,7 +5,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { ConferenceSponsorsService } from './conference-sponsors.service';
 import { ConferenceSponsor } from './entities/conference-sponsor.entity';
-import { Conference } from './../conference/entities/conference.entity';
+import { Conference, ConferenceVisibility } from './../conference/entities/conference.entity';
 import { CreateConferenceSponsorDto } from './dto/create-conference-sponsor.dto';
 import { UpdateConferenceSponsorDto } from './dto/update-conference-sponsor.dto';
 import { User } from '../users/entities/user.entity';
@@ -61,6 +61,7 @@ describe('ConferenceSponsorsService', () => {
     endDate: new Date(),
     location: 'Test location',
     organizerId: 'user-1',
+    visibility: ConferenceVisibility.PUBLIC,
     organizer: mockUser,
     speakers: [],
     sponsors: [],

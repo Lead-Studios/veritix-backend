@@ -27,14 +27,19 @@ export class DatabaseExceptionFilter implements ExceptionFilter {
     let statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = "Database operation failed";
     let errorCode: string | null = null;
-    const detail = (exception as any).detail as string;
-    const match = detail.match(/\((['"]?)([^'"]+)\1\)=\([^)]+\)/); // find the field name
-    const field = match ? match[2] : "unknown_field";
+    let field = "unknown_field";
 
     if (exception instanceof QueryFailedError) {
       statusCode = HttpStatus.BAD_REQUEST;
-      statusCode = HttpStatus.BAD_REQUEST;
       const pgError = exception as any;
+      const detail = pgError.detail as string;
+
+      if (detail) {
+        const match = detail.match(/\((['"]?)([^'"]+)\1\)=\([^)]+\)/);
+        if (match) {
+          field = match[2];
+        }
+      }
 
       switch (pgError.code) {
         case "23505":
