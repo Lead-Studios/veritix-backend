@@ -1,122 +1,123 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsNumber, IsEnum, IsUUID, IsBoolean, IsOptional, Min, Max } from 'class-validator';
-
-export enum PriceAdjustmentType {
-  PERCENTAGE = 'percentage',
-  FIXED = 'fixed'
-}
-
-export enum TriggerCondition {
-  TIME_BEFORE_EVENT = 'time_before_event',
-  TICKETS_SOLD_PERCENTAGE = 'tickets_sold_percentage',
-  SALES_VELOCITY = 'sales_velocity',
-  DEMAND_SCORE = 'demand_score'
-}
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import {
+  IsString,
+  IsNumber,
+  IsEnum,
+  IsUUID,
+  IsBoolean,
+  IsOptional,
+  Min,
+  Max,
+} from "class-validator";
+import { PricingRuleType, DiscountType } from "../entities/pricing-rule.entity";
 
 export class CreatePricingRuleDto {
   @ApiProperty({
-    description: 'Name of the pricing rule',
-    example: 'Early Bird Discount'
+    description: "Name of the pricing rule",
+    example: "Early Bird Discount",
   })
   @IsString()
   name: string;
 
   @ApiProperty({
-    description: 'ID of the event this rule applies to',
-    example: '123e4567-e89b-12d3-a456-426614174000'
+    description: "ID of the event this rule applies to",
+    example: "123e4567-e89b-12d3-a456-426614174000",
   })
   @IsUUID()
   eventId: string;
 
   @ApiProperty({
-    description: 'Type of price adjustment',
-    enum: PriceAdjustmentType,
-    example: PriceAdjustmentType.PERCENTAGE
+    description: "Type of the pricing rule",
+    enum: PricingRuleType,
+    example: PricingRuleType.EARLY_BIRD,
   })
-  @IsEnum(PriceAdjustmentType)
-  adjustmentType: PriceAdjustmentType;
+  @IsEnum(PricingRuleType)
+  ruleType: PricingRuleType;
 
   @ApiProperty({
-    description: 'Value of the price adjustment (percentage or fixed amount)',
-    example: 15
+    description: "Type of discount",
+    enum: DiscountType,
+    example: DiscountType.PERCENTAGE,
+  })
+  @IsEnum(DiscountType)
+  discountType: DiscountType;
+
+  @ApiProperty({
+    description: "Value of the discount",
+    example: 15,
   })
   @IsNumber()
-  adjustmentValue: number;
-
-  @ApiProperty({
-    description: 'Condition that triggers the price adjustment',
-    enum: TriggerCondition,
-    example: TriggerCondition.TIME_BEFORE_EVENT
-  })
-  @IsEnum(TriggerCondition)
-  triggerCondition: TriggerCondition;
-
-  @ApiProperty({
-    description: 'Value that activates the trigger condition',
-    example: 30
-  })
-  @IsNumber()
-  triggerValue: number;
+  discountValue: number;
 
   @ApiPropertyOptional({
-    description: 'Minimum price after adjustment',
-    example: 50
+    description: "Days before event",
+    example: 30,
+  })
+  @IsOptional()
+  @IsNumber()
+  daysBeforeEvent?: number;
+
+  @ApiPropertyOptional({
+    description: "Hours before event",
+    example: 24,
+  })
+  @IsOptional()
+  @IsNumber()
+  hoursBeforeEvent?: number;
+
+  @ApiPropertyOptional({
+    description: "Minimum tickets",
+    example: 10,
+  })
+  @IsOptional()
+  @IsNumber()
+  minimumTickets?: number;
+
+  @ApiPropertyOptional({
+    description: "Minimum purchases",
+    example: 5,
+  })
+  @IsOptional()
+  @IsNumber()
+  minimumPurchases?: number;
+
+  @ApiPropertyOptional({
+    description: "Sales threshold",
+    example: 100,
+  })
+  @IsOptional()
+  @IsNumber()
+  salesThreshold?: number;
+
+  @ApiPropertyOptional({
+    description: "Price increase amount",
+    example: 10,
+  })
+  @IsOptional()
+  @IsNumber()
+  priceIncreaseAmount?: number;
+
+  @ApiPropertyOptional({
+    description: "Minimum price after adjustment",
+    example: 50,
   })
   @IsOptional()
   @IsNumber()
   @Min(0)
   minimumPrice?: number;
 
-  @ApiPropertyOptional({
-    description: 'Maximum price after adjustment',
-    example: 200
-  })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  maximumPrice?: number;
-
   @ApiProperty({
-    description: 'Priority of the rule (higher number = higher priority)',
-    example: 1
-  })
-  @IsNumber()
-  @Min(1)
-  @Max(100)
-  priority: number;
-
-  @ApiProperty({
-    description: 'Whether the rule is currently active',
-    example: true
+    description: "Whether the rule is currently active",
+    example: true,
   })
   @IsBoolean()
   isActive: boolean;
 
   @ApiPropertyOptional({
-    description: 'Description of the pricing rule',
-    example: 'Applies 15% discount when event is 30 days away'
+    description: "Description of the pricing rule",
+    example: "Applies 15% discount when event is 30 days away",
   })
   @IsOptional()
   @IsString()
   description?: string;
-
-  @ApiPropertyOptional({
-    description: 'Specific ticket types this rule applies to',
-    example: ['VIP', 'Regular']
-  })
-  @IsOptional()
-  @IsString({ each: true })
-  applicableTicketTypes?: string[];
-
-  @ApiPropertyOptional({
-    description: 'Additional configuration options for the rule',
-    example: {
-      stackable: true,
-      roundingMethod: 'ceil',
-      decimalPlaces: 2
-    }
-  })
-  @IsOptional()
-  configuration?: Record<string, any>;
 }
-

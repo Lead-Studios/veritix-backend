@@ -22,6 +22,7 @@ import { ConferenceModule } from './conference/conference.module';
 import { ContactModule } from './contact/contact.module';
 import { ConferenceSponsorsModule } from './conference-sponsors/conference-sponsors.module';
 import { ConferencePosterManagementModule } from './conference-poster-management/conference-poster-management.module';
+import { SpecialSpeakerModule } from './special-speaker/special-speaker.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -59,6 +60,7 @@ import { ConferencePosterManagementModule } from './conference-poster-management
     ContactModule,
     ConferenceSponsorsModule,
     ConferencePosterManagementModule
+    SpecialSpeakerModule
   ],
   controllers: [AppController],
   providers: [AppService, PdfService],

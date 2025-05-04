@@ -1,6 +1,6 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
-import { DashboardService } from './dashboard.service';
+import { EventDashboardService } from './dashboard.service';
 import { JwtAuthGuard } from 'security/guards/jwt-auth.guard';
 import { RolesGuard } from 'security/guards/rolesGuard/roles.guard';
 import { RoleDecorator } from 'security/decorators/roles.decorator';
@@ -13,7 +13,7 @@ import { ReportPeriodEnum } from 'src/common/enums/report-period.enum';
 @Controller('dashboard')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class DashboardController {
-  constructor(private readonly dashboardService: DashboardService) {}
+  constructor(private readonly dashboardService: EventDashboardService) {}
 
   @Get('stats')
   @RoleDecorator(UserRole.Admin)

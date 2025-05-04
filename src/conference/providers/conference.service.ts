@@ -95,4 +95,14 @@ export class ConferenceService {
     const conference = await this.findOne(id);
     await this.conferenceRepository.remove(conference);
   }
+
+  async findCollaborator(id: string): Promise<Conference> {
+    const conference = await this.conferenceRepository.findOne({ where: { id } });
+    
+    if (!conference) {
+      throw new NotFoundException(`Collaborator with ID ${id} not found`);
+    }
+    
+    return conference;
+  }
 }

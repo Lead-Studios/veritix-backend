@@ -1,4 +1,13 @@
-import { forwardRef, Injectable, Logger, Inject, InternalServerErrorException, ConflictException, BadRequestException, UnauthorizedException } from "@nestjs/common";
+import {
+  forwardRef,
+  Injectable,
+  Logger,
+  Inject,
+  InternalServerErrorException,
+  ConflictException,
+  BadRequestException,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import type { DeepPartial, Repository } from "typeorm";
 import { UserNotFoundException } from "src/common/exceptions/user-not-found.exception";
@@ -44,59 +53,60 @@ export class AdminService {
     private readonly generateTokenProvider: GenerateTokenProvider,
   ) {}
 
-  async createUser(createAdminDto: CreateAdminDto): Promise<{ admin: Admin; token: string }> {
-        this.logger.log(`Creating user with email: ${createAdminDto.email}`);
-        const { email } = createAdminDto;
-        let existingUser: Admin;
-    
-        try {
-          existingUser = await this.findOneByEmail(email);
-        } catch (error: unknown) {
-          if (error instanceof Error) {
-            this.logger.error(`Error finding user: ${error.message}`);
-            this.logger.error(
-              `Error stack: ${error.stack}`,
-            );
-            throw new InternalServerErrorException(
-              "An unexpected error occurred while finding user.",
-            );
-          }
-          this.logger.error("An unknown error occurred while finding user.");
-          this.logger.error(
-            `Error: ${JSON.stringify(error, null, 2)}`,
-            { description: "An unknown error occurred" },
-          );
-          throw new InternalServerErrorException("An unknown error occurred.");
-        }
-    
-        if (existingUser) {
-          this.logger.warn(
-            `User with email ${createAdminDto.email} already exists.`);
-          throw new ConflictException(
-            "User already exists. Use a different email",
-          );
-        }
-        const hashedPassword = await this.hashingProvider.hashPassword(
-          createAdminDto.password,
+  async createUser(
+    createAdminDto: CreateAdminDto,
+  ): Promise<{ admin: Admin; token: string }> {
+    this.logger.log(`Creating user with email: ${createAdminDto.email}`);
+    const { email } = createAdminDto;
+    let existingUser: Admin;
+
+    try {
+      existingUser = await this.findOneByEmail(email);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        this.logger.error(`Error finding user: ${error.message}`);
+        this.logger.error(`Error stack: ${error.stack}`);
+        throw new InternalServerErrorException(
+          "An unexpected error occurred while finding user.",
         );
-        try {
-          const newUser: DeepPartial<Admin> = this.adminRepository.create({
-            ...createAdminDto,
-            password: hashedPassword,
-          });
-    
-          const savedUser = await this.adminRepository.save(newUser);
-    
-          // Generate token and send an email to the user for verification
-          const verification_token = await this.generateTokenProvider.generateVerificationToken(savedUser);
-          this.logger.log(`Verification token generated for user: ${JSON.stringify(verification_token, null, 2)}`);
-    
-          return { admin: savedUser, token: verification_token };
-        } catch (error: any) {
-          this.logger.error(`Error saving user: ${error.message}`);
-          throw error;
-        }
       }
+      this.logger.error("An unknown error occurred while finding user.");
+      this.logger.error(`Error: ${JSON.stringify(error, null, 2)}`, {
+        description: "An unknown error occurred",
+      });
+      throw new InternalServerErrorException("An unknown error occurred.");
+    }
+
+    if (existingUser) {
+      this.logger.warn(
+        `User with email ${createAdminDto.email} already exists.`,
+      );
+      throw new ConflictException("User already exists. Use a different email");
+    }
+    const hashedPassword = await this.hashingProvider.hashPassword(
+      createAdminDto.password,
+    );
+    try {
+      const newUser: DeepPartial<Admin> = this.adminRepository.create({
+        ...createAdminDto,
+        password: hashedPassword,
+      });
+
+      const savedUser = await this.adminRepository.save(newUser);
+
+      // Generate token and send an email to the user for verification
+      const verification_token =
+        await this.generateTokenProvider.generateVerificationToken(savedUser);
+      this.logger.log(
+        `Verification token generated for user: ${JSON.stringify(verification_token, null, 2)}`,
+      );
+
+      return { admin: savedUser, token: verification_token };
+    } catch (error: any) {
+      this.logger.error(`Error saving user: ${error.message}`);
+      throw error;
+    }
+  }
 
   async findOneByEmail(email: string): Promise<Admin | null> {
     return this.adminRepository.findOne({ where: { email } });
@@ -120,45 +130,47 @@ export class AdminService {
   }
 
   async updateAdminUser(
-      id: number,
-      updateUserDto: UpdateAdminDto,
-      internalFields?: Partial<Pick<User, "isVerified">>,
-    ): Promise<Admin | null> {
-      const user = await this.adminRepository.findOne({ where: { id } });
-      if (!user) {
-        return null;
-      }
-  
-      // Check if email is unique before updating
-      if (updateUserDto.email) {
-        const existingUser = await this.adminRepository.findOne({
-          where: { email: updateUserDto.email },
-        });
-        if (existingUser && existingUser.id !== id) {
-          throw new UnauthorizedException("You are not authorized to perform this action");
-        }
-      }
-  
-      // Ensure only specified fields are updated, excluding id
-      const allowedUpdates = ["name", "email", "userName", "password"];
-      for (const key of Object.keys(updateUserDto)) {
-        if (allowedUpdates.includes(key)) {
-          (user as any)[key] = (updateUserDto as any)[key];
-        }
-      }
-  
-      // Handle internal fields if provided
-      if (internalFields && internalFields.isVerified !== undefined) {
-        // check if user has been verified
-        if (!user.isVerified) {
-          user.isVerified = internalFields.isVerified;
-        }
-      }
-  
-      return this.adminRepository.save(user);
+    id: number,
+    updateUserDto: UpdateAdminDto,
+    internalFields?: Partial<Pick<User, "isVerified">>,
+  ): Promise<Admin | null> {
+    const user = await this.adminRepository.findOne({ where: { id } });
+    if (!user) {
+      return null;
     }
 
-  async findUserById(id: number): Promise<UserResponseDto> {
+    // Check if email is unique before updating
+    if (updateUserDto.email) {
+      const existingUser = await this.adminRepository.findOne({
+        where: { email: updateUserDto.email },
+      });
+      if (existingUser && existingUser.id !== id) {
+        throw new UnauthorizedException(
+          "You are not authorized to perform this action",
+        );
+      }
+    }
+
+    // Ensure only specified fields are updated, excluding id
+    const allowedUpdates = ["name", "email", "userName", "password"];
+    for (const key of Object.keys(updateUserDto)) {
+      if (allowedUpdates.includes(key)) {
+        (user as any)[key] = (updateUserDto as any)[key];
+      }
+    }
+
+    // Handle internal fields if provided
+    if (internalFields && internalFields.isVerified !== undefined) {
+      // check if user has been verified
+      if (!user.isVerified) {
+        user.isVerified = internalFields.isVerified;
+      }
+    }
+
+    return this.adminRepository.save(user);
+  }
+
+  async findUserById(id: string): Promise<UserResponseDto> {
     try {
       this.logger.log(`Retrieving user with ID: ${id}`);
       const user = await this.usersRepository.findOne({ where: { id } });

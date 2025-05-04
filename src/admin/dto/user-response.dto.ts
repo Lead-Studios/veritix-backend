@@ -3,10 +3,10 @@ import { UserRole } from "src/common/enums/users-roles.enum";
 
 export class UserResponseDto {
   @ApiProperty({
-    example: "1",
+    example: "123e4567-e89b-12d3-a456-426614174000",
     description: "Unique identifier for the user",
   })
-  id: number;
+  id: string;
 
   @ApiProperty({
     example: "user@example.com",
