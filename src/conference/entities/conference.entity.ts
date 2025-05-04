@@ -11,16 +11,24 @@ import {
   OneToMany,
   ManyToOne,
   JoinColumn,
+  Index,
 } from "typeorm";
 
+export enum ConferenceVisibility {
+  PUBLIC = "public",
+  PRIVATE = "private",
+  DRAFT = "draft",
+}
 @Entity()
 export class Conference {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
+  @Index()
   @Column({ name: "conference_name" })
   conferenceName: string;
 
+  @Index()
   @Column({ name: "conference_category" })
   conferenceCategory: string;
 
@@ -36,16 +44,27 @@ export class Conference {
   @Column({ name: "conference_image" })
   conferenceImage: string;
 
+  @Column({
+    type: "enum",
+    enum: ConferenceVisibility,
+    default: ConferenceVisibility.PUBLIC,
+  })
+  visibility: ConferenceVisibility;
+
   // Location details
+  @Index()
   @Column()
   country: string;
 
+  @Index()
   @Column()
   state: string;
 
+  @Index()
   @Column()
   street: string;
 
+  @Index()
   @Column({ name: "local_government" })
   localGovernment: string;
 

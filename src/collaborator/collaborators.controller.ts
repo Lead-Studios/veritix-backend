@@ -21,7 +21,6 @@ import {
   ApiQuery,
   ApiConsumes,
 } from "@nestjs/swagger";
-import { CollaboratorsService } from "./collaborators.service";
 import { CreateCollaboratorDto } from "./dto/create-collaborator.dto";
 import { UpdateCollaboratorDto } from "./dto/update-collaborator.dto";
 import { JwtAuthGuard } from "security/guards/jwt-auth.guard";
@@ -29,6 +28,7 @@ import { RolesGuard } from "security/guards/rolesGuard/roles.guard";
 import { RoleDecorator } from "security/decorators/roles.decorator";
 import { UserRole } from "src/common/enums/users-roles.enum";
 import { Collaborator } from "./entities/collaborator.entity";
+import { CollaboratorService } from "./collaborators.service";
 
 @ApiTags("Collaborators")
 @ApiBearerAuth()
@@ -36,7 +36,7 @@ import { Collaborator } from "./entities/collaborator.entity";
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth()
 export class CollaboratorController {
-  constructor(private readonly collaboratorService: CollaboratorService) {}
+  constructor(private readonly collaboratorsService: CollaboratorService) {}
 
   @Post()
   @RoleDecorator(UserRole.Admin)
@@ -58,7 +58,7 @@ export class CollaboratorController {
     @UploadedFile() file: Express.Multer.File,
     @Body() createCollaboratorDto: CreateCollaboratorDto,
   ) {
-    return this.collaboratorsService.create(file, createCollaboratorDto);
+    return this.collaboratorsService.create(createCollaboratorDto, file);
   }
 
   @Get()
@@ -132,7 +132,8 @@ export class CollaboratorController {
     @UploadedFile() file: Express.Multer.File,
     @Body() updateCollaboratorDto: UpdateCollaboratorDto,
   ) {
-    return this.collaboratorsService.update(id, file, updateCollaboratorDto);
+    const updateData = { ...updateCollaboratorDto, file };
+    return this.collaboratorsService.update(id, updateData);
   }
 
   @Delete(":id")
