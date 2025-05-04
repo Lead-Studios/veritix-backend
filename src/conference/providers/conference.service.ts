@@ -58,7 +58,7 @@ export class ConferenceService {
       comingSoon: conferenceData.comingSoon || false,
       transactionCharge: conferenceData.transactionCharge || false,
       // Set the organizer
-      organizerId: user.id ?? null,
+      organizerId: (user && user?.id )? user?.id : null,
     });
 
     return this.conferenceRepository.save(conference);

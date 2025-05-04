@@ -32,7 +32,7 @@ import { Request } from "express";
 import { User } from "src/users/entities/user.entity";
 
 @Controller("conference")
-// @UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class ConferenceController {
   constructor(private readonly conferenceService: ConferenceService) {}
 
