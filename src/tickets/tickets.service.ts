@@ -2,6 +2,7 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  BadRequestException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
@@ -11,6 +12,11 @@ import { PdfService } from "src/utils/pdf.service";
 import { ConferenceService } from "src/conference/providers/conference.service";
 import { User } from "src/users/entities/user.entity";
 import { UpdateTicketDto } from "./dto/update-ticket.dto";
+import { Receipt } from "./entities/receipt.entity";
+import { TicketPurchaseDto } from "./dto/ticket-purchase.dto";
+import { ReceiptDto } from "./dto/receipt.dto";
+import { Conference } from "../conference/entities/conference.entity";
+import { StripePaymentService } from "src/payment/services/stripe-payment.service";
 
 @Injectable()
 export class TicketService {
@@ -24,6 +30,14 @@ export class TicketService {
     private readonly pdfService: PdfService,
 
     private readonly conferenceService: ConferenceService,
+
+    @InjectRepository(Receipt)
+    private readonly receiptRepository: Repository<Receipt>,
+
+    @InjectRepository(Conference)
+    private readonly conferenceRepository: Repository<Conference>,
+
+    private readonly stripeService: StripePaymentService,
   ) {}
 
   //FN TO CREATE A TICKET ONLY BY ORGANIZERS
@@ -51,7 +65,7 @@ export class TicketService {
 
   async getTicketById(id: string): Promise<Ticket> {
     const ticket = await this.ticketRepository.findOne({
-      where: { id: Number(id) },
+      where: { id },
     });
     if (!ticket) throw new NotFoundException("Ticket not found");
     return ticket;
@@ -60,7 +74,7 @@ export class TicketService {
   async getTicketByIDAndEvent(id: string, eventId: string): Promise<Ticket> {
     const ticket = await this.ticketRepository.findOne({
       where: {
-        id: Number(id),
+        id,
         event: { id: eventId },
       },
       relations: ["event"],
@@ -74,7 +88,7 @@ export class TicketService {
 
   //FN TO UPDATE A TICKET
   public async updateTicket(
-    id: number,
+    id: string,
     updateTicketDto: UpdateTicketDto,
     user: User,
   ): Promise<Ticket> {
@@ -84,7 +98,7 @@ export class TicketService {
     }
 
     const conference = await this.conferenceService.findOne(
-      String(ticket.conferenceId),
+      ticket.conferenceId,
     );
     if (conference.organizerId !== user.id) {
       throw new ForbiddenException(
@@ -97,7 +111,7 @@ export class TicketService {
   }
 
   //FN TO DELETE A TICKET ONLY BY ORGANIZERS
-  public async deleteTicket(id: number, user: User): Promise<void> {
+  public async deleteTicket(id: string, user: User): Promise<void> {
     const ticket = await this.ticketRepository.findOne({ where: { id } });
     if (!ticket) {
       throw new NotFoundException("Ticket not found");
@@ -125,7 +139,7 @@ export class TicketService {
   // fn to get a single ticket history by ID
   public async getUserTicketById(userId: string, id: string): Promise<Ticket> {
     const ticket = await this.ticketRepository.findOne({
-      where: { id: Number(id), userId },
+      where: { id, userId },
       relations: ["event"],
     });
     if (!ticket) throw new NotFoundException("Ticket not found");
@@ -135,7 +149,7 @@ export class TicketService {
   // fn to get ticket details
   public async getTicketDetails(id: string): Promise<Ticket> {
     const ticket = await this.ticketRepository.findOne({
-      where: { id: Number(id) },
+      where: { id },
       relations: ["event"],
     });
     if (!ticket) throw new NotFoundException("Ticket details not found");
@@ -145,12 +159,120 @@ export class TicketService {
   //fn to generat ticket
   public async generateTicketReceipt(id: string): Promise<string> {
     const ticket = await this.ticketRepository.findOne({
-      where: { id: Number(id) },
+      where: { id },
       relations: ["event"],
     });
 
     if (!ticket) throw new NotFoundException("Ticket not found");
 
     return this.pdfService.generateTicketReceipt(ticket);
+  }
+
+  async purchaseTickets(
+    userId: string,
+    purchaseDto: TicketPurchaseDto,
+  ): Promise<ReceiptDto> {
+    return await this.ticketRepository.manager.transaction(async (manager) => {
+      const conference = await manager.findOne(Conference, {
+        where: { id: purchaseDto.conferenceId },
+        lock: { mode: "pessimistic_write" },
+      });
+
+      if (!conference) {
+        throw new NotFoundException("Conference not found");
+      }
+
+      // Get the ticket price from the first ticket in the conference
+      const ticket = await manager.findOne(Ticket, {
+        where: { conference: { id: conference.id } },
+      });
+
+      if (!ticket) {
+        throw new NotFoundException("No tickets available for this conference");
+      }
+
+      // Calculate total amount
+      const totalAmount = ticket.price * purchaseDto.ticketQuantity;
+
+      // Process payment
+      const paymentSuccessful = await this.stripeService.processPayment(
+        totalAmount,
+        purchaseDto.billingDetails,
+      );
+
+      if (!paymentSuccessful) {
+        throw new BadRequestException("Payment not completed");
+      }
+
+      // Create ticket record
+      const newTicket = manager.create(Ticket, {
+        conference: conference,
+        userId,
+        quantity: purchaseDto.ticketQuantity,
+        pricePerTicket: ticket.price,
+        totalAmount,
+        isPaid: true,
+      });
+
+      await manager.save(Ticket, newTicket);
+
+      // Create receipt
+      const receipt = manager.create(Receipt, {
+        ticketId: newTicket.id,
+        userFullName: purchaseDto.billingDetails.fullName,
+        userEmail: purchaseDto.billingDetails.email,
+        conferenceName: conference.conferenceName,
+        conferenceDate: conference.conferenceDate,
+        conferenceLocation: `${conference.street}, ${conference.localGovernment}, ${conference.state}, ${conference.country}`,
+        ticketQuantity: purchaseDto.ticketQuantity,
+        pricePerTicket: ticket.price,
+        totalAmount,
+        amountPaid: totalAmount,
+        transactionDate: new Date(),
+      });
+
+      await manager.save(Receipt, receipt);
+
+      // Update ticket with receipt ID
+      newTicket.receiptId = receipt.id;
+      await manager.save(Ticket, newTicket);
+
+      return this.mapReceiptToDto(receipt);
+    });
+  }
+
+  async getReceipt(receiptId: string, userId: string): Promise<ReceiptDto> {
+    const receipt = await this.receiptRepository.findOne({
+      where: { id: receiptId },
+      relations: ["ticket"],
+    });
+
+    if (!receipt) {
+      throw new NotFoundException("Receipt not found");
+    }
+
+    if (receipt.ticket.userId !== userId) {
+      throw new ForbiddenException(
+        "You do not have permission to access this receipt",
+      );
+    }
+
+    return this.mapReceiptToDto(receipt);
+  }
+
+  private mapReceiptToDto(receipt: Receipt): ReceiptDto {
+    return {
+      receiptId: receipt.id,
+      userFullName: receipt.userFullName,
+      userEmail: receipt.userEmail,
+      conferenceName: receipt.conferenceName,
+      conferenceDate: receipt.conferenceDate,
+      conferenceLocation: receipt.conferenceLocation,
+      ticketQuantity: receipt.ticketQuantity,
+      pricePerTicket: receipt.pricePerTicket,
+      totalAmount: receipt.totalAmount,
+      amountPaid: receipt.amountPaid,
+      transactionDate: receipt.transactionDate,
+    };
   }
 }

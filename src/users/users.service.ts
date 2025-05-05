@@ -84,7 +84,7 @@ export class UsersService {
   }
 
   // Soft delete a user by ID
-  async softDelete(id: number) {
+  async softDelete(id: string) {
     const user = await this.userRepository.findOne({ where: { id } });
 
     if (!user) {
@@ -95,9 +95,9 @@ export class UsersService {
     return { message: `User with ID ${id} has been deleted.` };
   }
 
-  public async findOneById(id: number): Promise<User> {
+  public async findOneById(id: string): Promise<User> {
     // Double-check ID validity
-    if (typeof id !== "number" || isNaN(id) || id <= 0) {
+    if (!id || typeof id !== "string") {
       throw new NotFoundException(`Invalid user ID: ${id}`);
     }
 
@@ -119,7 +119,7 @@ export class UsersService {
   }
 
   public async updateUser(
-    id: number,
+    id: string,
     updateUserDto: UpdateUserDto,
     internalFields?: Partial<Pick<User, "isVerified">>,
   ): Promise<User | null> {
@@ -157,7 +157,7 @@ export class UsersService {
     return this.userRepository.save(user);
   }
 
-  async findById(id: number): Promise<User> {
+  async findById(id: string): Promise<User> {
     const user = await this.userRepository.findOne({ where: { id } });
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
@@ -165,7 +165,7 @@ export class UsersService {
     return user;
   }
 
-  async updateProfile(id: number, updateData: UpdateProfileDto): Promise<User> {
+  async updateProfile(id: string, updateData: UpdateProfileDto): Promise<User> {
     const allowedUpdates = {
       userName: updateData.userName,
       email: updateData.email,
@@ -181,7 +181,7 @@ export class UsersService {
     return this.findById(id);
   }
 
-  async changePassword(id: number, dto: ChangePasswordDto): Promise<string> {
+  async changePassword(id: string, dto: ChangePasswordDto): Promise<string> {
     const user = await this.findById(id);
     const isValidPassword = await this.hashingProvider.comparePassword(
       dto.currentPassword,
@@ -204,7 +204,7 @@ export class UsersService {
     return (await this.findById(id)).password;
   }
 
-  async updateProfileImage(id: number, dto: ProfileImageDto): Promise<User> {
+  async updateProfileImage(id: string, dto: ProfileImageDto): Promise<User> {
     await this.userRepository.update(id, { profileImageUrl: dto.imageUrl });
     return this.findById(id);
   }

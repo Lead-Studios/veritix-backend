@@ -8,7 +8,11 @@ import {
 } from "typeorm";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { Event } from "../../events/entities/event.entity";
-import { MediaType } from "../dto/create-gallery-item.dto";
+
+export enum MediaType {
+  IMAGE = "image",
+  VIDEO = "video",
+}
 
 @Entity()
 export class GalleryItem {

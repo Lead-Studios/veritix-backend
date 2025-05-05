@@ -11,6 +11,7 @@ import { Collaborator } from "src/collaborator/entities/collaborator.entity";
 import { EventRevenueAnalyticsController } from "./event-revenue-analytics.controller";
 import { EventRevenueAnalyticsService } from "./event-revenue-analytics.service";
 import { CategoryModule } from "src/category/category.module";
+import { PricingRule } from "src/dynamic-pricing/pricing/entities/pricing-rule.entity";
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { CategoryModule } from "src/category/category.module";
       Event,
       Collaborator,
       Ticket /* Ticket, SpecialGuest */,
+      PricingRule,
     ]),
     CategoryModule,
   ],

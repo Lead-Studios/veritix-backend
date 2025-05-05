@@ -21,6 +21,7 @@ import type { ValidateDiscountCodeDto } from "./dto/validate-discount-code.dto";
 import type { EventsService } from "../../events/events.service";
 import type { UsersService } from "../users/users.service";
 import { differenceInDays, differenceInHours } from "date-fns";
+import type { UpdatePricingRuleDto } from "./dto/update-pricing-rule.dto";
 
 @Injectable()
 export class PricingService {
@@ -102,7 +103,7 @@ export class PricingService {
   async findAllPricingRules(eventId?: string): Promise<PricingRule[]> {
     if (eventId) {
       return this.pricingRuleRepository.find({
-        where: { eventId },
+        where: { event: { id: eventId } },
         order: { createdAt: "DESC" },
       });
     }
@@ -126,12 +127,9 @@ export class PricingService {
 
   async updatePricingRule(
     id: string,
-    updatePricingRuleDto: CreatePricingRuleDto,
+    updatePricingRuleDto: UpdatePricingRuleDto,
   ): Promise<PricingRule> {
     const rule = await this.findOnePricingRule(id);
-
-    // Validate rule type specific fields
-    this.validateRuleTypeFields(updatePricingRuleDto);
 
     // Update the rule
     Object.assign(rule, updatePricingRuleDto);
@@ -377,7 +375,7 @@ export class PricingService {
     // Apply dynamic pricing rules
     const dynamicRules = await this.pricingRuleRepository.find({
       where: {
-        eventId,
+        event: { id: eventId },
         ruleType: PricingRuleType.DYNAMIC,
         isActive: true,
       },
@@ -403,7 +401,7 @@ export class PricingService {
 
       const earlyBirdRules = await this.pricingRuleRepository.find({
         where: {
-          eventId,
+          event: { id: eventId },
           ruleType: PricingRuleType.EARLY_BIRD,
           isActive: true,
         },
@@ -433,7 +431,7 @@ export class PricingService {
 
       const lastMinuteRules = await this.pricingRuleRepository.find({
         where: {
-          eventId,
+          event: { id: eventId },
           ruleType: PricingRuleType.LAST_MINUTE,
           isActive: true,
         },
@@ -460,7 +458,7 @@ export class PricingService {
     if (quantity > 1) {
       const groupRules = await this.pricingRuleRepository.find({
         where: {
-          eventId,
+          event: { id: eventId },
           ruleType: PricingRuleType.GROUP,
           isActive: true,
         },
@@ -492,7 +490,7 @@ export class PricingService {
 
         const loyaltyRules = await this.pricingRuleRepository.find({
           where: {
-            eventId,
+            event: { id: eventId },
             ruleType: PricingRuleType.LOYALTY,
             isActive: true,
           },
@@ -669,9 +667,7 @@ export class PricingService {
     return loyaltyRules.map((rule) => ({
       id: rule.id,
       name: rule.name,
-      description: rule.description,
-      eventId: rule.eventId,
-      eventName: rule.event.eventName,
+      event: rule.event,
       discountType: rule.discountType,
       discountValue: rule.discountValue,
       ruleType: rule.ruleType,
@@ -697,7 +693,7 @@ export class PricingService {
     const earlyBirdRules = daysUntilEvent
       ? await this.pricingRuleRepository.find({
           where: {
-            eventId,
+            event: { id: eventId },
             ruleType: PricingRuleType.EARLY_BIRD,
             isActive: true,
             daysBeforeEvent: LessThanOrEqual(daysUntilEvent),
@@ -708,7 +704,7 @@ export class PricingService {
     const lastMinuteRules = hoursUntilEvent
       ? await this.pricingRuleRepository.find({
           where: {
-            eventId,
+            event: { id: eventId },
             ruleType: PricingRuleType.LAST_MINUTE,
             isActive: true,
             hoursBeforeEvent: MoreThanOrEqual(hoursUntilEvent),
@@ -718,7 +714,7 @@ export class PricingService {
 
     const groupRules = await this.pricingRuleRepository.find({
       where: {
-        eventId,
+        event: { id: eventId },
         ruleType: PricingRuleType.GROUP,
         isActive: true,
       },
@@ -731,7 +727,7 @@ export class PricingService {
         await this.usersService.getUserPurchaseCount(userId);
       loyaltyRules = await this.pricingRuleRepository.find({
         where: {
-          eventId,
+          event: { id: eventId },
           ruleType: PricingRuleType.LOYALTY,
           isActive: true,
           minimumPurchases: LessThanOrEqual(purchaseCount),

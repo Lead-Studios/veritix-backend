@@ -22,7 +22,7 @@ import {
   ApiConsumes,
   ApiBody,
 } from "@nestjs/swagger";
-import { CollaboratorsService } from "./collaborators.service";
+import { CollaboratorService } from "./collaborators.service";
 import { CreateCollaboratorDto } from "./dto/create-collaborator.dto";
 import { UpdateCollaboratorDto } from "./dto/update-collaborator.dto";
 import { JwtAuthGuard } from "security/guards/jwt-auth.guard";
@@ -36,21 +36,17 @@ import { FileInterceptor } from "@nestjs/platform-express";
 @ApiBearerAuth()
 @Controller("collaborators")
 @UseGuards(JwtAuthGuard, RolesGuard)
-export class CollaboratorsController {
-  constructor(private readonly collaboratorsService: CollaboratorsService) {}
+@ApiBearerAuth()
+export class CollaboratorController {
+  constructor(private readonly collaboratorsService: CollaboratorService) {}
 
   @Post()
   @RoleDecorator(UserRole.Admin)
   @UseInterceptors(FileInterceptor("image"))
+  @ApiConsumes("multipart/form-data")
   @ApiOperation({
     summary: "Create collaborator",
     description: "Add a new collaborator to an event",
-  })
-  @ApiConsumes("multipart/form-data") // Specify content type for file upload
-  @ApiBody({
-    description: "Collaborator details and image",
-    type: CreateCollaboratorDto, // DTO defines other fields
-    // Add schema for file if needed, often handled by swagger-cli plugin
   })
   @ApiResponse({
     status: 201,
@@ -67,7 +63,8 @@ export class CollaboratorsController {
     if (!file) {
       throw new BadRequestException("Collaborator image is required");
     }
-    return this.collaboratorsService.create(file, createCollaboratorDto); // Pass file to service
+    const collaboratorData = { ...createCollaboratorDto, image: file }; // Merge file into DTO
+    return this.collaboratorsService.create(collaboratorData); // Pass merged data to service
   }
 
   @Get()
@@ -89,10 +86,9 @@ export class CollaboratorsController {
   @ApiResponse({ status: 401, description: "Unauthorized" })
   findAll(@Query("eventId") eventId?: string) {
     if (eventId) {
-      return this.collaboratorsService.findByEvent(eventId); // Use findByEvent if eventId is provided
-    } else {
-      return this.collaboratorsService.findAll(); // Otherwise, get all
+      return this.collaboratorsService.findByEvent(eventId);
     }
+    return this.collaboratorsService.findAll();
   }
 
   @Get(":id")
@@ -119,6 +115,7 @@ export class CollaboratorsController {
   @Patch(":id")
   @RoleDecorator(UserRole.Admin)
   @UseInterceptors(FileInterceptor("image"))
+  @ApiConsumes("multipart/form-data")
   @ApiOperation({
     summary: "Update collaborator",
     description: "Update details of an existing collaborator",
@@ -146,7 +143,8 @@ export class CollaboratorsController {
     @UploadedFile() file: Express.Multer.File,
     @Body() updateCollaboratorDto: UpdateCollaboratorDto,
   ) {
-    return this.collaboratorsService.update(id, file, updateCollaboratorDto);
+    const updateData = { ...updateCollaboratorDto, file };
+    return this.collaboratorsService.update(id, updateData);
   }
 
   @Delete(":id")

@@ -170,7 +170,7 @@ export class AdminService {
     return this.adminRepository.save(user);
   }
 
-  async findUserById(id: number): Promise<UserResponseDto> {
+  async findUserById(id: string): Promise<UserResponseDto> {
     try {
       this.logger.log(`Retrieving user with ID: ${id}`);
       const user = await this.usersRepository.findOne({ where: { id } });

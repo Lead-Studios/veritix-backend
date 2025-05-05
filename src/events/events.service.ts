@@ -37,24 +37,11 @@ export class EventsService {
       eventDate: new Date(dto.startDate),
       eventClosingDate: new Date(dto.endDate),
       category: category,
-      status: dto.status ?? EventStatus.Draft,
+      status: dto.status ?? EventStatus.DRAFT,
       eventImage: coverImage ? coverImage.path : null,
     });
     return this.eventRepository.save(newEvent);
   }
-
-  // findAll() {
-  //   return this.eventRepository.find();
-  // }
-
-  // async createEvent(dto: CreateEventDto): Promise<Event> {
-  //   const category = await this.categoryService.findOne(dto.category);
-  //   const newEvent = this.eventRepository.create({
-  //     ...dto,
-  //     category,
-  //   });
-  //   return this.eventRepository.save(newEvent);
-  // }
 
   async getAllEvents(
     page: number = 1,
@@ -204,10 +191,6 @@ export class EventsService {
       }
     }
 
-    if (location) {
-      whereOptions.country = Like(`%${location}%`);
-    }
-
     const offset = (page - 1) * limit;
 
     const [allMatchingEvents, totalCountBeforeFuzzy] =
@@ -217,7 +200,7 @@ export class EventsService {
     const filteredEvents = allMatchingEvents.filter((event) => {
       const score = fuzzball.ratio(
         query.toLowerCase(),
-        event.eventName.toLowerCase(),
+        event.title.toLowerCase(),
       );
       return score > 70; // Threshold for fuzzy matching
     });
@@ -225,8 +208,8 @@ export class EventsService {
     // Sort by relevance (descending score)
     filteredEvents.sort(
       (a, b) =>
-        fuzzball.ratio(query.toLowerCase(), b.eventName.toLowerCase()) -
-        fuzzball.ratio(query.toLowerCase(), a.eventName.toLowerCase()),
+        fuzzball.ratio(query.toLowerCase(), b.title.toLowerCase()) -
+        fuzzball.ratio(query.toLowerCase(), a.title.toLowerCase()),
     );
 
     // Paginate results
@@ -242,20 +225,20 @@ export class EventsService {
 
   async publish(id: string): Promise<Event> {
     const event = await this.getEventById(id);
-    if (event.status === EventStatus.Published) {
+    if (event.status === EventStatus.PUBLISHED) {
       return event;
     }
 
-    event.status = EventStatus.Published;
+    event.status = EventStatus.PUBLISHED;
     return this.eventRepository.save(event);
   }
 
   async unpublish(id: string): Promise<Event> {
     const event = await this.getEventById(id);
-    if (event.status !== EventStatus.Published) {
+    if (event.status !== EventStatus.PUBLISHED) {
       return event;
     }
-    event.status = EventStatus.Draft;
+    event.status = EventStatus.DRAFT;
     return this.eventRepository.save(event);
   }
 
@@ -265,7 +248,7 @@ export class EventsService {
   ): Promise<Event> {
     const event = await this.getEventById(id);
 
-    event.status = EventStatus.Cancelled;
+    event.status = EventStatus.CANCELLED;
 
     return this.eventRepository.save(event);
   }

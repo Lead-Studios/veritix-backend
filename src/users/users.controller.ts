@@ -33,14 +33,22 @@ import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { JwtAuthGuard } from "security/guards/jwt-auth.guard";
 import { UpdateProfileDto, ChangePasswordDto } from "./dto/update-profile.dto";
+import { JsonWebTokenError } from "jsonwebtoken";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
 import { User } from "./entities/user.entity";
-import { Request } from "express";
+import { RequestWithUser } from "src/common/interfaces/request.interface";
 
 @ApiTags("Users")
 @Controller("users")
 export class UsersController {
   private readonly logger = new Logger(UsersController.name);
-  constructor(private readonly usersService: UsersService) {}
+
+  constructor(
+    private readonly usersService: UsersService,
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
+  ) {}
 
   @Post()
   @UseInterceptors(ClassSerializerInterceptor)
@@ -65,21 +73,14 @@ export class UsersController {
     description: "User details retrieved successfully",
   })
   @ApiResponse({ status: 401, description: "Unauthorized" })
-  async getUserDetails(@Req() request: Request): Promise<User> {
-    const user = request.user as any;
+  async getUserDetails(@Req() request: RequestWithUser) {
+    const user = request.user;
 
     if (!user?.userId) {
       throw new UnauthorizedException("Invalid user information");
     }
 
-    // Convert to number using safe parsing
-    const userId = Number(user.userId) || Number(user.sub);
-
-    if (isNaN(userId) || !Number.isInteger(userId) || userId <= 0) {
-      this.logger.error("Invalid userId:", user.userId);
-      throw new BadRequestException("Invalid userId");
-    }
-    return this.usersService.findOneById(userId);
+    return this.usersService.findOneById(user.userId.toString());
   }
 
   @Put("update-profile")
@@ -89,22 +90,24 @@ export class UsersController {
   @ApiBody({ type: UpdateProfileDto })
   @ApiResponse({ status: 200, description: "Profile updated successfully" })
   @ApiResponse({ status: 401, description: "Unauthorized" })
-  async updateProfile(
-    @Req() request: Request,
+  async updateUserProfile(
+    @Req() request: RequestWithUser,
     @Body() updateProfileDto: UpdateProfileDto,
   ) {
-    const user = request.user as any;
+    const user = request.user;
 
     if (!user || !user.userId) {
       this.logger.error(
         "Invalid user information:",
         JSON.stringify(user, null, 2),
       );
-      throw new BadRequestException("Invalid user information");
+      throw new JsonWebTokenError("Invalid user information");
     }
 
-    // Pass the numeric userId to the service
-    return this.usersService.updateProfile(user.userId, updateProfileDto);
+    return this.usersService.updateProfile(
+      user.userId.toString(),
+      updateProfileDto,
+    );
   }
 
   @Put("/change-password")
@@ -116,14 +119,14 @@ export class UsersController {
   @ApiResponse({ status: 401, description: "Unauthorized" })
   @ApiResponse({ status: 400, description: "Invalid password" })
   async changePassword(
-    @Req() request: Request,
+    @Req() request: RequestWithUser,
     @Body() dto: ChangePasswordDto,
   ) {
-    const user = request.user as any;
+    const user = request.user;
     if (!user || !user.userId) {
       throw new Error("Invalid user information");
     }
-    return this.usersService.changePassword(user.userId, dto);
+    return this.usersService.changePassword(user.userId.toString(), dto);
   }
 
   @Get()
@@ -156,15 +159,18 @@ export class UsersController {
     },
   })
   public async findAll(
-    @Query("page", new ParseIntPipe({ optional: true })) page: number = 1,
-    @Query("limit", new ParseIntPipe({ optional: true })) limit: number = 20,
-  ): Promise<{ total: number; page: number; limit: number; data: User[] }> {
-    const validPage = Math.max(1, page);
-    const validLimit = Math.max(1, limit);
+    @Query() pagination?: { limits: number; page: number },
+  ): Promise<{ users: CreateUserDto[]; total: number }> {
+    const { limits = 20, page = 1 } = pagination || {};
 
+    const validPage = Math.max(1, page || 1);
+    const validLimit = Math.max(1, Math.min(100, limits || 20));
     const result = await this.usersService.findAll(validPage, validLimit);
     // The service already returns the desired structure { total, page, limit, data }
-    return result;
+    return {
+      users: result.data,
+      total: result.total,
+    };
   }
 
   @Get(":id")
@@ -173,7 +179,7 @@ export class UsersController {
   @ApiResponse({ status: 200, description: "User found" })
   @ApiResponse({ status: 404, description: "User not found" })
   findOne(@Param("id") id: string) {
-    return this.usersService.findOneById(+id);
+    return this.usersService.findOneById(id);
   }
 
   @Delete(":id")
@@ -182,21 +188,61 @@ export class UsersController {
   @ApiResponse({ status: 200, description: "User deleted successfully" })
   @ApiResponse({ status: 404, description: "User not found" })
   remove(@Param("id") id: string) {
-    return this.usersService.remove(+id);
+    return this.usersService.remove(parseInt(id, 10));
   }
 
-  /**Patch endpoint */
   @Patch(":id")
   public async updateUser(
     @Body() updateUserDto: UpdateUserDto,
-    @Param("id", ParseIntPipe) id: number,
+    @Param("id") id: string,
   ) {
     const user = await this.usersService.updateUser(id, updateUserDto);
 
-    /**if user does not exist */
     if (!user) {
       throw new NotFoundException("No user was found");
     }
     return user;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get("profile")
+  async getProfile(@Req() request: RequestWithUser) {
+    const user = request.user;
+    if (!user || !user.id) {
+      this.logger.error("Invalid userId:", user?.id);
+      throw new JsonWebTokenError("Invalid userId");
+    }
+    return this.usersService.findOneById(user.id.toString());
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get("me")
+  async getCurrentUser(@Req() request: RequestWithUser) {
+    const user = request.user;
+    if (!user || !user.id) {
+      this.logger.error(
+        "Invalid user information:",
+        JSON.stringify(user, null, 2),
+      );
+      throw new JsonWebTokenError("Invalid user information");
+    }
+    return this.usersService.findOneById(user.id.toString());
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch("profile")
+  async updateProfile(
+    @Req() request: RequestWithUser,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    const user = request.user;
+    if (!user || !user.id) {
+      this.logger.error(
+        "Invalid user information:",
+        JSON.stringify(user, null, 2),
+      );
+      throw new JsonWebTokenError("Invalid user information");
+    }
+    return this.usersService.updateUser(user.id.toString(), updateUserDto);
   }
 }

@@ -6,7 +6,10 @@ import {
   ManyToOne,
   ManyToMany,
   DeleteDateColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from "typeorm";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { Ticket } from "../../tickets/entities/ticket.entity";
 import { SpecialGuest } from "../../special-guests/entities/special-guest.entity";
 import { Sponsor } from "../../sponsors/sponsor.entity";
@@ -14,13 +17,18 @@ import { Poster } from "../../posters/entities/poster.entity";
 import { Collaborator } from "../../collaborator/entities/collaborator.entity";
 import { EventGallery } from "../../event-gallery/entities/event-gallery.entity";
 import { Category } from "../../category/category.entity";
-import { EventStatus } from "src/common/enums/event-status.enum";
-import { GalleryItem } from "src/event-gallery/entities/gallery-item.entity";
+import { PricingRule } from "../../dynamic-pricing/pricing/entities/pricing-rule.entity";
+import { User } from "../../users/entities/user.entity";
+import { EventStatus } from "../../common/enums/event-status.enum";
+import { GalleryItem } from "../../event-gallery/entities/gallery-item.entity";
 
 @Entity()
 export class Event {
   @PrimaryGeneratedColumn("uuid")
   id: string;
+
+  @Column()
+  title: string;
 
   @Column()
   eventName: string;
@@ -35,19 +43,22 @@ export class Event {
   eventDescription: string;
 
   @Column()
-  country: string;
+  venue: string;
 
   @Column()
-  state: string;
+  address: string;
 
   @Column()
   street: string;
 
   @Column()
-  localGovernment: string;
+  capacity: number;
+
+  @Column({ type: "enum", enum: EventStatus, default: EventStatus.DRAFT })
+  status: EventStatus;
 
   @Column({ nullable: true })
-  direction: string;
+  cancellationReason: string;
 
   @Column({ nullable: true })
   eventImage: string;
@@ -57,9 +68,6 @@ export class Event {
 
   @Column({ default: false })
   eventComingSoon: boolean;
-
-  @Column()
-  status: EventStatus;
 
   @Column({ default: false })
   transactionCharge: boolean;
@@ -82,6 +90,9 @@ export class Event {
   @Column({ nullable: true })
   instagram: string;
 
+  @ManyToOne(() => User, (user) => user.events)
+  organizer: User;
+
   @ManyToMany(() => Sponsor, (sponsor) => sponsor.event)
   sponsors: Sponsor[];
 
@@ -95,6 +106,9 @@ export class Event {
 
   @OneToMany(() => Collaborator, (collaborator) => collaborator.event)
   collaborators: Collaborator[];
+
+  @OneToMany(() => PricingRule, (pricingRule) => pricingRule.event)
+  pricingRules: PricingRule[];
 
   @Column({ default: false })
   isArchived: boolean;

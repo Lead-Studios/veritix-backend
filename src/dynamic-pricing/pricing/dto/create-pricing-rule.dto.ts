@@ -1,42 +1,51 @@
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import {
-  IsEnum,
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
   IsString,
+  IsNumber,
+  IsEnum,
   IsUUID,
   IsBoolean,
-  IsDate,
+  IsOptional,
   Min,
+  Max,
+  IsNotEmpty,
+  IsDate,
 } from "class-validator";
-import { Type } from "class-transformer";
 import { PricingRuleType, DiscountType } from "../entities/pricing-rule.entity";
+import { Type } from "class-transformer";
 
 export class CreatePricingRuleDto {
+  @ApiProperty({
+    description: "Name of the pricing rule",
+    example: "Early Bird Discount",
+  })
   @IsString()
   @IsNotEmpty()
   name: string;
 
-  @IsString()
-  @IsOptional()
-  description?: string;
-
+  @ApiProperty({
+    description: "ID of the event this rule applies to",
+    example: "123e4567-e89b-12d3-a456-426614174000",
+  })
   @IsUUID()
   @IsNotEmpty()
   eventId: string;
 
+  @ApiProperty({
+    description: "Type of the pricing rule",
+    enum: PricingRuleType,
+    example: PricingRuleType.EARLY_BIRD,
+  })
   @IsEnum(PricingRuleType)
-  @IsNotEmpty()
   ruleType: PricingRuleType;
 
+  @ApiProperty({
+    description: "Type of discount",
+    enum: DiscountType,
+    example: DiscountType.PERCENTAGE,
+  })
   @IsEnum(DiscountType)
-  @IsNotEmpty()
   discountType: DiscountType;
-
-  @IsNumber()
-  @Min(0)
-  @IsNotEmpty()
-  discountValue: number;
 
   @IsBoolean()
   @IsOptional()

@@ -1,8 +1,5 @@
 import { Controller, Get, Param, Query, UseGuards } from "@nestjs/common";
-import {
-  EventRevenueAnalyticsService,
-  TimeFilter,
-} from "./event-revenue-analytics.service";
+import { EventRevenueAnalyticsService } from "./event-revenue-analytics.service";
 import { AuthGuard } from "@nestjs/passport";
 import { RolesGuard } from "security/guards/rolesGuard/roles.guard";
 import { RoleDecorator } from "security/decorators/roles.decorator";
@@ -15,6 +12,7 @@ import {
   ApiParam,
   ApiQuery,
 } from "@nestjs/swagger";
+import { TimeFilter } from "../common/enums/time-filter.enum";
 
 @ApiTags("Event Analytics")
 @ApiBearerAuth()

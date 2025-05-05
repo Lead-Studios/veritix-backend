@@ -28,6 +28,14 @@ export class UpdateCollaboratorDto {
   eventId?: string;
 
   @ApiPropertyOptional({
+    description: 'Updated conference ID for the collaborator',
+    example: '456e4567-e89b-12d3-a456-426614174000'
+  })
+  @IsOptional()
+  @IsUUID()
+  conferenceId?: string;
+
+  @ApiPropertyOptional({
     description: 'Updated role of the collaborator',
     enum: CollaboratorRole,
     example: CollaboratorRole.EVENT_MANAGER

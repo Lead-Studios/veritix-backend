@@ -66,7 +66,7 @@ export class TicketPurchaseService {
     }
 
     // Find user
-    const user = await this.userServices.findOneById(parseInt(userId));
+    const user = await this.userServices.findOneById(userId);
 
     if (!user) {
       throw new NotFoundException("User not found");

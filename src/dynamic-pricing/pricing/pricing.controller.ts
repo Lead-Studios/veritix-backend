@@ -117,7 +117,7 @@ export class PricingController {
   @ApiResponse({ status: 403, description: "Forbidden - Requires Admin role" })
   updateRule(
     @Param("id") id: string,
-    @Body() updatePricingRuleDto: CreatePricingRuleDto,
+    @Body() updatePricingRuleDto: UpdatePricingRuleDto,
   ) {
     return this.pricingService.updatePricingRule(id, updatePricingRuleDto);
   }

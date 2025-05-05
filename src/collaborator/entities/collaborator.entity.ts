@@ -9,6 +9,7 @@ import {
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { Event } from "../../events/entities/event.entity";
 import { CollaboratorRole } from "../dto/create-collaborator.dto";
+import { Conference } from "src/conference/entities/conference.entity";
 
 @Entity()
 export class Collaborator {
@@ -33,12 +34,12 @@ export class Collaborator {
   @Column()
   email: string;
 
-  @ApiProperty({
-    description: "Image URL of the collaborator",
-    example: "https://storage.example.com/collaborators/123/profile.jpg",
+  @ApiPropertyOptional({
+    description: "URL of the collaborator's image",
+    example: "https://example.com/images/collaborator.jpg",
   })
-  @Column()
-  imageUrl: string;
+  @Column({ nullable: true })
+  imageUrl?: string;
 
   @ApiProperty({
     description: "Role of the collaborator",
@@ -86,6 +87,20 @@ export class Collaborator {
   })
   @Column({ default: true })
   isActive: boolean;
+
+  @ApiProperty({
+    description: "Conference this collaborator is associated with",
+    type: () => Conference,
+  })
+  @ManyToOne(() => Conference, (conference) => conference.collaborators)
+  conference: Conference;
+
+  @ApiProperty({
+    description: "ID of the conference this collaborator is associated with",
+    example: "456e4567-e89b-12d3-a456-426614174000",
+  })
+  @Column({ name: "conference_id" })
+  conferenceId: string;
 
   @ApiProperty({
     description: "Date when the collaborator was added",

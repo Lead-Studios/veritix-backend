@@ -21,6 +21,9 @@ import { ContactUsModule } from "./contact-us/contact-us.module";
 import { ConferenceModule } from "./conference/conference.module";
 import { ContactModule } from "./contact/contact.module";
 import { ConferenceSponsorsModule } from "./conference-sponsors/conference-sponsors.module";
+import { SpecialSpeakerModule } from "./special-speaker/special-speaker.module";
+import { CacheModule } from "@nestjs/cache-manager";
+import { ConferencePosterManagementModule } from "./conference-poster-management/conference-poster-management.module";
 import { ConferenceGalleryModule } from "./conference-gallery/conference-gallery.module";
 @Module({
   imports: [
@@ -28,6 +31,11 @@ import { ConferenceGalleryModule } from "./conference-gallery/conference-gallery
       isGlobal: true,
       envFilePath: ".env",
       load: [databaseConfig, jwtConfig],
+    }),
+    CacheModule.register({
+      isGlobal: true,
+      ttl: 300, // 5 minutes
+      max: 100, // maximum number of items in cache
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -58,6 +66,8 @@ import { ConferenceGalleryModule } from "./conference-gallery/conference-gallery
     ConferenceModule,
     ContactModule,
     ConferenceSponsorsModule,
+    ConferencePosterManagementModule,
+    SpecialSpeakerModule,
     ConferenceGalleryModule,
   ],
   controllers: [AppController],

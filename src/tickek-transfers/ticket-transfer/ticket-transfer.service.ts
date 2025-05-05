@@ -70,7 +70,7 @@ export class TicketTransferService {
     // Handle recipient (email or id)
     if (createTransferDto.recipientId) {
       const recipient = await this.usersService.findById(
-        Number(createTransferDto.recipientId),
+        createTransferDto.recipientId,
       );
       if (!recipient) {
         throw new HttpException("Recipient not found", HttpStatus.NOT_FOUND);

@@ -1,3 +1,5 @@
+import { SpecialSpeaker } from "src/special-speaker/entities/special-speaker.entity";
+import { Collaborator } from "src/collaborator/entities/collaborator.entity";
 import { Ticket } from "src/tickets/entities/ticket.entity";
 import { User } from "src/users/entities/user.entity";
 import {
@@ -9,17 +11,25 @@ import {
   OneToMany,
   ManyToOne,
   JoinColumn,
+  Index,
 } from "typeorm";
 import { ConferenceGallery } from "src/conference-gallery/entities/conference-gallery.entity";
 
+export enum ConferenceVisibility {
+  PUBLIC = "public",
+  PRIVATE = "private",
+  DRAFT = "draft",
+}
 @Entity()
 export class Conference {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
+  @Index()
   @Column({ name: "conference_name" })
   conferenceName: string;
 
+  @Index()
   @Column({ name: "conference_category" })
   conferenceCategory: string;
 
@@ -38,16 +48,27 @@ export class Conference {
   )
   conferenceGallery: ConferenceGallery[];
 
+  @Column({
+    type: "enum",
+    enum: ConferenceVisibility,
+    default: ConferenceVisibility.PUBLIC,
+  })
+  visibility: ConferenceVisibility;
+
   // Location details
+  @Index()
   @Column()
   country: string;
 
+  @Index()
   @Column()
   state: string;
 
+  @Index()
   @Column()
   street: string;
 
+  @Index()
   @Column({ name: "local_government" })
   localGovernment: string;
 
@@ -84,8 +105,8 @@ export class Conference {
   @Column({ nullable: true })
   instagram: string;
 
-  @Column()
-  organizerId: number; // This will hold the ID of the organizer (User)
+  @Column({ type: "uuid", nullable:true })
+  organizerId: string; // This will hold the ID of the organizer (User)
 
   @ManyToOne(() => User, (user) => user.conferences) // Assuming you have a User entity
   @JoinColumn({ name: "organizerId" })
@@ -95,9 +116,15 @@ export class Conference {
   @OneToMany(() => Ticket, (ticket) => ticket.conference)
   tickets: Ticket[];
 
+  @OneToMany(() => Collaborator, (collaborator) => collaborator.conference)
+  collaborators: Collaborator[];
+
   @CreateDateColumn({ name: "created_at" })
   createdAt: Date;
 
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt: Date;
+
+  @OneToMany(() => SpecialSpeaker, (speaker) => speaker.conference)
+  specialSpeakers: SpecialSpeaker[];
 }

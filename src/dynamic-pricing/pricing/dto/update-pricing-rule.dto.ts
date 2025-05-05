@@ -43,7 +43,39 @@ export class UpdatePricingRuleDto {
   })
   @IsOptional()
   @IsNumber()
-  adjustmentValue?: number;
+  discountValue?: number;
+
+  @ApiPropertyOptional({
+    description: "Updated days before event",
+    example: 45,
+  })
+  @IsOptional()
+  @IsNumber()
+  daysBeforeEvent?: number;
+
+  @ApiPropertyOptional({
+    description: "Updated hours before event",
+    example: 12,
+  })
+  @IsOptional()
+  @IsNumber()
+  hoursBeforeEvent?: number;
+
+  @ApiPropertyOptional({
+    description: "Updated minimum tickets",
+    example: 15,
+  })
+  @IsOptional()
+  @IsNumber()
+  minimumTickets?: number;
+
+  @ApiPropertyOptional({
+    description: "Updated minimum purchases",
+    example: 8,
+  })
+  @IsOptional()
+  @IsNumber()
+  minimumPurchases?: number;
 
   // @ApiPropertyOptional({
   //   description: 'Updated condition that triggers the price adjustment',
@@ -60,7 +92,7 @@ export class UpdatePricingRuleDto {
   })
   @IsOptional()
   @IsNumber()
-  triggerValue?: number;
+  priceIncreaseAmount?: number;
 
   @ApiPropertyOptional({
     description: "Updated minimum price after adjustment",
