@@ -31,13 +31,16 @@ export class Event {
   title: string;
 
   @Column()
-  description: string;
+  eventName: string;
 
-  @Column()
-  startDate: Date;
+  @Column({ type: "timestamp" })
+  eventDate: Date;
 
-  @Column()
-  endDate: Date;
+  @Column({ type: "timestamp" })
+  eventClosingDate: Date;
+
+  @Column({ type: "text" })
+  eventDescription: string;
 
   @Column()
   venue: string;
@@ -46,7 +49,7 @@ export class Event {
   address: string;
 
   @Column()
-  category: string;
+  street: string;
 
   @Column()
   capacity: number;
@@ -58,28 +61,48 @@ export class Event {
   cancellationReason: string;
 
   @Column({ nullable: true })
-  postponementReason: string;
+  eventImage: string;
 
   @Column({ default: false })
-  isArchived: boolean;
+  hideEventLocation: boolean;
+
+  @Column({ default: false })
+  eventComingSoon: boolean;
+
+  @Column({ default: false })
+  transactionCharge: boolean;
+
+  @Column({ nullable: true })
+  bankName: string;
+
+  @Column({ nullable: true })
+  bankAccountNumber: string;
+
+  @Column({ nullable: true })
+  accountName: string;
+
+  @Column({ nullable: true })
+  facebook: string;
+
+  @Column({ nullable: true })
+  twitter: string;
+
+  @Column({ nullable: true })
+  instagram: string;
 
   @ManyToOne(() => User, (user) => user.events)
   organizer: User;
 
-  @OneToMany(() => GalleryItem, (galleryItem) => galleryItem.event)
-  galleryItems: GalleryItem[];
+  @ManyToMany(() => Sponsor, (sponsor) => sponsor.event)
+  sponsors: Sponsor[];
 
   @OneToMany(() => Ticket, (ticket) => ticket.event)
   tickets: Ticket[];
 
-  @OneToMany(() => SpecialGuest, (specialGuest) => specialGuest.event)
-  specialGuests: SpecialGuest[];
-
-  @OneToMany(() => Sponsor, (sponsor) => sponsor.event)
-  sponsors: Sponsor[];
-
-  @OneToMany(() => Poster, (poster) => poster.event)
-  posters: Poster[];
+  @OneToMany(() => SpecialGuest, (specialGuest) => specialGuest.event, {
+    nullable: true,
+  })
+  specialGuests: SpecialGuest[] | null;
 
   @OneToMany(() => Collaborator, (collaborator) => collaborator.event)
   collaborators: Collaborator[];
@@ -87,12 +110,18 @@ export class Event {
   @OneToMany(() => PricingRule, (pricingRule) => pricingRule.event)
   pricingRules: PricingRule[];
 
-  @CreateDateColumn()
-  createdAt: Date;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
+  @Column({ default: false })
+  isArchived: boolean;
 
   @DeleteDateColumn()
   deletedAt?: Date;
+
+  @OneToMany(() => Poster, (poster) => poster.event)
+  posters: Poster[];
+
+  @OneToMany(() => EventGallery, (eventGallery) => eventGallery.event)
+  eventGallery: EventGallery[];
+
+  @ManyToOne(() => Category, (category) => category.events)
+  category: Category;
 }

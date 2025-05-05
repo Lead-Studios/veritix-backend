@@ -32,7 +32,7 @@ export class CollaboratorService {
     });
 
     if (existingCollaborator) {
-      throw new BadRequestException('Email already in use for this conference');
+      throw new BadRequestException("Email already in use for this conference");
     }
 
     const event = await this.eventRepository.findOne({
@@ -47,7 +47,9 @@ export class CollaboratorService {
     });
 
     if (count >= 5) {
-      throw new BadRequestException("Maximum number of collaborators (5) reached for this event");
+      throw new BadRequestException(
+        "Maximum number of collaborators (5) reached for this event",
+      );
     }
 
     const collaborator = new Collaborator();
@@ -114,7 +116,9 @@ export class CollaboratorService {
       });
 
       if (existingCollaborator) {
-        throw new BadRequestException('Email already in use for this conference');
+        throw new BadRequestException(
+          "Email already in use for this conference",
+        );
       }
     }
 
@@ -122,9 +126,13 @@ export class CollaboratorService {
       updateCollaboratorDto.conferenceId &&
       updateCollaboratorDto.conferenceId !== collaborator.conferenceId
     ) {
-      const count = await this.countByConferenceId(updateCollaboratorDto.conferenceId);
+      const count = await this.countByConferenceId(
+        updateCollaboratorDto.conferenceId,
+      );
       if (count >= 5) {
-        throw new BadRequestException('Target conference already has the maximum of 5 collaborators');
+        throw new BadRequestException(
+          "Target conference already has the maximum of 5 collaborators",
+        );
       }
 
       collaborator.conferenceId = updateCollaboratorDto.conferenceId;
@@ -147,7 +155,9 @@ export class CollaboratorService {
       });
 
       if (count >= 5) {
-        throw new BadRequestException("Maximum number of collaborators (5) reached for this event");
+        throw new BadRequestException(
+          "Maximum number of collaborators (5) reached for this event",
+        );
       }
 
       collaborator.event = newEvent;

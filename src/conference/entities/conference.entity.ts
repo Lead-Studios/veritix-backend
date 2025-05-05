@@ -13,6 +13,7 @@ import {
   JoinColumn,
   Index,
 } from "typeorm";
+import { ConferenceGallery } from "src/conference-gallery/entities/conference-gallery.entity";
 
 export enum ConferenceVisibility {
   PUBLIC = "public",
@@ -41,8 +42,11 @@ export class Conference {
   @Column({ name: "conference_description", type: "text" })
   conferenceDescription: string;
 
-  @Column({ name: "conference_image" })
-  conferenceImage: string;
+  @OneToMany(
+    () => ConferenceGallery,
+    (conferenceGallery) => conferenceGallery.conference,
+  )
+  conferenceGallery: ConferenceGallery[];
 
   @Column({
     type: "enum",

@@ -17,6 +17,7 @@ import {
   UseGuards,
   UnauthorizedException,
   Logger,
+  BadRequestException,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -162,11 +163,14 @@ export class UsersController {
   ): Promise<{ users: CreateUserDto[]; total: number }> {
     const { limits = 20, page = 1 } = pagination || {};
 
-    const [users, total] = await this.usersRepository.findAndCount({
-      take: limits,
-      skip: (page - 1) * limits,
-    });
-    return { users: users, total };
+    const validPage = Math.max(1, page || 1);
+    const validLimit = Math.max(1, Math.min(100, limits || 20));
+    const result = await this.usersService.findAll(validPage, validLimit);
+    // The service already returns the desired structure { total, page, limit, data }
+    return {
+      users: result.data,
+      total: result.total,
+    };
   }
 
   @Get(":id")

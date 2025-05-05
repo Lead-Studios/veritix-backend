@@ -23,12 +23,12 @@ export class GalleryItem {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
-  @ApiProperty({
-    description: "Event this gallery item belongs to",
-    type: () => Event,
-  })
-  @ManyToOne(() => Event, (event) => event.galleryItems)
-  event: Event;
+  // @ApiProperty({
+  //   description: "Event this gallery item belongs to",
+  //   type: () => Event,
+  // })
+  // @ManyToOne(() => Event, (event) => event.galleryItems)
+  // event: Event;
 
   @ApiProperty({
     description: "Type of media (image or video)",
@@ -59,7 +59,7 @@ export class GalleryItem {
     description: "Description of the gallery item",
     example: "Capture of the spectacular opening ceremony fireworks",
   })
-  @Column({ nullable: true })
+  @Column("text", { nullable: true })
   description?: string;
 
   @ApiPropertyOptional({

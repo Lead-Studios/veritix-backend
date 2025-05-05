@@ -40,7 +40,7 @@ export class TokenVerificationProvider {
       // Check if the user exists
       const user = await this.adminServices.findOneByEmail(email);
       this.logger.log(`User found: ${JSON.stringify(user, null, 2)}`);
-      
+
       if (user.id !== userId || user.email !== email) {
         throw new UnauthorizedException("Token does not match user");
       }
@@ -82,9 +82,9 @@ export class TokenVerificationProvider {
         throw new UnauthorizedException('Invalid token');
       }
 
-      return { 
+      return {
         isValid: true,
-        email: user.email 
+        email: user.email
       };
     } catch (error) {
       this.logger.error(`Error verifying reset token: ${error.message}`, error.stack);

@@ -22,9 +22,6 @@ export class Ticket {
   @Column()
   userId: string;
 
-  @Column()
-  quantity: number;
-
   @Column("decimal", { precision: 10, scale: 2 })
   pricePerTicket: number;
 
@@ -62,6 +59,12 @@ export class Ticket {
   @Column()
   eventId: string;
 
+  @Column({ type: "int" })
+  quantity: number;
+
+  @Column({ type: "decimal", precision: 10, scale: 2 })
+  price: number;
+
   @Column({ type: "text" })
   description: string;
 
@@ -83,9 +86,6 @@ export class Ticket {
 
   @Column()
   status: string;
-
-  @Column("decimal", { precision: 10, scale: 2 })
-  price: number;
 
   @Column({ nullable: true })
   qrCode: string;

@@ -67,6 +67,13 @@ export class Collaborator {
   @ManyToOne(() => Event, (event) => event.collaborators)
   event: Event;
 
+  @ApiProperty({
+    description: "Event ID associated with the collaborator",
+    example: "123e4567-e89b-12d3-a456-426614174000",
+  })
+  @Column()
+  eventId: string;
+
   @ApiPropertyOptional({
     description: "Notes about the collaborator's responsibilities",
     example: "Manages ticket sales and event logistics",
@@ -80,7 +87,7 @@ export class Collaborator {
   })
   @Column({ default: true })
   isActive: boolean;
-  
+
   @ApiProperty({
     description: "Conference this collaborator is associated with",
     type: () => Conference,

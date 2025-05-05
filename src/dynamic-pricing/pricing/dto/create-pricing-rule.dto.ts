@@ -8,8 +8,11 @@ import {
   IsOptional,
   Min,
   Max,
+  IsNotEmpty,
+  IsDate,
 } from "class-validator";
 import { PricingRuleType, DiscountType } from "../entities/pricing-rule.entity";
+import { Type } from "class-transformer";
 
 export class CreatePricingRuleDto {
   @ApiProperty({
@@ -17,6 +20,7 @@ export class CreatePricingRuleDto {
     example: "Early Bird Discount",
   })
   @IsString()
+  @IsNotEmpty()
   name: string;
 
   @ApiProperty({
@@ -24,6 +28,7 @@ export class CreatePricingRuleDto {
     example: "123e4567-e89b-12d3-a456-426614174000",
   })
   @IsUUID()
+  @IsNotEmpty()
   eventId: string;
 
   @ApiProperty({
@@ -42,82 +47,46 @@ export class CreatePricingRuleDto {
   @IsEnum(DiscountType)
   discountType: DiscountType;
 
-  @ApiProperty({
-    description: "Value of the discount",
-    example: 15,
-  })
-  @IsNumber()
-  discountValue: number;
-
-  @ApiPropertyOptional({
-    description: "Days before event",
-    example: 30,
-  })
+  @IsBoolean()
   @IsOptional()
+  isActive?: boolean;
+
+  @IsDate()
+  @Type(() => Date)
+  @IsOptional()
+  startDate?: Date;
+
+  @IsDate()
+  @Type(() => Date)
+  @IsOptional()
+  endDate?: Date;
+
+  // Early bird specific fields
   @IsNumber()
+  @IsOptional()
   daysBeforeEvent?: number;
 
-  @ApiPropertyOptional({
-    description: "Hours before event",
-    example: 24,
-  })
-  @IsOptional()
+  // Dynamic pricing specific fields
   @IsNumber()
-  hoursBeforeEvent?: number;
-
-  @ApiPropertyOptional({
-    description: "Minimum tickets",
-    example: 10,
-  })
   @IsOptional()
-  @IsNumber()
-  minimumTickets?: number;
-
-  @ApiPropertyOptional({
-    description: "Minimum purchases",
-    example: 5,
-  })
-  @IsOptional()
-  @IsNumber()
-  minimumPurchases?: number;
-
-  @ApiPropertyOptional({
-    description: "Sales threshold",
-    example: 100,
-  })
-  @IsOptional()
-  @IsNumber()
   salesThreshold?: number;
 
-  @ApiPropertyOptional({
-    description: "Price increase amount",
-    example: 10,
-  })
-  @IsOptional()
   @IsNumber()
+  @IsOptional()
   priceIncreaseAmount?: number;
 
-  @ApiPropertyOptional({
-    description: "Minimum price after adjustment",
-    example: 50,
-  })
-  @IsOptional()
+  // Loyalty specific fields
   @IsNumber()
-  @Min(0)
-  minimumPrice?: number;
-
-  @ApiProperty({
-    description: "Whether the rule is currently active",
-    example: true,
-  })
-  @IsBoolean()
-  isActive: boolean;
-
-  @ApiPropertyOptional({
-    description: "Description of the pricing rule",
-    example: "Applies 15% discount when event is 30 days away",
-  })
   @IsOptional()
-  @IsString()
-  description?: string;
+  minimumPurchases?: number;
+
+  // Group discount specific fields
+  @IsNumber()
+  @IsOptional()
+  minimumTickets?: number;
+
+  // Last minute specific fields
+  @IsNumber()
+  @IsOptional()
+  hoursBeforeEvent?: number;
 }

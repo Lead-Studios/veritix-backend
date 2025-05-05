@@ -131,7 +131,7 @@ export class PricingService {
   ): Promise<PricingRule> {
     const rule = await this.findOnePricingRule(id);
 
-    // Update the rule with only the provided fields
+    // Update the rule
     Object.assign(rule, updatePricingRuleDto);
 
     return this.pricingRuleRepository.save(rule);
@@ -395,9 +395,9 @@ export class PricingService {
     }
 
     // Apply early bird discounts if applicable
-    if (event.startDate) {
+    if (event.eventDate) {
       const now = new Date();
-      const daysUntilEvent = differenceInDays(new Date(event.startDate), now);
+      const daysUntilEvent = differenceInDays(new Date(event.eventDate), now);
 
       const earlyBirdRules = await this.pricingRuleRepository.find({
         where: {
@@ -425,9 +425,9 @@ export class PricingService {
     }
 
     // Apply last minute discounts if applicable
-    if (event.startDate) {
+    if (event.eventDate) {
       const now = new Date();
-      const hoursUntilEvent = differenceInHours(new Date(event.startDate), now);
+      const hoursUntilEvent = differenceInHours(new Date(event.eventDate), now);
 
       const lastMinuteRules = await this.pricingRuleRepository.find({
         where: {
@@ -682,11 +682,11 @@ export class PricingService {
     }
 
     const now = new Date();
-    const daysUntilEvent = event.startDate
-      ? differenceInDays(new Date(event.startDate), now)
+    const daysUntilEvent = event.eventDate
+      ? differenceInDays(new Date(event.eventDate), now)
       : null;
-    const hoursUntilEvent = event.startDate
-      ? differenceInHours(new Date(event.startDate), now)
+    const hoursUntilEvent = event.eventDate
+      ? differenceInHours(new Date(event.eventDate), now)
       : null;
 
     // Get all applicable discounts for this event

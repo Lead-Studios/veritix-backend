@@ -9,7 +9,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-import { Event } from '../../events/entities/event.entity';
+import { Event } from "../../events/entities/event.entity";
 
 @Entity()
 export class User {
@@ -50,7 +50,7 @@ export class User {
   @Column({ default: false })
   isVerified: boolean;
 
-  @OneToMany(() => Event, event => event.organizer)
+  @OneToMany(() => Event, (event) => event.organizer)
   events: Event[];
 
   @CreateDateColumn()

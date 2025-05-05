@@ -10,7 +10,6 @@ import {
   Query,
   UseInterceptors,
   UploadedFile,
-  Req,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -26,14 +25,12 @@ import { FileInterceptor } from "@nestjs/platform-express";
 import { EventsService } from "./events.service";
 import { CreateEventDto } from "./dto/create-event.dto";
 import { UpdateEventDto } from "./dto/update-event.dto";
-
+import { JwtAuthGuard } from "security/guards/jwt-auth.guard";
 import { RolesGuard } from "security/guards/rolesGuard/roles.guard";
-
-import { UserRole } from "../common/enums/users-roles.enum";
+import { RoleDecorator } from "security/decorators/roles.decorator";
+import { UserRole } from "src/common/enums/users-roles.enum";
 import { Event } from "./entities/event.entity";
 import { EventStatus } from "../common/enums/event-status.enum";
-import { JwtAuthGuard } from "security/guards/jwt-auth.guard";
-import { RoleDecorator } from "security/decorators/roles.decorator";
 
 @ApiTags("Events")
 @ApiBearerAuth()
@@ -90,9 +87,14 @@ export class EventsController {
     type: Number,
   })
   @ApiQuery({
-    name: "search",
+    name: "name",
     required: false,
     description: "Search term for event title or description",
+  })
+  @ApiQuery({
+    name: "location", // Added location filter
+    required: false,
+    description: "Filter by event location (country, state, street, etc.)",
   })
   @ApiQuery({
     name: "category",
@@ -111,21 +113,33 @@ export class EventsController {
   })
   @ApiQuery({
     name: "status",
+    enum: EventStatus,
     required: false,
-    description: "Filter by event status",
+    description: "Filter by event status (e.g., Upcoming, Published, Draft)",
   })
   @ApiResponse({
     status: 200,
     description: "List of events with pagination metadata",
     type: [Event],
   })
-  findAll(@Req() req: any) {
-    const filters = {
-      page: req.query.page ? Number(req.query.page) : 1,
-      limit: req.query.limit ? Number(req.query.limit) : 10,
-      status: req.query.status as EventStatus,
-    };
-    return this.eventsService.findAll(filters);
+  findAll(
+    @Query("page") page?: number,
+    @Query("limit") limit?: number,
+    @Query("name") name?: string,
+    @Query("location") location?: string,
+    @Query("category") category?: string,
+    @Query("startDate") startDate?: string,
+    @Query("endDate") endDate?: string,
+    @Query("status") status?: EventStatus,
+  ) {
+    return this.eventsService.getAllEvents(page, limit, {
+      name,
+      location,
+      category,
+      startDate,
+      endDate,
+      status,
+    });
   }
 
   @Get(":id")
@@ -145,7 +159,7 @@ export class EventsController {
   })
   @ApiResponse({ status: 404, description: "Event not found" })
   findOne(@Param("id") id: string) {
-    return this.eventsService.findOne(id);
+    return this.eventsService.getEventById(id);
   }
 
   @Patch(":id")
@@ -182,7 +196,7 @@ export class EventsController {
     @Body() updateEventDto: UpdateEventDto,
     @UploadedFile() coverImage?: Express.Multer.File,
   ) {
-    return this.eventsService.update(id, updateEventDto, coverImage);
+    return this.eventsService.updateEvent(id, updateEventDto, coverImage);
   }
 
   @Delete(":id")
@@ -204,7 +218,7 @@ export class EventsController {
   })
   @ApiResponse({ status: 404, description: "Event not found" })
   remove(@Param("id") id: string) {
-    return this.eventsService.remove(id);
+    return this.eventsService.deleteEvent(id);
   }
 
   @Post(":id/publish")

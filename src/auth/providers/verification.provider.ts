@@ -4,7 +4,7 @@ import {
   Injectable,
   UnauthorizedException,
   Logger,
-  ConflictException
+  ConflictException,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigType } from "@nestjs/config";
@@ -28,18 +28,15 @@ export class TokenVerificationProvider {
   public async verifyToken(token: string) {
     this.logger.log(`Token: ${token}`);
     try {
-      const { userId, email } = await this.jwtService.verifyAsync(
-        token,
-        {
-          secret: this.jwtConfiguration.secret,
-          audience: this.jwtConfiguration.audience,
-          issuer: this.jwtConfiguration.issuer,
-        },
-      );
+      const { userId, email } = await this.jwtService.verifyAsync(token, {
+        secret: this.jwtConfiguration.secret,
+        audience: this.jwtConfiguration.audience,
+        issuer: this.jwtConfiguration.issuer,
+      });
 
       // Check if the user exists
       const user = await this.userServices.findOneById(userId);
-      
+
       if (user.id !== userId) {
         throw new UnauthorizedException("Token does not match user");
       }
@@ -48,7 +45,11 @@ export class TokenVerificationProvider {
       }
 
       if (!user.isVerified) {
-        await this.userServices.updateUser(user.id, { id: user.id }, { isVerified: true });
+        await this.userServices.updateUser(
+          user.id,
+          { id: user.id },
+          { isVerified: true },
+        );
       } else {
         return { message: "Email already verified" };
       }
@@ -58,7 +59,9 @@ export class TokenVerificationProvider {
       this.logger.error(`Error verifying email: ${error.message}`, error.stack);
       this.logger.debug(`Error details: ${JSON.stringify(error, null, 2)}`);
       if (error.name === "TokenExpiredError") {
-        throw new UnauthorizedException("Token has expired. Please request another one");
+        throw new UnauthorizedException(
+          "Token has expired. Please request another one",
+        );
       }
 
       throw new UnauthorizedException("Invalid or expired token");
@@ -66,7 +69,8 @@ export class TokenVerificationProvider {
   }
 
   public async sendToken(email: string) {
-    const message = 'Further instructions would be sent to this inbox. Be sure to check your spam or junk folders.';
+    const message =
+      "Further instructions would be sent to this inbox. Be sure to check your spam or junk folders.";
     // Check if the user exists
     const user = await this.userServices.GetOneByEmail(email);
     if (!user) {
@@ -77,10 +81,11 @@ export class TokenVerificationProvider {
     }
 
     if (user.isVerified) {
-      throw new  ConflictException('Account already verified.');
+      throw new ConflictException("Account already verified.");
     }
 
-    const token = await this.generateTokenProvider.generateVerificationToken(user);
+    const token =
+      await this.generateTokenProvider.generateVerificationToken(user);
     this.logger.log(`Token: ${token}`);
 
     // send email using emailService

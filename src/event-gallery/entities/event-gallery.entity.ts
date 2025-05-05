@@ -18,7 +18,7 @@ export class EventGallery {
   @Column()
   description: string;
 
-  @ManyToOne(() => Event, (event) => event.galleryItems, {
+  @ManyToOne(() => Event, (event) => event.eventGallery, {
     onDelete: "CASCADE",
   })
   @JoinColumn({ name: "eventId" })

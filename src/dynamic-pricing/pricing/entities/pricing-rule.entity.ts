@@ -5,10 +5,10 @@ import {
   ManyToOne,
   CreateDateColumn,
   UpdateDateColumn,
+  JoinColumn,
 } from "typeorm";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { Event } from "../../../events/entities/event.entity";
-
 
 export enum PricingRuleType {
   EARLY_BIRD = "EARLY_BIRD",
@@ -39,96 +39,63 @@ export class PricingRule {
   @Column()
   name: string;
 
-  @ApiProperty({
-    description: "Type of the pricing rule",
-    enum: PricingRuleType,
-    example: PricingRuleType.EARLY_BIRD,
-  })
-  @Column({ type: "enum", enum: PricingRuleType })
-  ruleType: PricingRuleType;
-
-  @ApiProperty({
-    description: "Type of discount",
-    enum: DiscountType,
-    example: DiscountType.PERCENTAGE,
-  })
-  @Column({ type: "enum", enum: DiscountType, nullable: true })
-  discountType: DiscountType;
-
-  @ApiProperty({
-    description: "Value of the discount",
-    example: 15,
-  })
   @Column({ nullable: true })
-  discountValue: number;
+  description: string;
 
-  @ApiProperty({
-    description: "Days before event",
-    example: 30,
-  })
-  @Column({ nullable: true })
-  daysBeforeEvent: number;
-
-  @ApiProperty({
-    description: "Hours before event",
-    example: 24,
-  })
-  @Column({ nullable: true })
-  hoursBeforeEvent: number;
-
-  @ApiProperty({
-    description: "Minimum tickets",
-    example: 10,
-  })
-  @Column({ nullable: true })
-  minimumTickets: number;
-
-  @ApiProperty({
-    description: "Minimum purchases",
-    example: 5,
-  })
-  @Column({ nullable: true })
-  minimumPurchases: number;
-
-  @ApiProperty({
-    description: "Sales threshold",
-    example: 100,
-  })
-  @Column({ nullable: true })
-  salesThreshold: number;
-
-  @ApiProperty({
-    description: "Price increase amount",
-    example: 10,
-  })
-  @Column({ nullable: true })
-  priceIncreaseAmount: number;
-
-  @ApiProperty({
-    description: "Minimum price after adjustment",
-    example: 50,
-  })
-  @Column("decimal", { precision: 10, scale: 2, nullable: true })
-  minimumPrice?: number;
-
-  @ApiProperty({
-    description: "Event this pricing rule applies to",
-    type: () => Event,
-  })
-  @ManyToOne(() => Event, (event) => event.pricingRules)
+  @ManyToOne(() => Event)
+  @JoinColumn()
   event: Event;
 
-  @ApiProperty({
-    description: "Whether the rule is currently active",
-    example: true,
+  @Column()
+  eventId: string;
+
+  @Column({
+    type: "enum",
+    enum: PricingRuleType,
   })
+  ruleType: PricingRuleType;
+
+  @Column({
+    type: "enum",
+    enum: DiscountType,
+  })
+  discountType: DiscountType;
+
+  @Column({ type: "decimal", precision: 10, scale: 2 })
+  discountValue: number;
+
   @Column({ default: true })
   isActive: boolean;
 
-  @ApiProperty({
-    description: "Date and time when the rule was created",
-    example: "2025-04-30T10:00:00Z",
-  })
+  @Column({ nullable: true })
+  startDate: Date;
+
+  @Column({ nullable: true })
+  endDate: Date;
+
+  // Early bird specific fields
+  @Column({ nullable: true })
+  daysBeforeEvent: number;
+
+  // Dynamic pricing specific fields
+  @Column({ nullable: true })
+  salesThreshold: number;
+
+  @Column({ nullable: true, type: "decimal", precision: 10, scale: 2 })
+  priceIncreaseAmount: number;
+
+  // Loyalty specific fields
+  @Column({ nullable: true })
+  minimumPurchases: number;
+
+  // Group discount specific fields
+  @Column({ nullable: true })
+  minimumTickets: number;
+
+  // Last minute specific fields
+  @Column({ nullable: true })
+  hoursBeforeEvent: number;
+
   @CreateDateColumn()
   createdAt: Date;
 

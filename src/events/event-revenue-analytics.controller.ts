@@ -74,7 +74,7 @@ export class EventRevenueAnalyticsController {
     @Param("eventId") eventId: string,
     @Query("filter") filter?: TimeFilter,
   ) {
-    return this.eventRevenueService.getRevenue(eventId, filter);
+    return this.eventRevenueService.calculateFilteredRevenue(eventId, filter);
   }
 
   @Get(":eventId/profit")
@@ -129,6 +129,6 @@ export class EventRevenueAnalyticsController {
     @Param("eventId") eventId: string,
     @Query("filter") filter?: TimeFilter,
   ) {
-    return this.eventRevenueService.getProfit(eventId, filter);
+    return this.eventRevenueService.calculateTotalProfit(eventId);
   }
 }

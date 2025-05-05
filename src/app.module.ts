@@ -24,6 +24,7 @@ import { ConferenceSponsorsModule } from "./conference-sponsors/conference-spons
 import { SpecialSpeakerModule } from "./special-speaker/special-speaker.module";
 import { CacheModule } from "@nestjs/cache-manager";
 import { ConferencePosterManagementModule } from "./conference-poster-management/conference-poster-management.module";
+import { ConferenceGalleryModule } from "./conference-gallery/conference-gallery.module";
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -66,7 +67,8 @@ import { ConferencePosterManagementModule } from "./conference-poster-management
     ContactModule,
     ConferenceSponsorsModule,
     ConferencePosterManagementModule,
-    SpecialSpeakerModule
+    SpecialSpeakerModule,
+    ConferenceGalleryModule,
   ],
   controllers: [AppController],
   providers: [AppService, PdfService],

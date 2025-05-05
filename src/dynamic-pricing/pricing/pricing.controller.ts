@@ -25,7 +25,6 @@ import { RolesGuard } from "security/guards/rolesGuard/roles.guard";
 import { RoleDecorator } from "security/decorators/roles.decorator";
 import { UserRole } from "src/common/enums/users-roles.enum";
 import { PricingRule } from "./entities/pricing-rule.entity";
-import { CalculatePriceDto } from "./dto/calculate-price.dto";
 
 @ApiTags("Dynamic Pricing")
 @ApiBearerAuth()
@@ -70,7 +69,7 @@ export class PricingController {
   })
   @ApiResponse({ status: 401, description: "Unauthorized" })
   @ApiResponse({ status: 403, description: "Forbidden - Requires Admin role" })
-  getAllRules(@Query("eventId") eventId: string) {
+  getAllRules(@Query("eventId") eventId?: string) {
     return this.pricingService.findAllPricingRules(eventId);
   }
 
@@ -93,7 +92,7 @@ export class PricingController {
   @ApiResponse({ status: 404, description: "Rule not found" })
   @ApiResponse({ status: 401, description: "Unauthorized" })
   @ApiResponse({ status: 403, description: "Forbidden - Requires Admin role" })
-  getRule(@Param("id") id: string) {
+  findOneRule(@Param("id") id: string) {
     return this.pricingService.findOnePricingRule(id);
   }
 
@@ -145,65 +144,65 @@ export class PricingController {
     return this.pricingService.removePricingRule(id);
   }
 
-  @Post("calculate")
-  @RoleDecorator(UserRole.Admin)
-  @ApiOperation({
-    summary: "Calculate dynamic prices",
-    description: "Calculate ticket prices based on configured rules",
-  })
-  @ApiParam({
-    name: "eventId",
-    description: "Event ID",
-    example: "123e4567-e89b-12d3-a456-426614174000",
-  })
-  @ApiResponse({
-    status: 200,
-    description: "Dynamic prices calculated successfully",
-    type: Object,
-  })
-  @ApiResponse({ status: 404, description: "Event not found" })
-  @ApiResponse({ status: 401, description: "Unauthorized" })
-  @ApiResponse({ status: 403, description: "Forbidden - Requires Admin role" })
-  calculatePrices(@Body() calculatePriceDto: CalculatePriceDto) {
-    return this.pricingService.calculatePrice(calculatePriceDto);
-  }
+  // @Post("calculate/:eventId")
+  // @RoleDecorator(UserRole.Admin)
+  // @ApiOperation({
+  //   summary: "Calculate dynamic prices",
+  //   description: "Calculate ticket prices based on configured rules",
+  // })
+  // @ApiParam({
+  //   name: "eventId",
+  //   description: "Event ID",
+  //   example: "123e4567-e89b-12d3-a456-426614174000",
+  // })
+  // @ApiResponse({
+  //   status: 200,
+  //   description: "Dynamic prices calculated successfully",
+  //   type: Object,
+  // })
+  // @ApiResponse({ status: 404, description: "Event not found" })
+  // @ApiResponse({ status: 401, description: "Unauthorized" })
+  // @ApiResponse({ status: 403, description: "Forbidden - Requires Admin role" })
+  // calculatePrices(@Param("eventId") eventId: string) {
+  //   return this.pricingService.calculatePrices(eventId);
+  // }
 
-  @Get("history")
-  @RoleDecorator(UserRole.Admin)
-  @ApiOperation({
-    summary: "Get price history",
-    description: "Retrieve price adjustment history for an event",
-  })
-  @ApiParam({
-    name: "eventId",
-    description: "Event ID",
-    example: "123e4567-e89b-12d3-a456-426614174000",
-  })
-  @ApiQuery({
-    name: "startDate",
-    required: false,
-    type: Date,
-    description: "Start date for history lookup",
-  })
-  @ApiQuery({
-    name: "endDate",
-    required: false,
-    type: Date,
-    description: "End date for history lookup",
-  })
-  @ApiResponse({
-    status: 200,
-    description: "Price history retrieved successfully",
-    type: Object,
-  })
-  @ApiResponse({ status: 404, description: "Event not found" })
-  @ApiResponse({ status: 401, description: "Unauthorized" })
-  @ApiResponse({ status: 403, description: "Forbidden - Requires Admin role" })
-  getPriceHistory(
-    @Query("eventId") eventId: string,
-    @Query("startDate") startDate: string,
-    @Query("endDate") endDate: string,
-  ) {
-    return this.pricingService.getEventDiscounts(eventId);
-  }
+  // @Get("history/:eventId")
+  // @RoleDecorator(UserRole.Admin)
+  // @ApiOperation({
+  //   summary: "Get price history",
+  //   description: "Retrieve price adjustment history for an event",
+  // })
+  // @ApiParam({
+  //   name: "eventId",
+  //   description: "Event ID",
+  //   example: "123e4567-e89b-12d3-a456-426614174000",
+  // })
+  // @ApiQuery({
+  //   name: "startDate",
+  //   required: false,
+  //   type: Date,
+  //   description: "Start date for history lookup",
+  // })
+  // @ApiQuery({
+  //   name: "endDate",
+  //   required: false,
+  //   type: Date,
+  //   description: "End date for history lookup",
+  // })
+  // @ApiResponse({
+  //   status: 200,
+  //   description: "Price history retrieved successfully",
+  //   type: Object,
+  // })
+  // @ApiResponse({ status: 404, description: "Event not found" })
+  // @ApiResponse({ status: 401, description: "Unauthorized" })
+  // @ApiResponse({ status: 403, description: "Forbidden - Requires Admin role" })
+  // getPriceHistory(
+  //   @Param("eventId") eventId: string,
+  //   @Query("startDate") startDate?: Date,
+  //   @Query("endDate") endDate?: Date,
+  // ) {
+  //   return this.pricingService.getPriceHistory(eventId, startDate, endDate);
+  // }
 }

@@ -14,8 +14,7 @@ import { AdminModule } from "src/admin/admin.module";
     forwardRef(() => AuthModule),
     TypeOrmModule.forFeature([User]),
     forwardRef(() => AdminModule),
-    
-],
+  ],
   controllers: [UsersController],
   providers: [UsersService, CreateUsersProvider, FindOneByEmailProvider],
   exports: [UsersService],

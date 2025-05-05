@@ -43,12 +43,11 @@ export class EventDashboardService {
       (totalTicketQuantity.totalQuantity || 0) - ticketsSold;
 
     // Get the first poster or gallery item image if available
-    const eventImage =
-      event.posters?.[0]?.imageUrl || event.galleryItems?.[0]?.url || null;
+    const eventImage = event.posters?.[0]?.imageUrl || null;
 
     return {
-      eventName: event.title,
-      eventDate: event.startDate,
+      eventName: event.eventName,
+      eventDate: event.eventDate,
       eventLocation: {
         address: event.address,
         venue: event.venue,

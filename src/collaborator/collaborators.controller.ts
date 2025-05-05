@@ -10,8 +10,8 @@ import {
   Query,
   UseInterceptors,
   UploadedFile,
+  BadRequestException,
 } from "@nestjs/common";
-import { FileInterceptor } from "@nestjs/platform-express";
 import {
   ApiTags,
   ApiOperation,
@@ -20,7 +20,9 @@ import {
   ApiParam,
   ApiQuery,
   ApiConsumes,
+  ApiBody,
 } from "@nestjs/swagger";
+import { CollaboratorService } from "./collaborators.service";
 import { CreateCollaboratorDto } from "./dto/create-collaborator.dto";
 import { UpdateCollaboratorDto } from "./dto/update-collaborator.dto";
 import { JwtAuthGuard } from "security/guards/jwt-auth.guard";
@@ -28,7 +30,7 @@ import { RolesGuard } from "security/guards/rolesGuard/roles.guard";
 import { RoleDecorator } from "security/decorators/roles.decorator";
 import { UserRole } from "src/common/enums/users-roles.enum";
 import { Collaborator } from "./entities/collaborator.entity";
-import { CollaboratorService } from "./collaborators.service";
+import { FileInterceptor } from "@nestjs/platform-express";
 
 @ApiTags("Collaborators")
 @ApiBearerAuth()
@@ -51,14 +53,18 @@ export class CollaboratorController {
     description: "Collaborator created successfully",
     type: Collaborator,
   })
-  @ApiResponse({ status: 400, description: "Invalid input" })
+  @ApiResponse({ status: 400, description: "Invalid input or missing image" })
   @ApiResponse({ status: 401, description: "Unauthorized" })
   @ApiResponse({ status: 403, description: "Forbidden - Requires Admin role" })
   create(
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file: Express.Multer.File, // Inject the uploaded file
     @Body() createCollaboratorDto: CreateCollaboratorDto,
   ) {
-    return this.collaboratorsService.create(createCollaboratorDto, file);
+    if (!file) {
+      throw new BadRequestException("Collaborator image is required");
+    }
+    const collaboratorData = { ...createCollaboratorDto, image: file }; // Merge file into DTO
+    return this.collaboratorsService.create(collaboratorData); // Pass merged data to service
   }
 
   @Get()
@@ -114,10 +120,15 @@ export class CollaboratorController {
     summary: "Update collaborator",
     description: "Update details of an existing collaborator",
   })
+  @ApiConsumes("multipart/form-data")
   @ApiParam({
     name: "id",
     description: "Collaborator ID",
     example: "123e4567-e89b-12d3-a456-426614174000",
+  })
+  @ApiBody({
+    description: "Collaborator details to update and optional new image",
+    type: UpdateCollaboratorDto,
   })
   @ApiResponse({
     status: 200,
