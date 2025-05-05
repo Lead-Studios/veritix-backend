@@ -10,6 +10,7 @@ import {
   ParseUUIDPipe,
   Query,
   Req,
+  UnauthorizedException,
 } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiQuery, ApiResponse } from "@nestjs/swagger";
 import { ConferenceService } from "../providers/conference.service";
@@ -18,51 +19,22 @@ import {
   UpdateConferenceDto,
   ConferenceFilterDto,
 } from "../dto";
-import { Conference } from "../entities/conference.entity";
+import {
+  Conference,
+  ConferenceVisibility,
+} from "../entities/conference.entity";
 import { JwtAuthGuard } from "security/guards/jwt-auth.guard";
 import { RolesGuard } from "security/guards/rolesGuard/roles.guard";
 import { Roles } from "src/dynamic-pricing/auth/decorators/roles.decorator";
 import { UserRole } from "src/common/enums/users-roles.enum";
 import { RoleDecorator } from "security/decorators/roles.decorator";
 import { Request } from "express";
+import { User } from "src/users/entities/user.entity";
 
 @Controller("conference")
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ConferenceController {
   constructor(private readonly conferenceService: ConferenceService) {}
-
-  @Post()
-  @RoleDecorator(UserRole.Admin, UserRole.Organizer)
-  create(
-    @Body() createConferenceDto: CreateConferenceDto,
-  ): Promise<Conference> {
-    return this.conferenceService.create(createConferenceDto);
-  }
-
-  @Get()
-  findAll(): Promise<Conference[]> {
-    return this.conferenceService.findAll();
-  }
-
-  @Get(":id")
-  findOne(@Param("id", ParseUUIDPipe) id: string): Promise<Conference> {
-    return this.conferenceService.findOne(id);
-  }
-
-  @Put(":id")
-  @RoleDecorator(UserRole.Admin, UserRole.Organizer)
-  update(
-    @Param("id", ParseUUIDPipe) id: string,
-    @Body() updateConferenceDto: UpdateConferenceDto,
-  ): Promise<Conference> {
-    return this.conferenceService.update(id, updateConferenceDto);
-  }
-
-  @Delete(":id")
-  @RoleDecorator(UserRole.Admin)
-  remove(@Param("id", ParseUUIDPipe) id: string): Promise<void> {
-    return this.conferenceService.remove(id);
-  }
 
   @Get("conferences")
   @ApiOperation({ summary: "Get conferences with filtering and pagination" })
@@ -121,20 +93,6 @@ export class ConferenceController {
                 },
               },
               image: { type: "string" },
-              description: { type: "string" },
-              visibility: {
-                type: "string",
-                enum: ["public", "private", "draft"],
-              },
-              organizer: {
-                type: "object",
-                properties: {
-                  id: { type: "number" },
-                  name: { type: "string" },
-                  firstName: { type: "string" },
-                  lastName: { type: "string" },
-                },
-              },
             },
           },
         },
@@ -154,6 +112,58 @@ export class ConferenceController {
     @Query() filter: ConferenceFilterDto,
     @Req() req: Request,
   ) {
-    return this.conferenceService.findAllWithFilters(filter, req.user as any);
+    // If requesting non-public conferences, ensure user is authenticated
+    if (
+      filter.visibility &&
+      filter.visibility !== ConferenceVisibility.PUBLIC
+    ) {
+      if (!req.user) {
+        throw new UnauthorizedException(
+          "Authentication required to view non-public conferences",
+        );
+      }
+    }
+
+    return this.conferenceService.findAllWithFilters(filter, req.user as User);
+  }
+
+  @Post()
+  @ApiOperation({ summary: "Create a new conference" })
+  @ApiResponse({
+    status: 201,
+    description: "The conference has been successfully created.",
+  })
+  @ApiResponse({ status: 400, description: "Bad request." })
+  create(
+    @Body() createConferenceDto: CreateConferenceDto,
+    @Req() req: Request,
+  ): Promise<Conference> {
+    const user = req.user as User;
+    return this.conferenceService.create(createConferenceDto, user);
+  }
+
+  @Get()
+  findAll(): Promise<Conference[]> {
+    return this.conferenceService.findAll();
+  }
+
+  @Get(":id")
+  findOne(@Param("id", ParseUUIDPipe) id: string): Promise<Conference> {
+    return this.conferenceService.findOne(id);
+  }
+
+  @Put(":id")
+  @RoleDecorator(UserRole.Admin, UserRole.Organizer)
+  update(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Body() updateConferenceDto: UpdateConferenceDto,
+  ): Promise<Conference> {
+    return this.conferenceService.update(id, updateConferenceDto);
+  }
+
+  @Delete(":id")
+  @RoleDecorator(UserRole.Admin)
+  remove(@Param("id", ParseUUIDPipe) id: string): Promise<void> {
+    return this.conferenceService.remove(id);
   }
 }

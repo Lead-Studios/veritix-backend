@@ -48,7 +48,7 @@ export class TicketService {
     const conference = await this.conferenceService.findOne(
       createTicketDto.eventId,
     );
-    if (!conference || conference.organizerId !== Number(user.id)) {
+    if (!conference || conference.organizerId !== user.id) {
       throw new ForbiddenException(
         "You do not have permission to create tickets for this conference",
       );
@@ -100,7 +100,7 @@ export class TicketService {
     const conference = await this.conferenceService.findOne(
       ticket.conferenceId,
     );
-    if (conference.organizerId !== Number(user.id)) {
+    if (conference.organizerId !== user.id) {
       throw new ForbiddenException(
         "You do not have permission to update this ticket",
       );
@@ -118,7 +118,7 @@ export class TicketService {
     }
 
     const conference = await this.conferenceService.findOne(ticket.eventId);
-    if (conference.organizerId !== Number(user.id)) {
+    if (conference.organizerId !== user.id) {
       throw new ForbiddenException(
         "You do not have permission to delete this ticket",
       );

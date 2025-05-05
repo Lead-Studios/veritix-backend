@@ -10,6 +10,7 @@ import { JwtAuthGuard } from "security/guards/jwt-auth.guard";
 import { RolesGuard } from "security/guards/rolesGuard/roles.guard";
 import { UserRole } from "src/common/enums/users-roles.enum";
 import { User } from "src/users/entities/user.entity";
+import { Request } from "express";
 
 const mockUser: User = {
   id: "user-1",
@@ -51,12 +52,27 @@ const mockConference = {
   organizer: mockUser,
 } as unknown as Conference;
 
+const mockRequest = {
+  user: mockUser,
+  get: jest.fn(),
+  header: jest.fn(),
+  accepts: jest.fn(),
+  acceptsCharsets: jest.fn(),
+  acceptsEncodings: jest.fn(),
+  acceptsLanguages: jest.fn(),
+  // ... other required Request properties
+} as unknown as Request & { user: User };
+
 const mockConferenceService = {
   create: jest.fn().mockResolvedValue(mockConference),
   findAll: jest.fn().mockResolvedValue([mockConference]),
   findOne: jest.fn().mockResolvedValue(mockConference),
   update: jest.fn().mockResolvedValue(mockConference),
   remove: jest.fn().mockResolvedValue(undefined),
+  findAllWithFilters: jest.fn().mockResolvedValue({
+    data: [mockConference],
+    meta: { page: 1, limit: 10, totalCount: 1, totalPages: 1 },
+  }),
 };
 
 const mockJwtAuthGuard = { canActivate: jest.fn().mockReturnValue(true) };
@@ -99,6 +115,7 @@ describe("ConferenceController", () => {
         conferenceClosingDate: new Date(),
         conferenceDescription: "A test conference",
         conferenceImage: "https://example.com/image.jpg",
+        visibility: ConferenceVisibility.PUBLIC,
         location: {
           country: "Nigeria",
           state: "Lagos",
@@ -118,8 +135,10 @@ describe("ConferenceController", () => {
         },
       };
 
-      expect(await controller.create(createDto)).toEqual(mockConference);
-      expect(service.create).toHaveBeenCalledWith(createDto);
+      expect(await controller.create(createDto, mockRequest)).toEqual(
+        mockConference,
+      );
+      expect(service.create).toHaveBeenCalledWith(createDto, mockUser);
     });
   });
 

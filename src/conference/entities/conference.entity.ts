@@ -101,8 +101,8 @@ export class Conference {
   @Column({ nullable: true })
   instagram: string;
 
-  @Column()
-  organizerId: number; // This will hold the ID of the organizer (User)
+  @Column({ type: "uuid", nullable:true })
+  organizerId: string; // This will hold the ID of the organizer (User)
 
   @ManyToOne(() => User, (user) => user.conferences) // Assuming you have a User entity
   @JoinColumn({ name: "organizerId" })
@@ -112,7 +112,7 @@ export class Conference {
   @OneToMany(() => Ticket, (ticket) => ticket.conference)
   tickets: Ticket[];
 
-  @OneToMany(() => Collaborator, collaborator => collaborator.conference)
+  @OneToMany(() => Collaborator, (collaborator) => collaborator.conference)
   collaborators: Collaborator[];
 
   @CreateDateColumn({ name: "created_at" })

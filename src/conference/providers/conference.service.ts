@@ -15,15 +15,23 @@ import {
   ConferenceFilterDto,
 } from "../dto";
 import { User } from "src/users/entities/user.entity";
+import { UserRole } from "src/common/enums/users-roles.enum";
+import { Cache } from "cache-manager";
+import { CACHE_MANAGER } from "@nestjs/cache-manager";
+import { Inject } from "@nestjs/common";
 
 @Injectable()
 export class ConferenceService {
   constructor(
     @InjectRepository(Conference)
     private conferenceRepository: Repository<Conference>,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
-  async create(createConferenceDto: CreateConferenceDto): Promise<Conference> {
+  async create(
+    createConferenceDto: CreateConferenceDto,
+    user: User,
+  ): Promise<Conference> {
     const { location, bankDetails, socialMedia, ...conferenceData } =
       createConferenceDto;
 
@@ -46,10 +54,11 @@ export class ConferenceService {
       facebook: socialMedia?.facebook,
       twitter: socialMedia?.twitter,
       instagram: socialMedia?.instagram,
-
       // Default values
       comingSoon: conferenceData.comingSoon || false,
       transactionCharge: conferenceData.transactionCharge || false,
+      // Set the organizer
+      organizerId: (user && user?.id )? user?.id : null,
     });
 
     return this.conferenceRepository.save(conference);
@@ -124,13 +133,62 @@ export class ConferenceService {
   }
 
   async findCollaborator(id: string): Promise<Conference> {
-    const conference = await this.conferenceRepository.findOne({ where: { id } });
-    
+    const conference = await this.conferenceRepository.findOne({
+      where: { id },
+    });
+
     if (!conference) {
       throw new NotFoundException(`Collaborator with ID ${id} not found`);
     }
-    
+
     return conference;
+  }
+
+  private async checkConferenceAccess(
+    conference: Conference,
+    user?: User,
+  ): Promise<boolean> {
+    if (conference.visibility === ConferenceVisibility.PUBLIC) {
+      return true;
+    }
+
+    if (!user) {
+      return false;
+    }
+
+    // Allow access if user is admin
+    if (user.role === UserRole.Admin) {
+      return true;
+    }
+
+    // Allow access if user is the organizer
+    if (conference.organizerId.toString() == user.id) {
+      return true;
+    }
+
+    // For private conferences, check if user has specific access
+    if (conference.visibility === ConferenceVisibility.PRIVATE) {
+      // TODO: Implement specific access checks (e.g., ticket holders, collaborators)
+      // Check if the user is a collaborator
+      if (
+        conference.collaborators?.some(
+          (collaborator) => collaborator.id === user.id,
+        )
+      ) {
+        return true;
+      }
+      // Check if the user has purchased a ticket for the conference
+      if (
+        conference.tickets?.some(
+          (ticketHolder) => ticketHolder.id.toString() === user.id,
+        )
+      ) {
+        return true;
+      }
+      return false;
+    }
+
+    return false;
   }
   async findAllWithFilters(filter: ConferenceFilterDto, user?: User) {
     const {
@@ -141,6 +199,17 @@ export class ConferenceService {
       page = 1,
       limit = 10,
     } = filter;
+
+    // Generate cache key based on filter parameters
+    const cacheKey = `conferences:${JSON.stringify({ name, category, location, visibility, page, limit })}`;
+
+    // Try to get cached results for public conferences
+    if (!visibility || visibility === ConferenceVisibility.PUBLIC) {
+      const cached = await this.cacheManager.get(cacheKey);
+      if (cached) {
+        return cached;
+      }
+    }
 
     let where: any = {};
 
@@ -174,8 +243,16 @@ export class ConferenceService {
       relations: ["organizer"],
     });
 
+    // Filter results based on user access
+    const accessibleResults = await Promise.all(
+      results.map(async (conference) => {
+        const hasAccess = await this.checkConferenceAccess(conference, user);
+        return hasAccess ? conference : null;
+      }),
+    ).then((results) => results.filter(Boolean));
+
     // Transform results to match the required format
-    const transformedResults = results.map((conference) => ({
+    const transformedResults = accessibleResults.map((conference) => ({
       id: conference.id,
       name: conference.conferenceName,
       category: conference.conferenceCategory,
@@ -187,14 +264,6 @@ export class ConferenceService {
         lga: conference.localGovernment,
       },
       image: conference.conferenceImage,
-      description: conference.conferenceDescription,
-      visibility: conference.visibility,
-      organizer: {
-        id: conference.organizer.id,
-        name: conference.organizer.userName,
-        firstName: conference.organizer.firstName,
-        lastName: conference.organizer.lastName,
-      },
     }));
 
     return {
@@ -205,7 +274,6 @@ export class ConferenceService {
         totalCount,
         totalPages: Math.ceil(totalCount / limit),
       },
-    }
+    };
   }
 }
-
