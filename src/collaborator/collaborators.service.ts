@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
@@ -15,6 +16,8 @@ export class CollaboratorsService {
     @InjectRepository(Collaborator)
     private collaboratorRepository: Repository<Collaborator>,
   ) {}
+
+  private readonly logger = new Logger(CollaboratorsService.name);
 
   async create(
     createCollaboratorDto: CreateCollaboratorDto,
@@ -124,8 +127,10 @@ export class CollaboratorsService {
 
       return collaborator;
     } catch (error) {
-      const logger = new Logger(CollaboratorsService.name);
-      logger.error(`Failed to delete collaborator with id ${id}`, error.stack);
+      this.logger.error(
+        `Failed to delete collaborator with id ${id}`,
+        error.stack,
+      );
       throw new BadRequestException("Failed to delete collaborator");
     }
   }
