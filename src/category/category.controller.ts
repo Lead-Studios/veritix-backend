@@ -107,11 +107,15 @@ export class CategoryController {
     description: 'Category ID',
     example: '123e4567-e89b-12d3-a456-426614174000'
   })
-  @ApiResponse({ status: 200, description: 'Category deleted successfully' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Category deleted successfully',
+    type: Category
+  })
   @ApiResponse({ status: 404, description: 'Category not found' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - Requires Admin role' })
-  async remove(@Param('id') id: string): Promise<void> {
+  async remove(@Param('id') id: string): Promise<Category> {
     return this.categoryService.remove(id);
   }
 }

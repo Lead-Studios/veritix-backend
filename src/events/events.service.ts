@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository, DeepPartial } from "typeorm";
+import { Repository, DeepPartial, FindOptionsWhere } from "typeorm";
 import { Event } from "./entities/event.entity";
 import { CreateEventDto } from "./dto/create-event.dto";
 import { PaginatedResult } from "../common/interfaces/result.interface";
@@ -18,7 +18,7 @@ export class EventsService {
     const category = await this.categoryService.findOne(dto.categoryId);
     const event = this.eventRepo.create({
       title: dto.title,
-      date: dto.date,
+      date: dto.startDate,
       category,
     });
     return this.eventRepo.save(event);
@@ -31,8 +31,12 @@ export class EventsService {
   async createEvent(dto: CreateEventDto): Promise<Event> {
     const category = await this.categoryService.findOne(dto.categoryId);
     const newEvent = this.eventRepository.create({
-      ...dto,
-      category,
+      eventName: dto.title,
+      eventDescription: dto.description,
+      eventDate: new Date(dto.startDate),
+      eventClosingDate: new Date(dto.endDate),
+      category: category,
+      sponsors: [],
     });
     return this.eventRepository.save(newEvent);
   }
@@ -40,7 +44,14 @@ export class EventsService {
   async getAllEvents(
     page?: number,
     limit?: number,
-    filters?: { name?: string; category?: string; location?: string },
+    filters?: {
+      name?: string;
+      category?: string;
+      location?: string;
+      startDate?: Date;
+      endDate?: Date;
+      status?: string;
+    },
   ): Promise<PaginatedResult<Event>> {
     const query = this.eventRepository.createQueryBuilder("event");
 
@@ -129,7 +140,7 @@ export class EventsService {
           category: await this.categoryService.findOne(category),
         }),
         ...(location && { location }),
-      } as Partial<Event>, // Ensure TypeORM understands the structure
+      } as FindOptionsWhere<Event>,
     });
 
     // Apply fuzzy matching on the event name
@@ -158,6 +169,4 @@ export class EventsService {
       limit,
     };
   }
-
-  c853433e47ca51f47fb67b7d9df970af4d574;
 }

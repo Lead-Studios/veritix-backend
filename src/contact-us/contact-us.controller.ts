@@ -16,6 +16,7 @@ import { JwtAuthGuard } from 'security/guards/jwt-auth.guard';
 import { RolesGuard } from 'security/guards/rolesGuard/roles.guard';
 import { RoleDecorator } from 'security/decorators/roles.decorator';
 import { UserRole } from 'src/common/enums/users-roles.enum';
+import { ContactUs } from './entities/contact-us.entity';
 
 @ApiTags('Contact Us')
 @Controller('contact-us')
@@ -30,10 +31,10 @@ export class ContactUsController {
   @ApiResponse({ 
     status: 201, 
     description: 'Message submitted successfully',
-    type: CreateContactUsDto
+    type: ContactUs
   })
   @ApiResponse({ status: 400, description: 'Invalid input' })
-  create(@Body() createContactUsDto: CreateContactUsDto) {
+  create(@Body() createContactUsDto: CreateContactUsDto): Promise<ContactUs> {
     return this.contactUsService.create(createContactUsDto);
   }
 
@@ -48,11 +49,11 @@ export class ContactUsController {
   @ApiResponse({ 
     status: 200, 
     description: 'List of all contact messages',
-    type: [CreateContactUsDto]
+    type: [ContactUs]
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - Requires Admin role' })
-  findAll() {
+  findAll(): Promise<ContactUs[]> {
     return this.contactUsService.findAll();
   }
 
@@ -72,12 +73,12 @@ export class ContactUsController {
   @ApiResponse({ 
     status: 200, 
     description: 'Contact message found',
-    type: CreateContactUsDto
+    type: ContactUs
   })
   @ApiResponse({ status: 404, description: 'Message not found' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - Requires Admin role' })
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id') id: string): Promise<ContactUs> {
     return this.contactUsService.findOne(id);
   }
 
@@ -97,12 +98,12 @@ export class ContactUsController {
   @ApiResponse({ 
     status: 200, 
     description: 'Message updated successfully',
-    type: CreateContactUsDto
+    type: ContactUs
   })
   @ApiResponse({ status: 404, description: 'Message not found' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - Requires Admin role' })
-  update(@Param('id') id: string, @Body() updateContactUsDto: UpdateContactUsDto) {
+  update(@Param('id') id: string, @Body() updateContactUsDto: UpdateContactUsDto): Promise<ContactUs> {
     return this.contactUsService.update(id, updateContactUsDto);
   }
 
@@ -119,11 +120,15 @@ export class ContactUsController {
     description: 'Contact message ID',
     example: '123e4567-e89b-12d3-a456-426614174000'
   })
-  @ApiResponse({ status: 200, description: 'Message deleted successfully' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Message deleted successfully',
+    type: ContactUs
+  })
   @ApiResponse({ status: 404, description: 'Message not found' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - Requires Admin role' })
-  remove(@Param('id') id: string) {
+  remove(@Param('id') id: string): Promise<ContactUs> {
     return this.contactUsService.remove(id);
   }
 }
