@@ -61,7 +61,7 @@ export class EventGalleryController {
     @Body() createGalleryItemDto: CreateGalleryItemDto,
     @UploadedFile() file: Express.Multer.File
   ) {
-    return this.eventGalleryService.create(createGalleryItemDto, file);
+    return this.eventGalleryService.createGalleryImage(createGalleryItemDto);
   }
 
   @Post('batch')
@@ -86,7 +86,8 @@ export class EventGalleryController {
     @Body() createGalleryItemDto: CreateGalleryItemDto,
     @UploadedFiles() files: Express.Multer.File[]
   ) {
-    return this.eventGalleryService.createBatch(createGalleryItemDto, files);
+    // return this.eventGalleryService.createBatch(createGalleryItemDto, files);
+    return "Not Implemented";
   }
 
   @Get()
@@ -114,7 +115,7 @@ export class EventGalleryController {
     @Query('eventId') eventId?: string,
     @Query('type') type?: string
   ) {
-    return this.eventGalleryService.findAll({ eventId, type });
+    return this.eventGalleryService.getAllImages();
   }
 
   @Get(':id')
@@ -135,7 +136,7 @@ export class EventGalleryController {
   @ApiResponse({ status: 404, description: 'Gallery item not found' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   findOne(@Param('id') id: string) {
-    return this.eventGalleryService.findOne(id);
+    return this.eventGalleryService.getImageById(id);
   }
 
   @Patch(':id')
@@ -159,7 +160,8 @@ export class EventGalleryController {
     @Param('id') id: string,
     @Body() updateGalleryItemDto: UpdateGalleryItemDto
   ) {
-    return this.eventGalleryService.update(id, updateGalleryItemDto);
+    // return this.eventGalleryService.update(id, updateGalleryItemDto);
+    return "Not Implemented";
   }
 
   @Delete(':id')
@@ -176,7 +178,7 @@ export class EventGalleryController {
   @ApiResponse({ status: 404, description: 'Gallery item not found' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   remove(@Param('id') id: string) {
-    return this.eventGalleryService.remove(id);
+    return this.eventGalleryService.deleteImage(id);
   }
 
   @Post(':id/feature')
@@ -197,7 +199,8 @@ export class EventGalleryController {
   @ApiResponse({ status: 404, description: 'Gallery item not found' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   setFeatured(@Param('id') id: string) {
-    return this.eventGalleryService.setFeatured(id);
+    // return this.eventGalleryService.setFeatured(id);
+    return "Not Implemented";
   }
 
   @Delete(':id/feature')
@@ -218,6 +221,7 @@ export class EventGalleryController {
   @ApiResponse({ status: 404, description: 'Gallery item not found' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   removeFeatured(@Param('id') id: string) {
-    return this.eventGalleryService.removeFeatured(id);
+    // return this.eventGalleryService.removeFeatured(id);
+    return "Not Implemented";
   }
 }

@@ -7,8 +7,11 @@ import {
   Param, 
   Delete, 
   UseGuards,
-  Query 
+  Query,
+  UseInterceptors,
+  UploadedFile
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { CollaboratorsService } from './collaborators.service';
 import { CreateCollaboratorDto } from './dto/create-collaborator.dto';
@@ -28,6 +31,7 @@ export class CollaboratorsController {
 
   @Post()
   @RoleDecorator(UserRole.Admin)
+  @UseInterceptors(FileInterceptor('file'))
   @ApiOperation({ 
     summary: 'Create collaborator', 
     description: 'Add a new collaborator to an event'
@@ -40,8 +44,11 @@ export class CollaboratorsController {
   @ApiResponse({ status: 400, description: 'Invalid input' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - Requires Admin role' })
-  create(@Body() createCollaboratorDto: CreateCollaboratorDto) {
-    return this.collaboratorsService.create(createCollaboratorDto);
+  create(
+    @Body() createCollaboratorDto: CreateCollaboratorDto,
+    @UploadedFile() file: Express.Multer.File
+  ) {
+    return this.collaboratorsService.create(createCollaboratorDto, file);
   }
 
   @Get()
@@ -88,6 +95,7 @@ export class CollaboratorsController {
 
   @Patch(':id')
   @RoleDecorator(UserRole.Admin)
+  @UseInterceptors(FileInterceptor('file'))
   @ApiOperation({ 
     summary: 'Update collaborator', 
     description: 'Update details of an existing collaborator'
@@ -105,8 +113,12 @@ export class CollaboratorsController {
   @ApiResponse({ status: 404, description: 'Collaborator not found' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - Requires Admin role' })
-  update(@Param('id') id: string, @Body() updateCollaboratorDto: UpdateCollaboratorDto) {
-    return this.collaboratorsService.update(id, updateCollaboratorDto);
+  update(
+    @Param('id') id: string, 
+    @Body() updateCollaboratorDto: UpdateCollaboratorDto,
+    @UploadedFile() file?: Express.Multer.File
+  ) {
+    return this.collaboratorsService.update(id, updateCollaboratorDto, file);
   }
 
   @Delete(':id')

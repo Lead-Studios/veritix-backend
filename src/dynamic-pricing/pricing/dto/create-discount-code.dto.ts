@@ -9,60 +9,59 @@ import {
   IsDate,
   IsArray,
   Min,
-} from "class-validator"
-import { Type } from "class-transformer"
-import { DiscountType } from "../entities/pricing-rule.entity"
+} from "class-validator";
+import { Type } from "class-transformer";
+import { DiscountType } from "../types/pricing-rule-types.enum";
 
 export class CreateDiscountCodeDto {
   @IsString()
   @IsNotEmpty()
-  code: string
+  code: string;
 
   @IsString()
   @IsNotEmpty()
-  name: string
+  name: string;
 
   @IsString()
   @IsOptional()
-  description?: string
+  description?: string;
 
   @IsUUID()
   @IsNotEmpty()
-  eventId: string
+  eventId: string;
 
   @IsEnum(DiscountType)
   @IsNotEmpty()
-  discountType: DiscountType
+  discountType: DiscountType;
 
   @IsNumber()
   @Min(0)
   @IsNotEmpty()
-  discountValue: number
+  discountValue: number;
 
   @IsBoolean()
   @IsOptional()
-  isActive?: boolean
+  isActive?: boolean;
 
   @IsDate()
   @Type(() => Date)
   @IsOptional()
-  startDate?: Date
+  startDate?: Date;
 
   @IsDate()
   @Type(() => Date)
   @IsOptional()
-  endDate?: Date
+  endDate?: Date;
 
   @IsNumber()
   @IsOptional()
-  maxUses?: number
+  maxUses?: number;
 
   @IsNumber()
   @IsOptional()
-  maxUsesPerUser?: number
+  maxUsesPerUser?: number;
 
   @IsArray()
   @IsOptional()
-  allowedTicketTypes?: string[]
+  allowedTicketTypes?: string[];
 }
-
