@@ -58,7 +58,7 @@ export class ConferenceService {
       comingSoon: conferenceData.comingSoon || false,
       transactionCharge: conferenceData.transactionCharge || false,
       // Set the organizer
-      organizerId: (user && user?.id )? user?.id : null,
+      organizerId: user && user?.id ? user?.id : null,
     });
 
     return this.conferenceRepository.save(conference);
@@ -263,7 +263,7 @@ export class ConferenceService {
         street: conference.street,
         lga: conference.localGovernment,
       },
-      image: conference.conferenceImage,
+      image: conference.conferenceName,
     }));
 
     return {

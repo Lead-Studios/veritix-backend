@@ -107,8 +107,8 @@ export class CreateEventDto {
   @ApiProperty({
     description: "Status of the event",
     enum: EventStatus,
-    default: EventStatus.Draft,
-    example: EventStatus.Draft,
+    default: EventStatus.DRAFT,
+    example: EventStatus.DRAFT,
   })
   @IsEnum(EventStatus)
   @IsOptional()

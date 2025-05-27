@@ -119,49 +119,49 @@ export class EventGalleryService {
     }
   }
 
-  async create(
-    createGalleryItemDto: CreateGalleryItemDto,
-    file: Express.Multer.File,
-  ): Promise<GalleryItem> {
-    const event = await this.eventRepository.findOne({
-      where: { id: createGalleryItemDto.eventId },
-    });
-    if (!event) {
-      throw new Error("Event not found");
-    }
+  // async create(
+  //   createGalleryItemDto: CreateGalleryItemDto,
+  //   file: Express.Multer.File,
+  // ): Promise<GalleryItem> {
+  //   const event = await this.eventRepository.findOne({
+  //     where: { id: createGalleryItemDto.eventId },
+  //   });
+  //   if (!event) {
+  //     throw new Error("Event not found");
+  //   }
 
-    const galleryItem = this.galleryItemRepository.create({
-      url: file.path,
-      type: createGalleryItemDto.type,
-      description: createGalleryItemDto.description,
-      event,
-    });
+  //   const galleryItem = this.galleryItemRepository.create({
+  //     url: file.path,
+  //     type: createGalleryItemDto.type,
+  //     description: createGalleryItemDto.description,
+  //     event,
+  //   });
 
-    return this.galleryItemRepository.save(galleryItem);
-  }
+  //   return this.galleryItemRepository.save(galleryItem);
+  // }
 
-  async createBatch(
-    createGalleryItemDto: CreateGalleryItemDto,
-    files: Express.Multer.File[],
-  ): Promise<GalleryItem[]> {
-    const event = await this.eventRepository.findOne({
-      where: { id: createGalleryItemDto.eventId },
-    });
-    if (!event) {
-      throw new Error("Event not found");
-    }
+  // async createBatch(
+  //   createGalleryItemDto: CreateGalleryItemDto,
+  //   files: Express.Multer.File[],
+  // ): Promise<GalleryItem[]> {
+  //   const event = await this.eventRepository.findOne({
+  //     where: { id: createGalleryItemDto.eventId },
+  //   });
+  //   if (!event) {
+  //     throw new Error("Event not found");
+  //   }
 
-    const galleryItems = files.map((file) =>
-      this.galleryItemRepository.create({
-        url: file.path,
-        type: createGalleryItemDto.type,
-        description: createGalleryItemDto.description,
-        event,
-      }),
-    );
+  //   const galleryItems = files.map((file) =>
+  //     this.galleryItemRepository.create({
+  //       url: file.path,
+  //       type: createGalleryItemDto.type,
+  //       description: createGalleryItemDto.description,
+  //       event,
+  //     }),
+  //   );
 
-    return this.galleryItemRepository.save(galleryItems);
-  }
+  //   return this.galleryItemRepository.save(galleryItems);
+  // }
 
   async findAll(filters: {
     eventId?: string;

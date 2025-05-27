@@ -7,7 +7,7 @@ export class UpdateEventDto extends PartialType(CreateEventDto) {
   @ApiProperty({
     description: "Updated status of the event",
     enum: EventStatus,
-    example: EventStatus.Published,
+    example: EventStatus.PUBLISHED,
     required: false,
   })
   @IsEnum(EventStatus)
