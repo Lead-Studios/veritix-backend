@@ -39,7 +39,7 @@ export class EventsController {
   constructor(private readonly eventsService: EventsService) {}
 
   @Post()
-  @RoleDecorator(UserRole.Admin, UserRole.Organizer)
+  // @RoleDecorator(UserRole.Admin, UserRole.Organizer)
   @UseInterceptors(FileInterceptor("coverImage"))
   @ApiOperation({
     summary: "Create new event",
