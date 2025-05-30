@@ -109,6 +109,6 @@ export class TicketPurchaseController {
     @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Receipt not found' })
     @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'User is not authenticated' })
     async getReceipt(@Param('orderId') orderId: string) {
-        return this.ticketPurchaseService.getReceipt(orderId);
+        return this.ticketPurchaseService.getReceipt(Number(orderId));
     }
 }

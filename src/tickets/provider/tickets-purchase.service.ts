@@ -9,6 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { TicketPurchase } from '../entities/ticket-pruchase';
 import { UsersService } from 'src/users/users.service';
 import { TicketService } from '../tickets.service';
+import { TicketTierService } from './ticket-tier.service';
 
 @Injectable()
 export class TicketPurchaseService {
@@ -25,6 +26,7 @@ export class TicketPurchaseService {
 
     private userServices: UsersService,
     private ticketServices: TicketService,
+    private ticketTierService: TicketTierService,
   ) {}
 
   async purchaseTickets(
@@ -57,6 +59,18 @@ export class TicketPurchaseService {
       throw new BadRequestException('Payment processing failed');
     }
 
+       const queryRunner = this.ticketPurchaseRepository.manager.connection.createQueryRunner()
+    await queryRunner.connect()
+    await queryRunner.startTransaction()
+
+    try {
+      // Find ticket tier and validate availability
+      const ticketTier = await this.ticketTierService.reserveTickets(
+        createTicketPurchaseDto.ticketId,
+        createTicketPurchaseDto.ticketQuantity,
+        queryRunner,
+      )
+
     // Find user
     const user = await this.userServices.findOneById(parseInt(userId));
 
@@ -87,12 +101,21 @@ export class TicketPurchaseService {
 
     // Save updated ticket and create purchase record
     await this.ticketRepository.save(ticket);
-    return this.ticketPurchaseRepository.save(ticketPurchase);
+    const savedPurchase = await this.ticketPurchaseRepository.save(ticketPurchase);
+
+    await queryRunner.commitTransaction();
+    return savedPurchase;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
-  async getReceipt(orderId: string): Promise<TicketPurchase> {
+  async getReceipt(orderId: number): Promise<TicketPurchase> {
     const ticketPurchase = await this.ticketPurchaseRepository.findOne({
-      where: { id: orderId },
+      where: { id: orderId.toString() },
       relations: ['event', 'user', 'ticket'],
     });
 

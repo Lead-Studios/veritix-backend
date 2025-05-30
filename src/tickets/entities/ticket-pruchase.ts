@@ -4,10 +4,12 @@ import {
     Column,
     ManyToOne,
     CreateDateColumn,
+    JoinColumn,
   } from 'typeorm';
   import { Event } from '../../events/entities/event.entity';
   import { Ticket } from '../../tickets/entities/ticket.entity';
   import { User } from '../../users/entities/user.entity';
+  import { TicketTier } from "./ticket-tier.entity"
   
   @Entity()
   export class TicketPurchase {
@@ -50,4 +52,18 @@ import {
   
     @CreateDateColumn()
     transactionDate: Date;
+    quantity: number
+
+  @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
+  purchaseDate: Date
+
+  @ManyToOne(
+    () => TicketTier,
+    (ticketTier) => ticketTier.purchases,
+  )
+  @JoinColumn({ name: "ticketTierId" })
+  ticketTier: TicketTier
+
+  @Column({ nullable: true })
+  ticketTierId: string
   }
