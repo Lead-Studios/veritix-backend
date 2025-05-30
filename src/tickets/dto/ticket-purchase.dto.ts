@@ -6,6 +6,7 @@ import {
   IsNotEmpty,
   Min,
   IsUUID,
+  IsOptional,
 } from "class-validator";
 
 export class AddressDetailsDto {
@@ -58,4 +59,8 @@ export class TicketPurchaseDto {
 
   @IsNotEmpty()
   billingDetails: BillingDetailsDto;
+
+  @IsOptional()
+  @IsString()
+  promoCode?: string;
 }

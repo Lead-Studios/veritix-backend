@@ -16,6 +16,7 @@ import { Conference } from "src/conference/entities/conference.entity";
 import { Receipt } from "./entities/receipt.entity";
 import { StripeModule } from "../payment/stripe.module";
 import { PaymentModule } from '../payment/payment.module';
+import { PromoCodeModule } from "src/promo-code/promo-code.module";
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { PaymentModule } from '../payment/payment.module';
     UsersModule,
     StripeModule,
     PaymentModule,
+    PromoCodeModule
   ],
   controllers: [TicketController, TicketPurchaseController],
   providers: [

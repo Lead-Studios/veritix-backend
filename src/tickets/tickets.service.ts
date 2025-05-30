@@ -17,6 +17,7 @@ import { TicketPurchaseDto } from "./dto/ticket-purchase.dto";
 import { ReceiptDto } from "./dto/receipt.dto";
 import { Conference } from "../conference/entities/conference.entity";
 import { StripePaymentService } from "src/payment/services/stripe-payment.service";
+import { PromoCodeService } from "src/promo-code/providers/promo-code.service";
 
 @Injectable()
 export class TicketService {
@@ -38,6 +39,8 @@ export class TicketService {
     private readonly conferenceRepository: Repository<Conference>,
 
     private readonly stripeService: StripePaymentService,
+
+    private readonly promoCodeService: PromoCodeService,
   ) {}
 
   //FN TO CREATE A TICKET ONLY BY ORGANIZERS
@@ -169,77 +172,85 @@ export class TicketService {
   }
 
   async purchaseTickets(
-    userId: string,
-    purchaseDto: TicketPurchaseDto,
-  ): Promise<ReceiptDto> {
-    return await this.ticketRepository.manager.transaction(async (manager) => {
-      const conference = await manager.findOne(Conference, {
-        where: { id: purchaseDto.conferenceId },
-        lock: { mode: "pessimistic_write" },
-      });
-
-      if (!conference) {
-        throw new NotFoundException("Conference not found");
-      }
-
-      // Get the ticket price from the first ticket in the conference
-      const ticket = await manager.findOne(Ticket, {
-        where: { conference: { id: conference.id } },
-      });
-
-      if (!ticket) {
-        throw new NotFoundException("No tickets available for this conference");
-      }
-
-      // Calculate total amount
-      const totalAmount = ticket.price * purchaseDto.ticketQuantity;
-
-      // Process payment
-      const paymentSuccessful = await this.stripeService.processPayment(
-        totalAmount,
-        purchaseDto.billingDetails,
-      );
-
-      if (!paymentSuccessful) {
-        throw new BadRequestException("Payment not completed");
-      }
-
-      // Create ticket record
-      const newTicket = manager.create(Ticket, {
-        conference: conference,
-        userId,
-        quantity: purchaseDto.ticketQuantity,
-        pricePerTicket: ticket.price,
-        totalAmount,
-        isPaid: true,
-      });
-
-      await manager.save(Ticket, newTicket);
-
-      // Create receipt
-      const receipt = manager.create(Receipt, {
-        ticketId: newTicket.id,
-        userFullName: purchaseDto.billingDetails.fullName,
-        userEmail: purchaseDto.billingDetails.email,
-        conferenceName: conference.conferenceName,
-        conferenceDate: conference.conferenceDate,
-        conferenceLocation: `${conference.street}, ${conference.localGovernment}, ${conference.state}, ${conference.country}`,
-        ticketQuantity: purchaseDto.ticketQuantity,
-        pricePerTicket: ticket.price,
-        totalAmount,
-        amountPaid: totalAmount,
-        transactionDate: new Date(),
-      });
-
-      await manager.save(Receipt, receipt);
-
-      // Update ticket with receipt ID
-      newTicket.receiptId = receipt.id;
-      await manager.save(Ticket, newTicket);
-
-      return this.mapReceiptToDto(receipt);
+  userId: string,
+  purchaseDto: TicketPurchaseDto,
+): Promise<ReceiptDto> {
+  return await this.ticketRepository.manager.transaction(async (manager) => {
+    const conference = await manager.findOne(Conference, {
+      where: { id: purchaseDto.conferenceId },
+      lock: { mode: 'pessimistic_write' },
     });
-  }
+
+    if (!conference) {
+      throw new NotFoundException('Conference not found');
+    }
+
+    const ticket = await manager.findOne(Ticket, {
+      where: { conference: { id: conference.id } },
+    });
+
+    if (!ticket) {
+      throw new NotFoundException('No tickets available for this conference');
+    }
+
+    // ✳️ Apply promo code discount if provided
+    let discount = 0;
+    if (purchaseDto.promoCode) {
+      const promo = await this.promoCodeService.validatePromoCode(
+        purchaseDto.promoCode,
+        conference.id,
+      );
+      discount = promo.discount;
+      await this.promoCodeService.incrementUsage(promo);
+    }
+
+    // ✳️ Adjust total amount with discount
+    const pricePerTicket = ticket.price - discount;
+    const totalAmount = pricePerTicket * purchaseDto.ticketQuantity;
+
+    const paymentSuccessful = await this.stripeService.processPayment(
+      totalAmount,
+      purchaseDto.billingDetails,
+    );
+
+    if (!paymentSuccessful) {
+      throw new BadRequestException('Payment not completed');
+    }
+
+    const newTicket = manager.create(Ticket, {
+      conference: conference,
+      userId,
+      quantity: purchaseDto.ticketQuantity,
+      pricePerTicket,
+      totalAmount,
+      isPaid: true,
+    });
+
+    await manager.save(Ticket, newTicket);
+
+    const receipt = manager.create(Receipt, {
+      ticketId: newTicket.id,
+      userFullName: purchaseDto.billingDetails.fullName,
+      userEmail: purchaseDto.billingDetails.email,
+      conferenceName: conference.conferenceName,
+      conferenceDate: conference.conferenceDate,
+      conferenceLocation: `${conference.street}, ${conference.localGovernment}, ${conference.state}, ${conference.country}`,
+      ticketQuantity: purchaseDto.ticketQuantity,
+      pricePerTicket,
+      totalAmount,
+      amountPaid: totalAmount,
+      transactionDate: new Date(),
+    });
+
+    await manager.save(Receipt, receipt);
+
+    newTicket.receiptId = receipt.id;
+    await manager.save(Ticket, newTicket);
+
+    return this.mapReceiptToDto(receipt);
+  });
+}
+
 
   async getReceipt(receiptId: string, userId: string): Promise<ReceiptDto> {
     const receipt = await this.receiptRepository.findOne({
