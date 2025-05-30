@@ -63,3 +63,5 @@ Content-Type: application/json
 # Replace the ID with a valid campaign email ID
 DELETE http://localhost:3000/admin/delete/campaign-emails/CAMPAIGN_ID_HERE
 Authorization: Bearer {{adminToken}} 
+
+

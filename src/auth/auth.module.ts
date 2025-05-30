@@ -13,6 +13,7 @@ import { RefreshTokenProvider } from "./providers/refresh-token.provider";
 import { PassportModule } from "@nestjs/passport";
 import { JwtStrategy } from "../../security/strategies/jwt.strategy";
 import { TokenVerificationProvider } from "./providers/verification.provider";
+import { GoogleStrategy } from "security/strategies/google.strategy";
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { TokenVerificationProvider } from "./providers/verification.provider";
   providers: [
     AuthService,
     JwtStrategy,
+    GoogleStrategy,
     {
       provide: HashingProvider,
       useClass: BcryptProvider,

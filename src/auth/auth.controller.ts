@@ -1,9 +1,10 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, Get, Query } from "@nestjs/common";
+import { Controller, Post, Body, HttpCode, HttpStatus, Get, Query, UseGuards, Req } from "@nestjs/common";
 import { AuthService } from "./providers/auth.service";
 import { SignInDto } from "./dto/create-auth.dto";
 import { RefreshTokenDto } from "./dto/refresh-token.dto";
 import { EmailDto } from "./dto/email.dto";
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
+import { AuthGuard } from "@nestjs/passport";
 
 @ApiTags('Auth')
 @Controller("auth")
@@ -83,4 +84,18 @@ export class AuthController {
   public async sendVerificationEmail(@Body() emailDto: EmailDto) {
     return this.authService.sendVerificationEmail(emailDto);
   }
+
+  //GOOGLE OAUTH ROUTES 
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  async googleAuth() {
+    // Redirect to Google login
+  }
+
+  @Get('google/redirect')
+  @UseGuards(AuthGuard('google'))
+  async googleAuthRedirect(@Req() req) {
+    return this.authService.handleGoogleLogin(req.user);
+  }
+  
 }

@@ -30,9 +30,11 @@ export class User {
   @Column("varchar", { nullable: true })
   lastName: string;
 
-  @Column("varchar", { nullable: true, default: '' })
+  @Column("varchar", { nullable: true, default: "" })
   profileImageUrl: string;
 
+  @Column({ default: "local" })
+  provider: string;
   @Column({
     type: "enum",
     enum: UserRole,
@@ -40,8 +42,8 @@ export class User {
   })
   role: UserRole;
 
-  @OneToMany(() => Conference, conference => conference.organizer)
-  conferences: Conference[];  // A user can organize multiple conferences
+  @OneToMany(() => Conference, (conference) => conference.organizer)
+  conferences: Conference[]; // A user can organize multiple conferences
 
   @Column("boolean", { default: true })
   isActive: boolean;
@@ -50,7 +52,7 @@ export class User {
   isVerified: boolean;
 
   @CreateDateColumn()
-  createdAt:Date;
+  createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;

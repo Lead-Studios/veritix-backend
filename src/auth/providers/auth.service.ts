@@ -6,6 +6,7 @@ import { RefreshTokenProvider } from "./refresh-token.provider";
 import { TokenVerificationProvider } from "./verification.provider";
 import { UsersService } from "../../users/users.service";
 import { EmailDto } from "../dto/email.dto";
+import { JwtService } from "@nestjs/jwt";
 
 @Injectable()
 export class AuthService {
@@ -14,8 +15,12 @@ export class AuthService {
     private readonly usersService: UsersService,
 
     private readonly signInProvider: SignInProvider,
+
     private readonly refreshTokenProvider: RefreshTokenProvider,
+
     private readonly verifyTokenProvider: TokenVerificationProvider,
+
+    private readonly jwtService: JwtService,
   ) {}
 
   public async signIn(signInDto: SignInDto) {
@@ -33,5 +38,15 @@ export class AuthService {
   public async sendVerificationEmail(emailDto: EmailDto) {
     const { email } = emailDto;
     return await this.verifyTokenProvider.sendToken(email);
+  }
+
+   public async handleGoogleLogin(user: any) {
+    const existingUser = await this.usersService.findOrCreateByGoogle(user);
+
+    const payload = { sub: existingUser.id, email: existingUser.email };
+    return {
+      accessToken: this.jwtService.sign(payload),
+      user: existingUser,
+    };
   }
 }
