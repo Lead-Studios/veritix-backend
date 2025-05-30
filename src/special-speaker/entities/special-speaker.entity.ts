@@ -1,4 +1,4 @@
-import { Conference } from "src/conference/entities/conference.entity";
+import { Conference } from "../../conference/entities/conference.entity";
 import {
   Entity,
   Column,

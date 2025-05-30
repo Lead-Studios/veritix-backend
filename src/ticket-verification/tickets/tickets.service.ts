@@ -10,7 +10,6 @@ export class TicketsService {
     private readonly blockchainService: BlockchainService,
     private readonly configService: ConfigService,
   ) {}
-
   async verifyTicket(ticketId: string): Promise<VerificationResult> {
     try {
       // Call blockchain service to verify the ticket

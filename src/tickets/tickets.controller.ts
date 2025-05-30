@@ -17,7 +17,6 @@ import { CreateTicketDto } from "./dto/create-ticket.dto";
 import { JwtAuthGuard } from "../../security/guards/jwt-auth.guard";
 import { RolesGuard } from "../../security/guards/rolesGuard/roles.guard";
 import { Ticket } from "./entities/ticket.entity";
-// import { Roles } from '../../security/decorators/roles.decorator';
 
 import { Response, Request } from "express";
 import * as fs from "fs";
@@ -27,6 +26,8 @@ import { UserRole } from "src/common/enums/users-roles.enum";
 import { TicketPurchaseDto } from "./dto/ticket-purchase.dto";
 import { ReceiptDto } from "./dto/receipt.dto";
 import { RequestWithUser } from "src/common/interfaces/request.interface";
+import { Role } from "src/ticket-verification/auth/enums/role.enum";
+import { Roles } from "src/ticket-verification/auth/decorators/roles.decorator";
 
 @Controller("user/tickets")
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -142,5 +143,18 @@ export class TicketController {
     @Param("receiptId") receiptId: string,
   ): Promise<ReceiptDto> {
     return this.ticketService.getReceipt(receiptId, req.user.userId);
+  }
+
+  
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.EVENT_ORGANIZER)
+  @Post('validate-qr')
+  /**
+   * Validates a QR code token for ticket verification.
+   * @param token The QR code token to validate.
+   * @returns The result of the QR code validation.
+   */
+  async validateQRCode(@Body() token: string) {
+    return this.ticketService.validateQRCode(token);
   }
 }

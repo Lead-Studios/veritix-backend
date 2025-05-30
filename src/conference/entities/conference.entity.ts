@@ -1,7 +1,7 @@
-import { SpecialSpeaker } from "src/special-speaker/entities/special-speaker.entity";
-import { Collaborator } from "src/collaborator/entities/collaborator.entity";
-import { Ticket } from "src/tickets/entities/ticket.entity";
-import { User } from "src/users/entities/user.entity";
+import { SpecialSpeaker } from "../../special-speaker/entities/special-speaker.entity";
+import { Collaborator } from "../../collaborator/entities/collaborator.entity";
+import { Ticket } from "../../tickets/entities/ticket.entity";
+import { User } from "../../users/entities/user.entity";
 import {
   Entity,
   Column,

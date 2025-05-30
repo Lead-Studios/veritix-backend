@@ -9,7 +9,9 @@ import {
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { Event } from "../../events/entities/event.entity";
 import { CollaboratorRole } from "../dto/create-collaborator.dto";
-import { Conference } from "src/conference/entities/conference.entity";
+// import { Conference } from "src/conference/entities/conference.entity";
+import { Conference } from "../../conference/entities/conference.entity";
+
 
 @Entity()
 export class Collaborator {

@@ -40,6 +40,8 @@ export class BlockchainService {
     }
   }
 
+  
+
   async verifyTicket(ticketId: string): Promise<boolean> {
     if (this.contract) {
       try {
