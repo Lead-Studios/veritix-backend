@@ -7,7 +7,8 @@ import {
   Put, 
   Delete, 
   UseGuards, 
-  ParseUUIDPipe 
+  ParseUUIDPipe,
+  Query
 } from '@nestjs/common';
 import { ConferenceService } from '../providers/conference.service';
 import { CreateConferenceDto, UpdateConferenceDto } from '../dto';
@@ -52,5 +53,19 @@ export class ConferenceController {
   @RoleDecorator(UserRole.Admin)
   remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     return this.conferenceService.remove(id);
+  }
+
+   @Get('search')
+  async search(
+    @Query('query') query: string,
+    @Query('category') category?: string,
+    @Query('location') location?: string,
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
+  ) {
+    const limitNum = Math.min(parseInt(limit) || 10, 100); // max 100
+    const offsetNum = parseInt(offset) || 0;
+
+    return this.conferenceService.search(query, category, location, limitNum, offsetNum);
   }
 }
