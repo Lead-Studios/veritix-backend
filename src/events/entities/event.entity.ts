@@ -14,6 +14,8 @@ import { Poster } from "../../posters/entities/poster.entity";
 import { Collaborator } from "../../collaborator/entities/collaborator.entity";
 import { EventGallery } from "../../event-gallery/entities/event-gallery.entity";
 import { Category } from "../../category/category.entity";
+import { EventView } from "./event-view.entity";
+import { PurchaseLog } from "./purchase-log.entity";
 
 @Entity()
 export class Event {
@@ -105,4 +107,10 @@ export class Event {
 
   @ManyToOne(() => Category, (category) => category.events)
   category: Category;
+
+  @OneToMany(() => EventView, view => view.event)
+views: EventView[];
+
+@OneToMany(() => PurchaseLog, log => log.event)
+purchaseLogs: PurchaseLog[];
 }

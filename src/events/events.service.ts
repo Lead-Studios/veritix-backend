@@ -5,6 +5,8 @@ import { Event } from "./entities/event.entity";
 import { CreateEventDto } from "./dto/create-event.dto";
 import { PaginatedResult } from "../common/interfaces/result.interface";
 import * as fuzzball from "fuzzball";
+import { AnalyticsService } from "./analytics.service";
+import { AnalyticsQueryDto } from "./dto/analytics-query.dto";
 
 @Injectable()
 export class EventsService {
@@ -12,6 +14,7 @@ export class EventsService {
   categoryService: any;
   constructor(
     @InjectRepository(Event) private eventRepository: Repository<Event>,
+    private analyticsService: AnalyticsService,
   ) {}
 
   async create(dto: CreateEventDto) {
@@ -123,6 +126,12 @@ export class EventsService {
     const result = await this.eventRepository.delete(id);
     if (!result.affected) throw new NotFoundException("Event not found");
   }
+
+  async getEventAnalytics(eventId: string, query: AnalyticsQueryDto) {
+  // Verify event exists and user has permission
+  const event = await this.getEventById(eventId);
+  return this.analyticsService.getEventAnalytics(eventId, query);
+}
 
   async searchEvents(
     query: string,
