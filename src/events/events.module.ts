@@ -11,23 +11,30 @@ import { Collaborator } from "src/collaborator/entities/collaborator.entity";
 import { EventRevenueAnalyticsController } from "./event-revenue-analytics.controller";
 import { EventRevenueAnalyticsService } from "./event-revenue-analytics.service";
 import { CategoryModule } from "src/category/category.module";
+import { AnalyticsController } from "./analytics.controller";
+import { AnalyticsService } from "./analytics.service";
+import { EventView } from "./entities/event-view.entity";
+import { PurchaseLog } from "./entities/purchase-log.entity";
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       Event,
       Collaborator,
+      EventView, 
+      PurchaseLog,
       Ticket /* Ticket, SpecialGuest */,
     ]),
     CategoryModule,
   ],
-  controllers: [EventsController, EventRevenueAnalyticsController],
+  controllers: [EventsController, EventRevenueAnalyticsController, AnalyticsController],
   providers: [
     EventsService,
+    AnalyticsService,
     JwtAuthGuard,
     RolesGuard,
     EventRevenueAnalyticsService,
   ],
-  exports: [EventsService, EventRevenueAnalyticsService],
+  exports: [EventsService, EventRevenueAnalyticsService, AnalyticsService],
 })
 export class EventsModule {}
