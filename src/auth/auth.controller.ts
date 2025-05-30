@@ -92,17 +92,18 @@ export class AuthController {
     // Redirect to Google login
   }
 
+   @Get('google')
+  @UseGuards(AuthGuard('google'))
+  async googleAuthen() {
+    // Redirect to Google login
+  }
+
   @Get('google/redirect')
   @UseGuards(AuthGuard('google'))
   async googleAuthRedirect(@Req() req) {
     return this.authService.handleGoogleLogin(req.user);
   }
 
-  //TO BE DELETED SOON
-  @Get('google/redirection')
-  @UseGuards(AuthGuard('google'))
-  async googleAuthRedirection(@Req() req) {
-    return this.authService.handleGoogleLogin(req.user);
-  }
+  
   
 }
