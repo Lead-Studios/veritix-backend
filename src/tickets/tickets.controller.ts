@@ -10,15 +10,23 @@ import {
   Query,
   Res,
   NotFoundException,
+  Req,
 } from "@nestjs/common";
 import { TicketService } from "./tickets.service";
 import { CreateTicketDto } from "./dto/create-ticket.dto";
 import { JwtAuthGuard } from "../../security/guards/jwt-auth.guard";
 import { RolesGuard } from "../../security/guards/rolesGuard/roles.guard";
 import { Ticket } from "./entities/ticket.entity";
-//import { Roles } from '../../security/decorators/roles.decorator';
-import { Response } from "express";
+// import { Roles } from '../../security/decorators/roles.decorator';
+
+import { Response, Request } from "express";
 import * as fs from "fs";
+import { User } from "src/users/entities/user.entity";
+import { RoleDecorator } from "security/decorators/roles.decorator";
+import { UserRole } from "src/common/enums/users-roles.enum";
+import { TicketPurchaseDto } from "./dto/ticket-purchase.dto";
+import { ReceiptDto } from "./dto/receipt.dto";
+import { RequestWithUser } from "src/common/interfaces/request.interface";
 
 @Controller("user/tickets")
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -26,39 +34,50 @@ export class TicketController {
   constructor(private readonly ticketService: TicketService) {}
 
   @Post()
-  //@Roles('admin') // Only admin can create tickets
-  async createTicket(@Body() dto: CreateTicketDto) {
-    return this.ticketService.createTicket(dto);
+  @UseGuards(RolesGuard)
+  @RoleDecorator(UserRole.Admin, UserRole.Organizer) //only admins and organizers can create ticket
+  // @Roles('admin') // Only admin can create tickets
+  async createTicket(@Body() dto: CreateTicketDto, @Query("user") user: User) {
+    return this.ticketService.createTicket(dto, user);
   }
 
   @Get()
+  @UseGuards(RolesGuard)
+  @RoleDecorator(UserRole.Admin, UserRole.Organizer, UserRole.Guest)
   async getAllTickets() {
     return this.ticketService.getAllTickets();
   }
 
   @Get(":id")
+  @UseGuards(RolesGuard)
+  @RoleDecorator(UserRole.Admin, UserRole.Organizer, UserRole.Guest)
   async getTicketById(@Param("id") id: string) {
     return this.ticketService.getTicketById(id);
   }
 
-  @Get("/event/:eventId")
+  @Get("/event/:eventId/tickets")
+  @UseGuards(RolesGuard)
+  @RoleDecorator(UserRole.Admin, UserRole.Organizer, UserRole.Guest)
   async getTicketsByEvent(@Param("eventId") eventId: string) {
     return this.ticketService.getTicketsByEvent(eventId);
   }
 
   @Put(":id")
-  //@Roles('admin') // Only admin can update tickets
+  @UseGuards(RolesGuard)
+  @RoleDecorator(UserRole.Admin, UserRole.Organizer)
   async updateTicket(
     @Param("id") id: string,
     @Body() dto: Partial<CreateTicketDto>,
+    @Query("user") user: User,
   ) {
-    return this.ticketService.updateTicket(id, dto);
+    return this.ticketService.updateTicket(id, dto, user);
   }
 
   @Delete(":id")
-  //@Roles('admin') // Only admin can delete tickets
-  async deleteTicket(@Param("id") id: string) {
-    return this.ticketService.deleteTicket(id);
+  @UseGuards(RolesGuard)
+  @RoleDecorator(UserRole.Admin, UserRole.Organizer)
+  delete(@Param("id") id: string, @Query("user") user: User) {
+    return this.ticketService.deleteTicket(id, user);
   }
 
   // route to get all user ticket history
@@ -105,5 +124,23 @@ export class TicketController {
     } catch (error) {
       throw new NotFoundException("Receipt generation failed");
     }
+  }
+
+  @Post("purchase")
+  @UseGuards(JwtAuthGuard)
+  async purchaseTickets(
+    @Req() req: RequestWithUser,
+    @Body() purchaseDto: TicketPurchaseDto,
+  ): Promise<ReceiptDto> {
+    return this.ticketService.purchaseTickets(req.user.userId, purchaseDto);
+  }
+
+  @Get("receipt/:receiptId")
+  @UseGuards(JwtAuthGuard)
+  async getReceipt(
+    @Req() req: RequestWithUser,
+    @Param("receiptId") receiptId: string,
+  ): Promise<ReceiptDto> {
+    return this.ticketService.getReceipt(receiptId, req.user.userId);
   }
 }

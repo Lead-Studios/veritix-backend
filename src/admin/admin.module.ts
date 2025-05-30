@@ -34,7 +34,9 @@ import { TokenVerificationProvider } from "./providers/verification.provider";
       // imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>("jwt.secret"),
-        resetPasswordSecret: configService.get<string>("jwt.resetPasswordSecret"),
+        resetPasswordSecret: configService.get<string>(
+          "jwt.resetPasswordSecret",
+        ),
         signOptions: {
           expiresIn: configService.get<string>("jwt.expiresIn"),
           issuer: configService.get<string>("jwt.issuer"),
@@ -60,6 +62,13 @@ import { TokenVerificationProvider } from "./providers/verification.provider";
       useClass: BcryptProvider,
     },
   ],
-  exports: [AdminService, AdminAuthService, HashingProvider, CampaignService, DashboardService, TicketService],
+  exports: [
+    AdminService,
+    AdminAuthService,
+    HashingProvider,
+    CampaignService,
+    DashboardService,
+    TicketService,
+  ],
 })
 export class AdminModule {}

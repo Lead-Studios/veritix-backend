@@ -1,14 +1,19 @@
-import { Injectable, BadRequestException, NotFoundException, Inject } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Event } from '../../events/entities/event.entity';
-import { Ticket } from '../../tickets/entities/ticket.entity';
-import { CreateTicketPurchaseDto } from '../dto/create-ticket-purchase.dto';
-import { PaymentServiceInterface } from '../../payment/interfaces/payment-service.interface';
-import { v4 as uuidv4 } from 'uuid';
-import { TicketPurchase } from '../entities/ticket-pruchase';
-import { UsersService } from 'src/users/users.service';
-import { TicketService } from '../tickets.service';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  Inject,
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { Event } from "../../events/entities/event.entity";
+import { Ticket } from "../../tickets/entities/ticket.entity";
+import { CreateTicketPurchaseDto } from "../dto/create-ticket-purchase.dto";
+import { PaymentServiceInterface } from "../../payment/interfaces/payment-service.interface";
+import { v4 as uuidv4 } from "uuid";
+import { TicketPurchase } from "../entities/ticket-pruchase";
+import { UsersService } from "src/users/users.service";
+import { TicketService } from "../tickets.service";
 
 @Injectable()
 export class TicketPurchaseService {
@@ -20,7 +25,7 @@ export class TicketPurchaseService {
     @InjectRepository(Ticket)
     private ticketRepository: Repository<Ticket>,
 
-    @Inject('PaymentServiceInterface')
+    @Inject("PaymentServiceInterface")
     private paymentService: PaymentServiceInterface,
 
     private userServices: UsersService,
@@ -33,15 +38,18 @@ export class TicketPurchaseService {
     paymentDetails: any,
   ): Promise<TicketPurchase> {
     // Find ticket and validate availability
-    const ticket = await this.ticketServices.getTicketByIDAndEvent(createTicketPurchaseDto.ticketId, createTicketPurchaseDto.eventId);
+    const ticket = await this.ticketServices.getTicketByIDAndEvent(
+      createTicketPurchaseDto.ticketId,
+      createTicketPurchaseDto.eventId,
+    );
 
     if (!ticket) {
-      throw new NotFoundException('Ticket not found');
+      throw new NotFoundException("Ticket not found");
     }
 
     // Check ticket availability
     if (ticket.quantity < createTicketPurchaseDto.ticketQuantity) {
-      throw new BadRequestException('Not enough tickets available');
+      throw new BadRequestException("Not enough tickets available");
     }
 
     // Calculate total price
@@ -54,14 +62,14 @@ export class TicketPurchaseService {
     );
 
     if (!paymentSuccessful) {
-      throw new BadRequestException('Payment processing failed');
+      throw new BadRequestException("Payment processing failed");
     }
 
     // Find user
-    const user = await this.userServices.findOneById(parseInt(userId));
+    const user = await this.userServices.findOneById(userId);
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException("User not found");
     }
 
     // Generate transaction ID
@@ -93,11 +101,11 @@ export class TicketPurchaseService {
   async getReceipt(orderId: string): Promise<TicketPurchase> {
     const ticketPurchase = await this.ticketPurchaseRepository.findOne({
       where: { id: orderId },
-      relations: ['event', 'user', 'ticket'],
+      relations: ["event", "user", "ticket"],
     });
 
     if (!ticketPurchase) {
-      throw new NotFoundException('Receipt not found');
+      throw new NotFoundException("Receipt not found");
     }
 
     return ticketPurchase;

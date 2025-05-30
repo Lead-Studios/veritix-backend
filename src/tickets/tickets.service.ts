@@ -1,89 +1,158 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Ticket } from "./entities/ticket.entity";
 import { CreateTicketDto } from "./dto/create-ticket.dto";
 import { PdfService } from "src/utils/pdf.service";
+import { ConferenceService } from "src/conference/providers/conference.service";
+import { User } from "src/users/entities/user.entity";
+import { UpdateTicketDto } from "./dto/update-ticket.dto";
+import { Receipt } from "./entities/receipt.entity";
+import { TicketPurchaseDto } from "./dto/ticket-purchase.dto";
+import { ReceiptDto } from "./dto/receipt.dto";
+import { Conference } from "../conference/entities/conference.entity";
+import { StripePaymentService } from "src/payment/services/stripe-payment.service";
 
 @Injectable()
 export class TicketService {
   constructor(
     @InjectRepository(Ticket)
-    private readonly ticketRepository: Repository<Ticket>, 
+    private readonly ticketRepository: Repository<Ticket>,
 
-    private readonly pdfService : PdfService
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
+
+    private readonly pdfService: PdfService,
+
+    private readonly conferenceService: ConferenceService,
+
+    @InjectRepository(Receipt)
+    private readonly receiptRepository: Repository<Receipt>,
+
+    @InjectRepository(Conference)
+    private readonly conferenceRepository: Repository<Conference>,
+
+    private readonly stripeService: StripePaymentService,
   ) {}
 
-  async createTicket(dto: CreateTicketDto): Promise<Ticket> {
-    const ticket = this.ticketRepository.create(dto);
-    return this.ticketRepository.save(ticket);
+  //FN TO CREATE A TICKET ONLY BY ORGANIZERS
+  public async createTicket(
+    createTicketDto: CreateTicketDto,
+    user: User,
+  ): Promise<Ticket> {
+    const conference = await this.conferenceService.findOne(
+      createTicketDto.eventId,
+    );
+    if (!conference || conference.organizerId !== user.id) {
+      throw new ForbiddenException(
+        "You do not have permission to create tickets for this conference",
+      );
+    }
+
+    const ticket = this.ticketRepository.create(createTicketDto);
+    return await this.ticketRepository.save(ticket);
   }
 
-  async getAllTickets(): Promise<Ticket[]> {
+  //
+  public async getAllTickets(): Promise<Ticket[]> {
     return this.ticketRepository.find();
   }
 
   async getTicketById(id: string): Promise<Ticket> {
-    const ticket = await this.ticketRepository.findOne({ where: { id } });
+    const ticket = await this.ticketRepository.findOne({
+      where: { id },
+    });
     if (!ticket) throw new NotFoundException("Ticket not found");
     return ticket;
   }
 
-  async getTicketByIDAndEvent(id:string, eventId:string): Promise<Ticket> {
+  async getTicketByIDAndEvent(id: string, eventId: string): Promise<Ticket> {
     const ticket = await this.ticketRepository.findOne({
-      where: { 
+      where: {
         id,
-        event: { id: eventId }
+        event: { id: eventId },
       },
-      relations: ['event']
+      relations: ["event"],
     });
-    return ticket
+    return ticket;
   }
 
   async getTicketsByEvent(eventId: string): Promise<Ticket[]> {
     return this.ticketRepository.find({ where: { event: { id: eventId } } });
   }
 
-  async updateTicket(
+  //FN TO UPDATE A TICKET
+  public async updateTicket(
     id: string,
-    dto: Partial<CreateTicketDto>,
+    updateTicketDto: UpdateTicketDto,
+    user: User,
   ): Promise<Ticket> {
-    const ticket = await this.getTicketById(id);
-    Object.assign(ticket, dto);
+    const ticket = await this.ticketRepository.findOne({ where: { id } });
+    if (!ticket) {
+      throw new NotFoundException("Ticket not found");
+    }
+
+    const conference = await this.conferenceService.findOne(
+      ticket.conferenceId,
+    );
+    if (conference.organizerId !== user.id) {
+      throw new ForbiddenException(
+        "You do not have permission to update this ticket",
+      );
+    }
+
+    Object.assign(ticket, updateTicketDto);
     return this.ticketRepository.save(ticket);
   }
 
-  async deleteTicket(id: string): Promise<void> {
-    const result = await this.ticketRepository.delete(id);
-    if (result.affected === 0) throw new NotFoundException("Ticket not found");
-  }
-
-    //fn to get all ticket history for a user
-    public async getUserTicketHistory(userId: string): Promise<Ticket[]> {
-      return this.ticketRepository.find({
-        where: { userId },
-        relations: ['event'],
-        order: { purchaseDate: 'DESC' },
-      });
+  //FN TO DELETE A TICKET ONLY BY ORGANIZERS
+  public async deleteTicket(id: string, user: User): Promise<void> {
+    const ticket = await this.ticketRepository.findOne({ where: { id } });
+    if (!ticket) {
+      throw new NotFoundException("Ticket not found");
     }
 
-     // fn to get a single ticket history by ID
+    const conference = await this.conferenceService.findOne(ticket.eventId);
+    if (conference.organizerId !== user.id) {
+      throw new ForbiddenException(
+        "You do not have permission to delete this ticket",
+      );
+    }
+
+    await this.ticketRepository.remove(ticket);
+  }
+
+  //fn to get all ticket history for a user
+  public async getUserTicketHistory(userId: string): Promise<Ticket[]> {
+    return this.ticketRepository.find({
+      where: { userId },
+      relations: ["event"],
+      order: { purchaseDate: "DESC" },
+    });
+  }
+
+  // fn to get a single ticket history by ID
   public async getUserTicketById(userId: string, id: string): Promise<Ticket> {
     const ticket = await this.ticketRepository.findOne({
       where: { id, userId },
-      relations: ['event'],
+      relations: ["event"],
     });
-    if (!ticket) throw new NotFoundException('Ticket not found');
+    if (!ticket) throw new NotFoundException("Ticket not found");
     return ticket;
   }
 
-   // fn to get ticket details
-   public async getTicketDetails(id: string): Promise<Ticket> {
+  // fn to get ticket details
+  public async getTicketDetails(id: string): Promise<Ticket> {
     const ticket = await this.ticketRepository.findOne({
       where: { id },
-      relations: ['event'],
+      relations: ["event"],
     });
-    if (!ticket) throw new NotFoundException('Ticket details not found');
+    if (!ticket) throw new NotFoundException("Ticket details not found");
     return ticket;
   }
 
@@ -97,5 +166,113 @@ export class TicketService {
     if (!ticket) throw new NotFoundException("Ticket not found");
 
     return this.pdfService.generateTicketReceipt(ticket);
+  }
+
+  async purchaseTickets(
+    userId: string,
+    purchaseDto: TicketPurchaseDto,
+  ): Promise<ReceiptDto> {
+    return await this.ticketRepository.manager.transaction(async (manager) => {
+      const conference = await manager.findOne(Conference, {
+        where: { id: purchaseDto.conferenceId },
+        lock: { mode: "pessimistic_write" },
+      });
+
+      if (!conference) {
+        throw new NotFoundException("Conference not found");
+      }
+
+      // Get the ticket price from the first ticket in the conference
+      const ticket = await manager.findOne(Ticket, {
+        where: { conference: { id: conference.id } },
+      });
+
+      if (!ticket) {
+        throw new NotFoundException("No tickets available for this conference");
+      }
+
+      // Calculate total amount
+      const totalAmount = ticket.price * purchaseDto.ticketQuantity;
+
+      // Process payment
+      const paymentSuccessful = await this.stripeService.processPayment(
+        totalAmount,
+        purchaseDto.billingDetails,
+      );
+
+      if (!paymentSuccessful) {
+        throw new BadRequestException("Payment not completed");
+      }
+
+      // Create ticket record
+      const newTicket = manager.create(Ticket, {
+        conference: conference,
+        userId,
+        quantity: purchaseDto.ticketQuantity,
+        pricePerTicket: ticket.price,
+        totalAmount,
+        isPaid: true,
+      });
+
+      await manager.save(Ticket, newTicket);
+
+      // Create receipt
+      const receipt = manager.create(Receipt, {
+        ticketId: newTicket.id,
+        userFullName: purchaseDto.billingDetails.fullName,
+        userEmail: purchaseDto.billingDetails.email,
+        conferenceName: conference.conferenceName,
+        conferenceDate: conference.conferenceDate,
+        conferenceLocation: `${conference.street}, ${conference.localGovernment}, ${conference.state}, ${conference.country}`,
+        ticketQuantity: purchaseDto.ticketQuantity,
+        pricePerTicket: ticket.price,
+        totalAmount,
+        amountPaid: totalAmount,
+        transactionDate: new Date(),
+      });
+
+      await manager.save(Receipt, receipt);
+
+      // Update ticket with receipt ID
+      newTicket.receiptId = receipt.id;
+      await manager.save(Ticket, newTicket);
+
+      return this.mapReceiptToDto(receipt);
+    });
+  }
+
+  async getReceipt(receiptId: string, userId: string): Promise<ReceiptDto> {
+    const receipt = await this.receiptRepository.findOne({
+      where: { id: receiptId },
+      relations: ["ticket"],
+    });
+
+    if (!receipt) {
+      throw new NotFoundException("Receipt not found");
+    }
+
+    if (receipt.ticket.userId !== userId) {
+      throw new ForbiddenException(
+        "You do not have permission to access this receipt",
+      );
+    }
+
+    return this.mapReceiptToDto(receipt);
+  }
+
+  private mapReceiptToDto(receipt: Receipt): ReceiptDto {
+    return {
+      receiptId: receipt.id,
+      userFullName: receipt.userFullName,
+      userEmail: receipt.userEmail,
+      conferenceName: receipt.conferenceName,
+      conferenceDate: receipt.conferenceDate,
+      conferenceLocation: receipt.conferenceLocation,
+      ticketQuantity: receipt.ticketQuantity,
+      pricePerTicket: receipt.pricePerTicket,
+      totalAmount: receipt.totalAmount,
+      amountPaid: receipt.amountPaid,
+      transactionDate: receipt.transactionDate,
+    };
   }
 }

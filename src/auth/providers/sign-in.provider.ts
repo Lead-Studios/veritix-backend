@@ -27,9 +27,11 @@ export class SignInProvider {
     this.logger.log(`User ${email} is attempting to sign in`);
 
     // 1. Retrieve user
-    const user = await this.usersService.GetOneByEmail(email.trim().toLowerCase());
+    const user = await this.usersService.GetOneByEmail(
+      email.trim().toLowerCase(),
+    );
     if (!user) {
-      this.logger.warn(`User not found`)
+      this.logger.warn(`User not found`);
       throw new UnauthorizedException("Email or password is incorrect.");
     }
 
@@ -41,14 +43,17 @@ export class SignInProvider {
         user.password,
       );
     } catch (error) {
-      this.logger.error(`Error verifying password: ${error.message}`, error.stack);
+      this.logger.error(
+        `Error verifying password: ${error.message}`,
+        error.stack,
+      );
       throw new ServiceUnavailableException(
         "Could not verify password. Please try again.",
       );
     }
 
     if (!isMatch) {
-      this.logger.warn(`Incorrect password`)
+      this.logger.warn(`Incorrect password`);
       throw new UnauthorizedException("Email or password is incorrect.");
     }
 

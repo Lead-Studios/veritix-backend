@@ -4,14 +4,50 @@ import {
   Column,
   ManyToOne,
   CreateDateColumn,
+  UpdateDateColumn,
   JoinColumn,
 } from "typeorm";
 import { Event } from "../../events/entities/event.entity";
+import { Conference } from "src/conference/entities/conference.entity";
+import { User } from "../../users/entities/user.entity";
 
-@Entity()
+@Entity("tickets")
 export class Ticket {
   @PrimaryGeneratedColumn("uuid")
   id: string;
+
+  @Column()
+  conferenceId: string;
+
+  @Column()
+  userId: string;
+
+  @Column("decimal", { precision: 10, scale: 2 })
+  pricePerTicket: number;
+
+  @Column("decimal", { precision: 10, scale: 2 })
+  totalAmount: number;
+
+  @Column({ default: false })
+  isPaid: boolean;
+
+  @Column({ nullable: true })
+  paymentIntentId: string;
+
+  @Column({ nullable: true })
+  receiptId: string;
+
+  @ManyToOne(() => User)
+  user: User;
+
+  @ManyToOne(() => Conference)
+  conference: Conference;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 
   @Column()
   name: string;
@@ -22,7 +58,7 @@ export class Ticket {
 
   @Column()
   eventId: string;
-  
+
   @Column({ type: "int" })
   quantity: number;
 
@@ -48,6 +84,9 @@ export class Ticket {
   @CreateDateColumn()
   purchaseDate: Date;
 
+  @Column()
+  status: string;
+
   @Column({ nullable: true })
-  userId: string;
+  qrCode: string;
 }
