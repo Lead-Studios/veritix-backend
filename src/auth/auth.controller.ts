@@ -97,5 +97,12 @@ export class AuthController {
   async googleAuthRedirect(@Req() req) {
     return this.authService.handleGoogleLogin(req.user);
   }
+
+  //TO BE DELETED SOON
+  @Get('google/redirection')
+  @UseGuards(AuthGuard('google'))
+  async googleAuthRedirection(@Req() req) {
+    return this.authService.handleGoogleLogin(req.user);
+  }
   
 }
