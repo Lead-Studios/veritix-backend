@@ -17,6 +17,8 @@ import { TicketPurchaseDto } from "./dto/ticket-purchase.dto";
 import { ReceiptDto } from "./dto/receipt.dto";
 import { Conference } from "../conference/entities/conference.entity";
 import { StripePaymentService } from "src/payment/services/stripe-payment.service";
+import { createHash } from "crypto";
+import * as QRCode from 'qrcode';
 
 @Injectable()
 export class TicketService {
@@ -40,6 +42,12 @@ export class TicketService {
     private readonly stripeService: StripePaymentService,
   ) {}
 
+  private generateSecureToken(ticketId: number): string {
+    const secret = process.env.QR_SECRET || 'default_secret';
+    const raw = `${ticketId}-${secret}`;
+    return createHash('sha256').update(raw).digest('hex'); // Secure token
+  }
+
   //FN TO CREATE A TICKET ONLY BY ORGANIZERS
   public async createTicket(
     createTicketDto: CreateTicketDto,
@@ -55,7 +63,19 @@ export class TicketService {
     }
 
     const ticket = this.ticketRepository.create(createTicketDto);
-    return await this.ticketRepository.save(ticket);
+    const savedTicket = await this.ticketRepository.save(ticket);
+
+  // ✅ Generate a secure token based on the ticket ID
+  const secureToken = this.generateSecureToken(Number(savedTicket.id));
+
+  // ✅ Generate a QR code as a base64 image from the token
+  const qrCode = await QRCode.toDataURL(secureToken);
+
+  // ✅ Update the ticket with the QR code image
+  savedTicket.qrCode = qrCode;
+  await this.ticketRepository.save(savedTicket);
+
+  return savedTicket;
   }
 
   //
@@ -70,6 +90,23 @@ export class TicketService {
     if (!ticket) throw new NotFoundException("Ticket not found");
     return ticket;
   }
+
+  async validateQRCode(token: string) {
+  const tickets = await this.ticketRepository.find(); // Load all, or filter by event
+
+  const matchingTicket = tickets.find(ticket =>
+    this.generateSecureToken(Number(ticket.id)) === token,
+  );
+
+  if (!matchingTicket) throw new NotFoundException('Invalid QR code');
+  if (matchingTicket.isUsed) throw new BadRequestException('Ticket already used');
+
+  matchingTicket.isUsed = true;
+  await this.ticketRepository.save(matchingTicket);
+
+  return { valid: true, ticketId: matchingTicket.id };
+}
+
 
   async getTicketByIDAndEvent(id: string, eventId: string): Promise<Ticket> {
     const ticket = await this.ticketRepository.findOne({
