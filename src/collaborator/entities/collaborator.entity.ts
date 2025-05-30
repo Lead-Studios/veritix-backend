@@ -52,6 +52,20 @@ export class Collaborator {
   @ManyToOne(() => Event, event => event.collaborators)
   event: Event;
 
+  @ApiProperty({
+    description: 'ID of the event this collaborator is associated with',
+    example: '123e4567-e89b-12d3-a456-426614174000'
+  })
+  @Column()
+  eventId: string;
+
+  @ApiProperty({
+    description: 'URL or path to the collaborator\'s image',
+    example: 'uploads/collaborators/image-123456.jpg'
+  })
+  @Column({ nullable: true })
+  imageUrl: string;
+
   @ApiPropertyOptional({
     description: 'Notes about the collaborator\'s responsibilities',
     example: 'Manages ticket sales and event logistics'
