@@ -27,11 +27,22 @@ import { UserRole } from "src/common/enums/users-roles.enum";
 import { TicketPurchaseDto } from "./dto/ticket-purchase.dto";
 import { ReceiptDto } from "./dto/receipt.dto";
 import { RequestWithUser } from "src/common/interfaces/request.interface";
+import { PromoCodeService } from "src/promo-code/providers/promo-code.service";
+import { ApplyPromoDto } from "src/promo-code/dtos/promoCodeDto";
 
 @Controller("user/tickets")
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class TicketController {
-  constructor(private readonly ticketService: TicketService) {}
+  constructor(
+    private readonly ticketService: TicketService,
+    private readonly promoService: PromoCodeService,
+  ) {}
+
+   @Post('apply-code')
+  async applyPromoCode(@Body() dto: ApplyPromoDto) {
+    const promo = await this.promoService.validatePromoCode(dto.code, dto.eventId);
+    return { discount: promo.discount };
+  }
 
   @Post()
   @UseGuards(RolesGuard)
