@@ -13,6 +13,9 @@ import { TicketPurchaseService } from "./provider/tickets-purchase.service";
 import { User } from "src/users/entities/user.entity";
 import { ConferenceService } from "src/conference/providers/conference.service";
 import { Conference } from "src/conference/entities/conference.entity";
+import { TicketTier } from "./entities/ticket-tier.entity"; 
+import { EventsModule } from "src/events/events.module"; 
+import { TicketTierService } from "./provider/ticket-tier.service";
 import { Receipt } from "./entities/receipt.entity";
 import { StripeModule } from "../payment/stripe.module";
 import { PaymentModule } from '../payment/payment.module';
@@ -20,6 +23,15 @@ import { PaymentModule } from '../payment/payment.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
+      Ticket, 
+      TicketPurchase, 
+      Event, 
+      User, 
+      Conference,
+      TicketTier,
+    ]),
+    UsersModule,
+    EventsModule, 
       Ticket,
       TicketPurchase,
       Event,
@@ -37,11 +49,13 @@ import { PaymentModule } from '../payment/payment.module';
     PdfService,
     TicketPurchaseService,
     ConferenceService,
+    TicketTierService, 
     {
       provide: "PaymentServiceInterface",
       useClass: StripePaymentService,
     },
   ],
-  exports: [TicketService, PdfService],
+  exports: [TicketService, PdfService, TicketTierService], 
+=======
 })
 export class TicketModule {}
