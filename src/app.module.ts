@@ -25,6 +25,7 @@ import { SpecialSpeakerModule } from "./special-speaker/special-speaker.module";
 import { CacheModule } from "@nestjs/cache-manager";
 import { ConferencePosterManagementModule } from "./conference-poster-management/conference-poster-management.module";
 import { ConferenceGalleryModule } from "./conference-gallery/conference-gallery.module";
+import { JwtStrategy } from "../security/strategies/jwt.strategy";
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -71,7 +72,7 @@ import { ConferenceGalleryModule } from "./conference-gallery/conference-gallery
     ConferenceGalleryModule,
   ],
   controllers: [AppController],
-  providers: [AppService, PdfService],
+  providers: [AppService, PdfService, JwtStrategy],
   exports: [PdfService, AppService],
 })
 export class AppModule implements OnModuleInit {
