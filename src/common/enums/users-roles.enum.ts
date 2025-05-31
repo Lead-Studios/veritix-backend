@@ -1,8 +1,10 @@
 export enum UserRole {
-  Admin = "admin",
-  User = "user",
-  Guest = "guest",
-  Organizer = "organizer",
-  ConferenceOwner = "conference_owner",
-  Collaborator = "collaborator",
+  ADMIN = "admin",
+  USER = "user",
+  GUEST = "guest",
+  ORGANIZER = "organizer",
+  CONFERENCE_OWNER = "conference_owner",
+  COLLABORATOR = "collaborator",
+  SPONSOR = "sponsor",
+  SPECIAL_GUEST = "special_guest",
 }

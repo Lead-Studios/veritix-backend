@@ -27,7 +27,7 @@ describe("ConferenceSponsorsController", () => {
   const mockUser = {
     id: "user-1",
     email: "test@example.com",
-    role: UserRole.Organizer,
+    role: UserRole.ORGANIZER,
   };
 
   const mockConferenceSponsorDto: CreateConferenceSponsorDto = {

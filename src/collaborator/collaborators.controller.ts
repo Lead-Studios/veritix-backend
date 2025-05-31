@@ -27,7 +27,7 @@ import { CreateCollaboratorDto } from "./dto/create-collaborator.dto";
 import { UpdateCollaboratorDto } from "./dto/update-collaborator.dto";
 import { JwtAuthGuard } from "security/guards/jwt-auth.guard";
 import { RolesGuard } from "security/guards/rolesGuard/roles.guard";
-import { RoleDecorator } from "security/decorators/roles.decorator";
+import { Roles } from "security/decorators/roles.decorator";
 import { UserRole } from "src/common/enums/users-roles.enum";
 import { Collaborator } from "./entities/collaborator.entity";
 import { FileInterceptor } from "@nestjs/platform-express";
@@ -41,7 +41,7 @@ export class CollaboratorController {
   constructor(private readonly collaboratorsService: CollaboratorService) {}
 
   @Post()
-  @RoleDecorator(UserRole.Admin)
+  @Roles(UserRole.ADMIN)
   @UseInterceptors(FileInterceptor("image"))
   @ApiConsumes("multipart/form-data")
   @ApiOperation({
@@ -113,7 +113,7 @@ export class CollaboratorController {
   }
 
   @Patch(":id")
-  @RoleDecorator(UserRole.Admin)
+  @Roles(UserRole.ADMIN)
   @UseInterceptors(FileInterceptor("image"))
   @ApiConsumes("multipart/form-data")
   @ApiOperation({
@@ -148,7 +148,7 @@ export class CollaboratorController {
   }
 
   @Delete(":id")
-  @RoleDecorator(UserRole.Admin)
+  @Roles(UserRole.ADMIN)
   @ApiOperation({
     summary: "Delete collaborator",
     description: "Remove a collaborator from an event",

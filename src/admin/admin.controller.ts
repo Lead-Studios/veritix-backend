@@ -24,13 +24,13 @@ import { UserRole } from "src/common/enums/users-roles.enum";
 import { JwtAuthGuard } from "security/guards/jwt-auth.guard";
 import { RolesGuard } from "security/guards/rolesGuard/roles.guard";
 import { AdminService } from "./providers/admin.service";
-import { RoleDecorator, ROLES_KEY } from "security/decorators/roles.decorator";
+import { Roles, ROLES_KEY } from "security/decorators/roles.decorator";
 
 @ApiTags("Admin")
 @ApiBearerAuth()
 @Controller("/api/v1/admin")
 @UseGuards(JwtAuthGuard, RolesGuard)
-@RoleDecorator(UserRole.Admin)
+@Roles(UserRole.ADMIN)
 @UseFilters(AllExceptionsFilter)
 export class AdminController {
   private readonly logger = new Logger(AdminController.name);

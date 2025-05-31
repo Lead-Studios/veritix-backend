@@ -28,7 +28,6 @@ async function bootstrap() {
       logger.log(`Memory Usage: ${Math.round(used * 100) / 100} MB`);
     }, 60000);
   }
-
   app.use(new HttpLogger().use);
   app.useGlobalFilters(new DatabaseExceptionFilter());
 

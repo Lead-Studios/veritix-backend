@@ -2,7 +2,7 @@ import { Controller, Get, Param, Query, UseGuards } from "@nestjs/common";
 import { EventRevenueAnalyticsService } from "./event-revenue-analytics.service";
 import { AuthGuard } from "@nestjs/passport";
 import { RolesGuard } from "security/guards/rolesGuard/roles.guard";
-import { RoleDecorator } from "security/decorators/roles.decorator";
+import { Roles } from "security/decorators/roles.decorator";
 import { UserRole } from "src/common/enums/users-roles.enum";
 import {
   ApiTags,
@@ -24,7 +24,7 @@ export class EventRevenueAnalyticsController {
   ) {}
 
   @Get(":eventId/revenue")
-  @RoleDecorator(UserRole.Admin, UserRole.User)
+  @Roles(UserRole.ADMIN, UserRole.USER)
   @ApiOperation({
     summary: "Get event revenue",
     description:
@@ -78,7 +78,7 @@ export class EventRevenueAnalyticsController {
   }
 
   @Get(":eventId/profit")
-  @RoleDecorator(UserRole.Admin, UserRole.User)
+  @Roles(UserRole.ADMIN, UserRole.USER)
   @ApiOperation({
     summary: "Get event profit",
     description:

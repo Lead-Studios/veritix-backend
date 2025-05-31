@@ -22,7 +22,7 @@ import { CreatePricingRuleDto } from "./dto/create-pricing-rule.dto";
 import { UpdatePricingRuleDto } from "./dto/update-pricing-rule.dto";
 import { JwtAuthGuard } from "security/guards/jwt-auth.guard";
 import { RolesGuard } from "security/guards/rolesGuard/roles.guard";
-import { RoleDecorator } from "security/decorators/roles.decorator";
+import { Roles } from "security/decorators/roles.decorator";
 import { UserRole } from "src/common/enums/users-roles.enum";
 import { PricingRule } from "./entities/pricing-rule.entity";
 
@@ -34,7 +34,7 @@ export class PricingController {
   constructor(private readonly pricingService: PricingService) {}
 
   @Post("rules")
-  @RoleDecorator(UserRole.Admin)
+  @Roles(UserRole.ADMIN)
   @ApiOperation({
     summary: "Create pricing rule",
     description: "Create a new dynamic pricing rule for tickets",
@@ -52,7 +52,7 @@ export class PricingController {
   }
 
   @Get("rules")
-  @RoleDecorator(UserRole.Admin)
+  @Roles(UserRole.ADMIN)
   @ApiOperation({
     summary: "Get all pricing rules",
     description: "Retrieve all dynamic pricing rules",
@@ -74,7 +74,7 @@ export class PricingController {
   }
 
   @Get("rules/:id")
-  @RoleDecorator(UserRole.Admin)
+  @Roles(UserRole.ADMIN)
   @ApiOperation({
     summary: "Get pricing rule by ID",
     description: "Retrieve a specific pricing rule by ID",
@@ -97,7 +97,7 @@ export class PricingController {
   }
 
   @Put("rules/:id")
-  @RoleDecorator(UserRole.Admin)
+  @Roles(UserRole.ADMIN)
   @ApiOperation({
     summary: "Update pricing rule",
     description: "Update an existing pricing rule",
@@ -123,7 +123,7 @@ export class PricingController {
   }
 
   @Delete("rules/:id")
-  @RoleDecorator(UserRole.Admin)
+  @Roles(UserRole.ADMIN)
   @ApiOperation({
     summary: "Delete pricing rule",
     description: "Remove a pricing rule",
@@ -145,7 +145,7 @@ export class PricingController {
   }
 
   // @Post("calculate/:eventId")
-  // @RoleDecorator(UserRole.Admin)
+  // @Roles(UserRole.ADMIN)
   // @ApiOperation({
   //   summary: "Calculate dynamic prices",
   //   description: "Calculate ticket prices based on configured rules",
@@ -168,7 +168,7 @@ export class PricingController {
   // }
 
   // @Get("history/:eventId")
-  // @RoleDecorator(UserRole.Admin)
+  // @Roles(UserRole.ADMIN)
   // @ApiOperation({
   //   summary: "Get price history",
   //   description: "Retrieve price adjustment history for an event",

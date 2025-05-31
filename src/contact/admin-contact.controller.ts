@@ -3,11 +3,11 @@ import { JwtAuthGuard } from "security/guards/jwt-auth.guard";
 import { RolesGuard } from "security/guards/rolesGuard/roles.guard";
 import { ContactService } from "./contact.service";
 import { UserRole } from "src/common/enums/users-roles.enum";
-import { RoleDecorator } from "security/decorators/roles.decorator";
+import { Roles } from "security/decorators/roles.decorator";
 
 @Controller("admin/contact-messages")
 @UseGuards(JwtAuthGuard, RolesGuard)
-@RoleDecorator(UserRole.Admin)
+@Roles(UserRole.ADMIN)
 export class AdminContactController {
   constructor(private readonly contactService: ContactService) {}
 

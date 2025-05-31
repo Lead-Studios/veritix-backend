@@ -14,6 +14,7 @@ import { GalleryItem } from "./event-gallery/entities/gallery-item.entity";
 import { config } from "dotenv";
 import { PricingRule } from "./dynamic-pricing/pricing/entities/pricing-rule.entity";
 import { SpecialSpeaker } from "./special-speaker/entities/special-speaker.entity";
+import { ConferenceGallery } from "./conference-gallery/entities/conference-gallery.entity";
 
 // Load environment variables from .env file
 config();
@@ -40,6 +41,7 @@ export const AppDataSource = new DataSource({
     SpecialSpeaker,
     Conference,
     GalleryItem,
+    ConferenceGallery,
   ],
   migrations: ["src/migrations/*.ts"],
   synchronize: false,

@@ -114,8 +114,22 @@ export class UsersService {
   //   return `This action updates a #${id} user`;
   // }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async remove(id: string) {
+    // Double-check ID validity
+    if (!id || typeof id !== "string") {
+      throw new NotFoundException(`Invalid user ID: ${id}`);
+    }
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    this.logger.log(`Deleting user with ID: ${id}`);
+    // Use soft delete to maintain data integrity
+    // If you want to hard delete, you can use `this.userRepository.delete(id);`
+    this.userRepository.softDelete(id);
+    this.logger.log(`User with ID ${id} has been soft deleted`);
+    // Return a success message or the deleted user object
+    return { message: `User with ID ${id} has been deleted.` };
   }
 
   public async updateUser(

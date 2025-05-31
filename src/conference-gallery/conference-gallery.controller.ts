@@ -20,7 +20,7 @@ import {
   CreateConferenceGalleryDto,
   UpdateConferenceGalleryDto,
 } from "./dto/conference-gallery.dto";
-import { RoleDecorator } from "security/decorators/roles.decorator";
+import { Roles } from "security/decorators/roles.decorator";
 import { diskStorage } from "multer";
 import * as path from "path";
 import * as fs from "fs";
@@ -35,7 +35,7 @@ export class ConferenceGalleryController {
   ) {}
 
   @Post()
-  @RoleDecorator(UserRole.Organizer, UserRole.Admin)
+  @Roles(UserRole.ORGANIZER, UserRole.ADMIN)
   @UseInterceptors(
     FileInterceptor("file", {
       storage: diskStorage({
@@ -113,7 +113,7 @@ export class ConferenceGalleryController {
   }
 
   @Put(":id")
-  @RoleDecorator(UserRole.Organizer, UserRole.Admin)
+  @Roles(UserRole.ORGANIZER, UserRole.ADMIN)
   @UseInterceptors(
     FileInterceptor("file", {
       // Use FileInterceptor for optional image update
@@ -160,7 +160,7 @@ export class ConferenceGalleryController {
   }
 
   @Delete(":id")
-  @RoleDecorator(UserRole.Organizer, UserRole.Admin)
+  @Roles(UserRole.ORGANIZER, UserRole.ADMIN)
   async remove(@Param("id") id: string): Promise<void> {
     await this.conferenceGalleryService.remove(id);
   }

@@ -157,7 +157,7 @@ export class ConferenceService {
     }
 
     // Allow access if user is admin
-    if (user.role === UserRole.Admin) {
+    if (user.role === UserRole.ADMIN) {
       return true;
     }
 

@@ -27,7 +27,7 @@ import { CreateEventDto } from "./dto/create-event.dto";
 import { UpdateEventDto } from "./dto/update-event.dto";
 import { JwtAuthGuard } from "security/guards/jwt-auth.guard";
 import { RolesGuard } from "security/guards/rolesGuard/roles.guard";
-import { RoleDecorator } from "security/decorators/roles.decorator";
+import { Roles } from "security/decorators/roles.decorator";
 import { UserRole } from "src/common/enums/users-roles.enum";
 import { Event } from "./entities/event.entity";
 import { EventStatus } from "../common/enums/event-status.enum";
@@ -40,7 +40,7 @@ export class EventsController {
   constructor(private readonly eventsService: EventsService) {}
 
   @Post()
-  // @RoleDecorator(UserRole.Admin, UserRole.Organizer)
+  // @Roles(UserRole.ADMIN, UserRole.ORGANIZER)
   @UseInterceptors(FileInterceptor("coverImage"))
   @ApiOperation({
     summary: "Create new event",
@@ -163,7 +163,7 @@ export class EventsController {
   }
 
   @Patch(":id")
-  @RoleDecorator(UserRole.Admin, UserRole.Organizer)
+  @Roles(UserRole.ADMIN, UserRole.ORGANIZER)
   @UseInterceptors(FileInterceptor("coverImage"))
   @ApiOperation({
     summary: "Update event",
@@ -200,7 +200,7 @@ export class EventsController {
   }
 
   @Delete(":id")
-  @RoleDecorator(UserRole.Admin)
+  @Roles(UserRole.ADMIN)
   @ApiOperation({
     summary: "Delete event",
     description: "Delete an event and all associated data",
@@ -222,7 +222,7 @@ export class EventsController {
   }
 
   @Post(":id/publish")
-  @RoleDecorator(UserRole.Admin, UserRole.Organizer)
+  @Roles(UserRole.ADMIN, UserRole.ORGANIZER)
   @ApiOperation({
     summary: "Publish event",
     description: "Make an event visible to the public",
@@ -248,7 +248,7 @@ export class EventsController {
   }
 
   @Post(":id/unpublish")
-  @RoleDecorator(UserRole.Admin, UserRole.Organizer)
+  @Roles(UserRole.ADMIN, UserRole.ORGANIZER)
   @ApiOperation({
     summary: "Unpublish event",
     description: "Hide an event from the public",
@@ -274,7 +274,7 @@ export class EventsController {
   }
 
   @Post(":id/cancel")
-  @RoleDecorator(UserRole.Admin, UserRole.Organizer)
+  @Roles(UserRole.ADMIN, UserRole.ORGANIZER)
   @ApiOperation({
     summary: "Cancel event",
     description: "Cancel an event and handle all associated operations",
@@ -321,7 +321,7 @@ export class EventsController {
   }
 
   @Post(":id/postpone")
-  @RoleDecorator(UserRole.Admin, UserRole.Organizer)
+  @Roles(UserRole.ADMIN, UserRole.ORGANIZER)
   @ApiOperation({
     summary: "Postpone event",
     description: "Change the date of an event and handle notifications",

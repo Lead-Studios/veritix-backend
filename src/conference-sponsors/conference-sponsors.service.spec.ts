@@ -42,12 +42,12 @@ describe('ConferenceSponsorsService', () => {
   } as Express.Multer.File;
 
   const mockUser: User = {
-    id: 'user-1',
-    email: 'test@example.com',
-    password: 'hashedPassword',
-    firstName: 'Test',
-    lastName: 'User',
-    role: UserRole.Organizer,
+    id: "user-1",
+    email: "test@example.com",
+    password: "hashedPassword",
+    firstName: "Test",
+    lastName: "User",
+    role: UserRole.ORGANIZER,
     conferences: [],
     createdAt: new Date(),
     updatedAt: new Date(),
