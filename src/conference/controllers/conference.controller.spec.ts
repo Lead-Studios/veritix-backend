@@ -18,7 +18,7 @@ const mockUser: User = {
   password: "hashedPassword",
   firstName: "Test",
   lastName: "User",
-  role: UserRole.Organizer,
+  role: UserRole.ORGANIZER,
   conferences: [],
   createdAt: new Date(),
   updatedAt: new Date(),

@@ -22,7 +22,7 @@ import { Ticket } from "./entities/ticket.entity";
 import { Response, Request } from "express";
 import * as fs from "fs";
 import { User } from "src/users/entities/user.entity";
-import { RoleDecorator } from "security/decorators/roles.decorator";
+import { Roles } from "security/decorators/roles.decorator";
 import { UserRole } from "src/common/enums/users-roles.enum";
 import { TicketPurchaseDto } from "./dto/ticket-purchase.dto";
 import { ReceiptDto } from "./dto/receipt.dto";
@@ -35,7 +35,7 @@ export class TicketController {
 
   @Post()
   @UseGuards(RolesGuard)
-  @RoleDecorator(UserRole.Admin, UserRole.Organizer) //only admins and organizers can create ticket
+  @Roles(UserRole.ADMIN, UserRole.ORGANIZER) //only admins and organizers can create ticket
   // @Roles('admin') // Only admin can create tickets
   async createTicket(@Body() dto: CreateTicketDto, @Query("user") user: User) {
     return this.ticketService.createTicket(dto, user);
@@ -43,28 +43,28 @@ export class TicketController {
 
   @Get()
   @UseGuards(RolesGuard)
-  @RoleDecorator(UserRole.Admin, UserRole.Organizer, UserRole.Guest)
+  @Roles(UserRole.ADMIN, UserRole.ORGANIZER, UserRole.GUEST)
   async getAllTickets() {
     return this.ticketService.getAllTickets();
   }
 
   @Get(":id")
   @UseGuards(RolesGuard)
-  @RoleDecorator(UserRole.Admin, UserRole.Organizer, UserRole.Guest)
+  @Roles(UserRole.ADMIN, UserRole.ORGANIZER, UserRole.GUEST)
   async getTicketById(@Param("id") id: string) {
     return this.ticketService.getTicketById(id);
   }
 
   @Get("/event/:eventId/tickets")
   @UseGuards(RolesGuard)
-  @RoleDecorator(UserRole.Admin, UserRole.Organizer, UserRole.Guest)
+  @Roles(UserRole.ADMIN, UserRole.ORGANIZER, UserRole.GUEST)
   async getTicketsByEvent(@Param("eventId") eventId: string) {
     return this.ticketService.getTicketsByEvent(eventId);
   }
 
   @Put(":id")
   @UseGuards(RolesGuard)
-  @RoleDecorator(UserRole.Admin, UserRole.Organizer)
+  @Roles(UserRole.ADMIN, UserRole.ORGANIZER)
   async updateTicket(
     @Param("id") id: string,
     @Body() dto: Partial<CreateTicketDto>,
@@ -75,7 +75,7 @@ export class TicketController {
 
   @Delete(":id")
   @UseGuards(RolesGuard)
-  @RoleDecorator(UserRole.Admin, UserRole.Organizer)
+  @Roles(UserRole.ADMIN, UserRole.ORGANIZER)
   delete(@Param("id") id: string, @Query("user") user: User) {
     return this.ticketService.deleteTicket(id, user);
   }

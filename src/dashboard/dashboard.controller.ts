@@ -9,7 +9,7 @@ import {
 import { EventDashboardService } from "./dashboard.service";
 import { JwtAuthGuard } from "security/guards/jwt-auth.guard";
 import { RolesGuard } from "security/guards/rolesGuard/roles.guard";
-import { RoleDecorator } from "security/decorators/roles.decorator";
+import { Roles } from "security/decorators/roles.decorator";
 import { UserRole } from "src/common/enums/users-roles.enum";
 import { DashboardStatsDto } from "./dto/dashboard-stats.dto";
 import { ReportPeriodEnum } from "src/common/enums/report-period.enum";
@@ -22,7 +22,7 @@ export class EventDashboardController {
   constructor(private readonly eventDashboardService: EventDashboardService) {}
 
   // @Get("stats")
-  // @RoleDecorator(UserRole.Admin)
+  // @Roles(UserRole.ADMIN)
   // @ApiOperation({
   //   summary: "Get dashboard statistics",
   //   description: "Retrieve key metrics and statistics for the dashboard",
@@ -61,7 +61,7 @@ export class EventDashboardController {
   // }
 
   // @Get("revenue")
-  // @RoleDecorator(UserRole.Admin)
+  // @Roles(UserRole.ADMIN)
   // @ApiOperation({
   //   summary: "Get revenue analytics",
   //   description: "Retrieve detailed revenue statistics and trends",
@@ -84,7 +84,7 @@ export class EventDashboardController {
   // }
 
   // @Get("events/performance")
-  // @RoleDecorator(UserRole.Admin)
+  // @Roles(UserRole.ADMIN)
   // @ApiOperation({
   //   summary: "Get event performance metrics",
   //   description: "Retrieve performance metrics for events",
@@ -107,7 +107,7 @@ export class EventDashboardController {
   // }
 
   // @Get("tickets/sales")
-  // @RoleDecorator(UserRole.Admin)
+  // @Roles(UserRole.ADMIN)
   // @ApiOperation({
   //   summary: "Get ticket sales analytics",
   //   description: "Retrieve detailed ticket sales statistics and trends",
@@ -130,7 +130,7 @@ export class EventDashboardController {
   // }
 
   @Get(":eventId")
-  @RoleDecorator(UserRole.Admin)
+  @Roles(UserRole.ADMIN)
   @UseGuards(JwtAuthGuard, RolesGuard)
   async getEventDashboard(@Param("eventId") eventId: string) {
     return this.eventDashboardService.getDashboardMetrics(eventId);

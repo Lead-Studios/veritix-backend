@@ -53,7 +53,7 @@ describe("AdminService", () => {
           password: "password",
           firstName: "Test",
           lastName: "User",
-          role: UserRole.User,
+          role: UserRole.USER,
           isActive: true,
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -65,7 +65,7 @@ describe("AdminService", () => {
           password: "password",
           firstName: "Test",
           lastName: "Admin",
-          role: UserRole.Admin,
+          role: UserRole.ADMIN,
           isActive: true,
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -101,7 +101,7 @@ describe("AdminService", () => {
         password: "password",
         firstName: "Test",
         lastName: "User",
-        role: UserRole.User,
+        role: UserRole.USER,
         isActive: true,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -154,7 +154,7 @@ describe("AdminService", () => {
           id: "1",
           username: "test1",
           email: "test1@example.com",
-          role: UserRole.User,
+          role: UserRole.USER,
           isActive: true,
           createdAt: new Date(),
         },
@@ -162,7 +162,7 @@ describe("AdminService", () => {
           id: "2",
           username: "test2",
           email: "test2@example.com",
-          role: UserRole.Admin,
+          role: UserRole.ADMIN,
           isActive: false,
           createdAt: new Date(),
         },
@@ -179,8 +179,8 @@ describe("AdminService", () => {
       expect(result.activeUsers).toBe(1);
       expect(result.inactiveUsers).toBe(1);
       expect(result.usersByRole).toEqual({
-        [UserRole.User]: 1,
-        [UserRole.Admin]: 1,
+        [UserRole.USER]: 1,
+        [UserRole.ADMIN]: 1,
       });
       expect(result.period).toBe(ReportPeriodEnum.WEEK);
       expect(userRepository.createQueryBuilder).toHaveBeenCalledWith("user");

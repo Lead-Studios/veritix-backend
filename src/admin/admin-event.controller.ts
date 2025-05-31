@@ -8,7 +8,7 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { AuthGuard } from "@nestjs/passport";
-import { RoleDecorator } from "security/decorators/roles.decorator";
+import { Roles } from "security/decorators/roles.decorator";
 import { RolesGuard } from "security/guards/rolesGuard/roles.guard";
 import { UserRole } from "src/common/enums/users-roles.enum";
 import { EventsService } from "src/events/events.service";
@@ -18,7 +18,7 @@ import { AdminService } from "./providers/admin.service";
 
 @Controller("admin")
 @UseGuards(AuthGuard, RolesGuard)
-@RoleDecorator(UserRole.Admin)
+@Roles(UserRole.ADMIN)
 export class AdminEventController {
   constructor(
     private readonly eventsService: EventsService,

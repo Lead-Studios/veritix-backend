@@ -20,7 +20,7 @@ import { CreateContactUsDto } from "./dto/create-contact-us.dto";
 import { UpdateContactUsDto } from "./dto/update-contact-us.dto";
 import { JwtAuthGuard } from "security/guards/jwt-auth.guard";
 import { RolesGuard } from "security/guards/rolesGuard/roles.guard";
-import { RoleDecorator } from "security/decorators/roles.decorator";
+import { Roles } from "security/decorators/roles.decorator";
 import { UserRole } from "src/common/enums/users-roles.enum";
 
 @ApiTags("Contact Us")
@@ -45,7 +45,7 @@ export class ContactUsController {
 
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @RoleDecorator(UserRole.Admin)
+  @Roles(UserRole.ADMIN)
   @ApiBearerAuth()
   @ApiOperation({
     summary: "Get all messages",
@@ -64,7 +64,7 @@ export class ContactUsController {
 
   @Get(":id")
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @RoleDecorator(UserRole.Admin)
+  @Roles(UserRole.ADMIN)
   @ApiBearerAuth()
   @ApiOperation({
     summary: "Get message by ID",
@@ -89,7 +89,7 @@ export class ContactUsController {
 
   // @Patch(":id")
   // @UseGuards(JwtAuthGuard, RolesGuard)
-  // @RoleDecorator(UserRole.Admin)
+  // @Roles(UserRole.ADMIN)
   // @ApiBearerAuth()
   // @ApiOperation({
   //   summary: "Update message",
@@ -117,7 +117,7 @@ export class ContactUsController {
 
   @Delete(":id")
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @RoleDecorator(UserRole.Admin)
+  @Roles(UserRole.ADMIN)
   @ApiBearerAuth()
   @ApiOperation({
     summary: "Delete message",

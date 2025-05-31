@@ -28,7 +28,7 @@
 // import { UpdateGalleryItemDto } from "./dto/update-gallery-item.dto";
 // import { JwtAuthGuard } from "security/guards/jwt-auth.guard";
 // import { RolesGuard } from "security/guards/rolesGuard/roles.guard";
-// import { RoleDecorator } from "security/decorators/roles.decorator";
+// import { Roles } from "security/decorators/roles.decorator";
 // import { UserRole } from "src/common/enums/users-roles.enum";
 // import { GalleryItem } from "./entities/gallery-item.entity";
 
@@ -244,7 +244,7 @@ import { JwtAuthGuard } from "../../security/guards/jwt-auth.guard";
 import { RolesGuard } from "../../security/guards/rolesGuard/roles.guard";
 import { EventGalleryService } from "./event-gallery.service";
 import { UserRole } from "src/common/enums/users-roles.enum";
-import { RoleDecorator } from "security/decorators/roles.decorator";
+import { Roles } from "security/decorators/roles.decorator";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { diskStorage } from "multer";
 import * as path from "path";
@@ -256,7 +256,7 @@ import { v4 as uuidv4 } from "uuid";
 export class EventGalleryController {
   constructor(private readonly galleryService: EventGalleryService) {}
 
-  @RoleDecorator(UserRole.Admin)
+  @Roles(UserRole.ADMIN)
   @Post()
   @UseInterceptors(
     FileInterceptor("file", {
@@ -317,7 +317,7 @@ export class EventGalleryController {
     // return this.galleryService.createGalleryImage(createGalleryDto);
   }
 
-  @RoleDecorator(UserRole.Admin, UserRole.User)
+  @Roles(UserRole.ADMIN, UserRole.USER)
   @Get()
   async getAllImages(
     @Query("page") page: string = "1",
@@ -326,13 +326,13 @@ export class EventGalleryController {
     return this.galleryService.getAllImages(Number(page), Number(limit));
   }
 
-  @RoleDecorator(UserRole.Admin, UserRole.Guest, UserRole.User)
+  @Roles(UserRole.ADMIN, UserRole.GUEST, UserRole.USER)
   @Get(":id")
   async getImageById(@Param("id") id: string) {
     return this.galleryService.getImageById(id);
   }
 
-  @RoleDecorator(UserRole.Admin, UserRole.Guest, UserRole.User)
+  @Roles(UserRole.ADMIN, UserRole.GUEST, UserRole.USER)
   @Get("events/:eventId")
   async getEventGallery(
     @Param("eventId") eventId: string,
@@ -346,7 +346,7 @@ export class EventGalleryController {
     );
   }
 
-  @RoleDecorator(UserRole.Admin)
+  @Roles(UserRole.ADMIN)
   @Put(":id")
   async updateImageDescription(
     @Param("id") id: string,
@@ -355,7 +355,7 @@ export class EventGalleryController {
     return this.galleryService.updateImageDescription(id, updateGalleryDto);
   }
 
-  @RoleDecorator(UserRole.Admin)
+  @Roles(UserRole.ADMIN)
   @Delete(":id")
   async deleteImage(@Param("id") id: string) {
     return this.galleryService.deleteImage(id);
