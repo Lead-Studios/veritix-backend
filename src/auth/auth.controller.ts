@@ -6,6 +6,8 @@ import {
   HttpStatus,
   Get,
   Query,
+  UseGuards,
+  Req,
 } from "@nestjs/common";
 import { AuthService } from "./providers/auth.service";
 import { SignInDto } from "./dto/create-auth.dto";
@@ -18,6 +20,7 @@ import {
   ApiBearerAuth,
   ApiBody,
 } from "@nestjs/swagger";
+import { AuthGuard } from "@nestjs/passport";
 
 @ApiTags("Auth")
 @Controller("auth")
@@ -100,4 +103,45 @@ export class AuthController {
   public async sendVerificationEmail(@Body() emailDto: EmailDto) {
     return this.authService.sendVerificationEmail(emailDto);
   }
+
+ 
+
+  // GOOGLE OAUTH ROUTES
+
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  @ApiOperation({
+    summary: 'Google OAuth login',
+    description: 'Initiate Google OAuth2 login flow. Redirects user to Google login page.'
+  })
+  @ApiResponse({ status: 200, description: 'Redirect to Google login' })
+  async googleAuth() {
+    // Redirect to Google login
+  }
+
+  @Get('google/redirect')
+  @UseGuards(AuthGuard('google'))
+  @ApiOperation({
+    summary: 'Google OAuth redirect',
+    description: 'Google OAuth2 callback endpoint. Handles Google login and returns user info and tokens.'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'User authenticated with Google',
+    schema: {
+      example: {
+        accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+        refreshToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+        user: {
+          id: '1',
+          email: 'user@example.com',
+          role: 'user'
+        }
+      }
+    }
+  })
+  async googleAuthRedirect(@Req() req) {
+    return this.authService.handleGoogleLogin(req.user);
+  }
+
 }
