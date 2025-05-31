@@ -9,21 +9,24 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>("jwt.secret"),
-      
+      secretOrKey: configService.get<string>("JWT_SECRET"),
     });
   }
   private readonly logger = new Logger(JwtStrategy.name);
 
   async validate(payload: any) {
-    const userId = Number(payload.sub || payload.userId);
-    if (!userId) {
+    this.logger.log("Validating JWT token");
+    this.logger.debug(`Payload: ${JSON.stringify(payload, null, 2)}`);
+
+    if (!payload) {
       throw new UnauthorizedException("Invalid token");
     }
-    this.logger.log(`User ID from token: ${userId}`);
-    // Check if userId is a valid number
-    if (isNaN(userId) || !Number.isInteger(userId) || userId <= 0) {
-      this.logger.error("Invalid userId:", userId);
+
+    const userId: string = payload.userId;
+    if (!userId || typeof userId !== "string") {
+      this.logger.error(
+        `Invalid userId in payload: ${JSON.stringify(payload, null, 2)}`,
+      );
       throw new UnauthorizedException("Invalid userId");
     }
 
