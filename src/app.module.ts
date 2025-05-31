@@ -26,6 +26,7 @@ import { CacheModule } from "@nestjs/cache-manager";
 import { ConferencePosterManagementModule } from "./conference-poster-management/conference-poster-management.module";
 import { ConferenceGalleryModule } from "./conference-gallery/conference-gallery.module";
 import { JwtStrategy } from "../security/strategies/jwt.strategy";
+import { PromoCodeModule } from './promo-code/promo-code.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -70,6 +71,7 @@ import { JwtStrategy } from "../security/strategies/jwt.strategy";
     ConferencePosterManagementModule,
     SpecialSpeakerModule,
     ConferenceGalleryModule,
+    PromoCodeModule,
   ],
   controllers: [AppController],
   providers: [AppService, PdfService, JwtStrategy],

@@ -108,3 +108,18 @@ Content-Type: image/jpeg
 ### Get User Details After Updates
 GET http://localhost:3000/api/v1/users/details
 Authorization: Bearer {{newAuthToken}}
+
+### Ticket Purchase with Promo Code
+POST http://localhost:3000/api/v1/tickets/purchase
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "conferenceId": "b8325e7c-27b5-4dc1-a88d-f6b55dbb01a2",
+  "ticketQuantity": 2,
+  "billingDetails": {
+    "fullName": "Jane Doe",
+    "email": "jane@example.com"
+  },
+  "promoCode": "DISCOUNT20"
+}

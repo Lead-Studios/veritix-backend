@@ -21,6 +21,7 @@ import { PricingRule } from "../../dynamic-pricing/pricing/entities/pricing-rule
 import { User } from "../../users/entities/user.entity";
 import { EventStatus } from "../../common/enums/event-status.enum";
 import { GalleryItem } from "../../event-gallery/entities/gallery-item.entity";
+import { PromoCode } from "src/promo-code/promoCode.entity";
 
 @Entity()
 export class Event {
@@ -56,6 +57,9 @@ export class Event {
 
   @Column({ type: "enum", enum: EventStatus, default: EventStatus.DRAFT })
   status: EventStatus;
+
+  @OneToMany(() => PromoCode, (promo) => promo.event)
+  promoCodes: PromoCode[];
 
   @Column({ nullable: true })
   cancellationReason: string;

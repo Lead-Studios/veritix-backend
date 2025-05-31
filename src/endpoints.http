@@ -8,3 +8,12 @@ GET http://localhost:6767/dashboard/events/4d65fddf-d651-405b-917d-b86cebc05fdd
     "email": "user@gmail.com",
     "password": "user@123"
 }
+
+POST http://localhost:3000/events/1/promo-codes
+Content-Type: application/json
+{
+  "code": "SAVE10",
+  "discount": 10,
+  "maxUses": 100,
+  "expiresAt": "2025-12-31T23:59:59.999Z"
+}
