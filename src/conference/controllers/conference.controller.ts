@@ -23,13 +23,12 @@ import {
   Conference,
   ConferenceVisibility,
 } from "../entities/conference.entity";
-import { JwtAuthGuard } from "security/guards/jwt-auth.guard";
-import { RolesGuard } from "security/guards/rolesGuard/roles.guard";
-import { Roles } from "src/dynamic-pricing/auth/decorators/roles.decorator";
-import { UserRole } from "src/common/enums/users-roles.enum";
-import { RoleDecorator } from "security/decorators/roles.decorator";
+import { JwtAuthGuard } from "../../../security/guards/jwt-auth.guard";
+import { RolesGuard } from "../../../security/guards/rolesGuard/roles.guard";
+import { UserRole } from "../../common/enums/users-roles.enum";
+import { Roles } from "../../../security/decorators/roles.decorator";
 import { Request } from "express";
-import { User } from "src/users/entities/user.entity";
+import { User } from "../..//users/entities/user.entity";
 
 @Controller("conference")
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -153,7 +152,7 @@ export class ConferenceController {
   }
 
   @Put(":id")
-  @RoleDecorator(UserRole.Admin, UserRole.Organizer)
+  @Roles(UserRole.ADMIN, UserRole.ORGANIZER)
   update(
     @Param("id", ParseUUIDPipe) id: string,
     @Body() updateConferenceDto: UpdateConferenceDto,
@@ -162,7 +161,7 @@ export class ConferenceController {
   }
 
   @Delete(":id")
-  @RoleDecorator(UserRole.Admin)
+  @Roles(UserRole.ADMIN)
   remove(@Param("id", ParseUUIDPipe) id: string): Promise<void> {
     return this.conferenceService.remove(id);
   }

@@ -38,7 +38,10 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { User } from "./entities/user.entity";
 import { RequestWithUser } from "src/common/interfaces/request.interface";
-
+import { UserRole } from "src/common/enums/users-roles.enum";
+import { Roles } from "../../security/decorators/roles.decorator";
+import { RolesGuard } from "../../security/guards/rolesGuard/roles.guard";
+import { Role } from "src/collaborator/enum/role.enum";
 @ApiTags("Users")
 @Controller("users")
 export class UsersController {
@@ -65,7 +68,8 @@ export class UsersController {
   }
 
   @Get("details")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.USER, UserRole.ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Get current user details" })
   @ApiResponse({
@@ -84,7 +88,8 @@ export class UsersController {
   }
 
   @Put("update-profile")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.USER, UserRole.ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Update user profile" })
   @ApiBody({ type: UpdateProfileDto })
@@ -111,7 +116,8 @@ export class UsersController {
   }
 
   @Put("/change-password")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.USER, UserRole.ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Change user password" })
   @ApiBody({ type: ChangePasswordDto })
@@ -158,6 +164,8 @@ export class UsersController {
       },
     },
   })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   public async findAll(
     @Query() pagination?: { limits: number; page: number },
   ): Promise<{ users: CreateUserDto[]; total: number }> {
@@ -174,24 +182,30 @@ export class UsersController {
   }
 
   @Get(":id")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: "Get user by ID" })
   @ApiParam({ name: "id", description: "User ID" })
   @ApiResponse({ status: 200, description: "User found" })
   @ApiResponse({ status: 404, description: "User not found" })
-  findOne(@Param("id") id: string) {
-    return this.usersService.findOneById(id);
+  async findOne(@Param("id") id: string) {
+    return await this.usersService.findOneById(id);
   }
 
   @Delete(":id")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: "Delete user" })
   @ApiParam({ name: "id", description: "User ID" })
   @ApiResponse({ status: 200, description: "User deleted successfully" })
   @ApiResponse({ status: 404, description: "User not found" })
-  remove(@Param("id") id: string) {
-    return this.usersService.remove(parseInt(id, 10));
+  async remove(@Param("id") id: string) {
+    return await this.usersService.remove(id);
   }
 
   @Patch(":id")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   public async updateUser(
     @Body() updateUserDto: UpdateUserDto,
     @Param("id") id: string,
@@ -204,7 +218,8 @@ export class UsersController {
     return user;
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.USER, UserRole.ADMIN)
   @Get("profile")
   async getProfile(@Req() request: RequestWithUser) {
     const user = request.user;
@@ -215,7 +230,8 @@ export class UsersController {
     return this.usersService.findOneById(user.id.toString());
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.USER, UserRole.ADMIN)
   @Get("me")
   async getCurrentUser(@Req() request: RequestWithUser) {
     const user = request.user;
@@ -229,7 +245,8 @@ export class UsersController {
     return this.usersService.findOneById(user.id.toString());
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.USER, UserRole.ADMIN)
   @Patch("profile")
   async updateProfile(
     @Req() request: RequestWithUser,

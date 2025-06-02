@@ -1,10 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from "typeorm"
-
-export enum UserRole {
-  USER = "user",
-  ORGANIZER = "organizer",
-  ADMIN = "admin",
-}
+import { UserRole } from "../../../common/enums/users-roles.enum";
 
 @Entity()
 export class User {

@@ -21,7 +21,7 @@ import { CreateCategoryDto } from "./dto/create-category.dto";
 import { UpdateCategoryDto } from "./dto/update-category.dto";
 import { JwtAuthGuard } from "security/guards/jwt-auth.guard";
 import { RolesGuard } from "security/guards/rolesGuard/roles.guard";
-import { RoleDecorator } from "security/decorators/roles.decorator";
+import { Roles } from "security/decorators/roles.decorator";
 import { UserRole } from "src/common/enums/users-roles.enum";
 
 @ApiTags("Categories")
@@ -32,7 +32,7 @@ export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
   @Post()
-  @RoleDecorator(UserRole.Admin)
+  @Roles(UserRole.ADMIN)
   @ApiOperation({
     summary: "Create event category",
     description: "Create a new event category",
@@ -88,7 +88,7 @@ export class CategoryController {
   }
 
   @Put(":id")
-  @RoleDecorator(UserRole.Admin)
+  @Roles(UserRole.ADMIN)
   @ApiOperation({
     summary: "Update category",
     description: "Update an existing event category",
@@ -114,7 +114,7 @@ export class CategoryController {
   }
 
   @Delete(":id")
-  @RoleDecorator(UserRole.Admin)
+  @Roles(UserRole.ADMIN)
   @ApiOperation({
     summary: "Delete category",
     description: "Delete an event category",

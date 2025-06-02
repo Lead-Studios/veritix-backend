@@ -25,7 +25,7 @@ import { UpdateConferenceSponsorDto } from "./dto/update-conference-sponsor.dto"
 
 import { JwtAuthGuard } from "../../security/guards/jwt-auth.guard";
 import { RolesGuard } from "../../security/guards/rolesGuard/roles.guard";
-import { RoleDecorator } from "../../security/decorators/roles.decorator";
+import { Roles } from "../../security/decorators/roles.decorator";
 import {
   ApiTags,
   ApiOperation,
@@ -45,7 +45,7 @@ export class ConferenceSponsorsController {
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @RoleDecorator(UserRole.Organizer, UserRole.Admin)
+  @Roles(UserRole.ORGANIZER, UserRole.ADMIN)
   @HttpCode(HttpStatus.CREATED)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Create a new sponsor" })
@@ -56,37 +56,38 @@ export class ConferenceSponsorsController {
   @ApiResponse({ status: 400, description: "Bad Request." })
   @ApiResponse({ status: 401, description: "Unauthorized." })
   @ApiResponse({ status: 403, description: "Forbidden." })
-  @ApiConsumes('multipart/form-data')
+  @ApiConsumes("multipart/form-data")
   @ApiBody({
     schema: {
-      type: 'object',
+      type: "object",
       properties: {
-        brandName: { type: 'string' },
-        brandWebsite: { type: 'string' },
-        conferenceId: { type: 'string' },
-        facebook: { type: 'string', nullable: true },
-        twitter: { type: 'string', nullable: true },
-        instagram: { type: 'string', nullable: true },
+        brandName: { type: "string" },
+        brandWebsite: { type: "string" },
+        conferenceId: { type: "string" },
+        facebook: { type: "string", nullable: true },
+        twitter: { type: "string", nullable: true },
+        instagram: { type: "string", nullable: true },
         brandImage: {
-          type: 'string',
-          format: 'binary',
+          type: "string",
+          format: "binary",
         },
       },
     },
   })
   @UseInterceptors(
-    FileInterceptor('brandImage', {
+    FileInterceptor("brandImage", {
       storage: diskStorage({
-        destination: './uploads/conference-sponsors',
+        destination: "./uploads/conference-sponsors",
         filename: (req, file, cb) => {
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const uniqueSuffix =
+            Date.now() + "-" + Math.round(Math.random() * 1e9);
           const ext = extname(file.originalname);
           cb(null, `${uniqueSuffix}${ext}`);
         },
       }),
       fileFilter: (req, file, cb) => {
         if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
-          return cb(new Error('Only image files are allowed!'), false);
+          return cb(new Error("Only image files are allowed!"), false);
         }
         cb(null, true);
       },
@@ -142,7 +143,7 @@ export class ConferenceSponsorsController {
 
   @Put(":id")
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @RoleDecorator(UserRole.Organizer, UserRole.Admin)
+  @Roles(UserRole.ORGANIZER, UserRole.ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Update a sponsor" })
   @ApiResponse({
@@ -153,37 +154,38 @@ export class ConferenceSponsorsController {
   @ApiResponse({ status: 401, description: "Unauthorized." })
   @ApiResponse({ status: 403, description: "Forbidden." })
   @ApiResponse({ status: 404, description: "Sponsor not found." })
-  @ApiConsumes('multipart/form-data')
+  @ApiConsumes("multipart/form-data")
   @ApiBody({
     schema: {
-      type: 'object',
+      type: "object",
       properties: {
-        brandName: { type: 'string' },
-        brandWebsite: { type: 'string' },
-        conferenceId: { type: 'string' },
-        facebook: { type: 'string', nullable: true },
-        twitter: { type: 'string', nullable: true },
-        instagram: { type: 'string', nullable: true },
+        brandName: { type: "string" },
+        brandWebsite: { type: "string" },
+        conferenceId: { type: "string" },
+        facebook: { type: "string", nullable: true },
+        twitter: { type: "string", nullable: true },
+        instagram: { type: "string", nullable: true },
         brandImage: {
-          type: 'string',
-          format: 'binary',
+          type: "string",
+          format: "binary",
         },
       },
     },
   })
   @UseInterceptors(
-    FileInterceptor('brandImage', {
+    FileInterceptor("brandImage", {
       storage: diskStorage({
-        destination: './uploads/conference-sponsors',
+        destination: "./uploads/conference-sponsors",
         filename: (req, file, cb) => {
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const uniqueSuffix =
+            Date.now() + "-" + Math.round(Math.random() * 1e9);
           const ext = extname(file.originalname);
           cb(null, `${uniqueSuffix}${ext}`);
         },
       }),
       fileFilter: (req, file, cb) => {
         if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
-          return cb(new Error('Only image files are allowed!'), false);
+          return cb(new Error("Only image files are allowed!"), false);
         }
         cb(null, true);
       },
@@ -208,7 +210,7 @@ export class ConferenceSponsorsController {
 
   @Delete(":id")
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @RoleDecorator(UserRole.Organizer, UserRole.Admin)
+  @Roles(UserRole.ORGANIZER, UserRole.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Delete a sponsor" })
