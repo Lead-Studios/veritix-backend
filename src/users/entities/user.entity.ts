@@ -41,6 +41,9 @@ export class User {
   })
   role: UserRole;
 
+  @Column({ default: "local" })
+  provider: string;
+
   @OneToMany(() => Conference, (conference) => conference.organizer)
   conferences: Conference[]; // A user can organize multiple conferences
 

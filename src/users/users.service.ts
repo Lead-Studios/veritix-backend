@@ -222,4 +222,21 @@ export class UsersService {
     await this.userRepository.update(id, { profileImageUrl: dto.imageUrl });
     return this.findById(id);
   }
+
+  public async findOrCreateByGoogle(googleUser: any) {
+  let user = await this.userRepository.findOne({ where: { email: googleUser.email } });
+
+  if (!user) {
+    user = this.userRepository.create({
+      email: googleUser.email,
+      firstName: googleUser.firstName,
+      lastName: googleUser.lastName,
+      profileImageUrl: googleUser.picture,
+      provider: 'google',
+    });
+    await this.userRepository.save(user);
+  }
+
+  return user;
+}
 }
