@@ -27,6 +27,7 @@ import { ConferencePosterManagementModule } from "./conference-poster-management
 import { ConferenceGalleryModule } from "./conference-gallery/conference-gallery.module";
 import { JwtStrategy } from "../security/strategies/jwt.strategy";
 import { PromoCodeModule } from './promo-code/promo-code.module';
+import { WebhookModule } from "./webhook/webhook.module";
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -58,6 +59,7 @@ import { PromoCodeModule } from './promo-code/promo-code.module';
     UsersModule,
     AuthModule,
     TicketModule,
+    WebhookModule,
     SpecialGuestModule,
     EventsModule,
     PostersModule,
