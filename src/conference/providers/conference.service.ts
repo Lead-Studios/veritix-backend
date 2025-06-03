@@ -276,4 +276,44 @@ export class ConferenceService {
       },
     };
   }
+  async fuzzySearch(
+    query: string,
+    category?: string,
+    location?: string,
+    limit = 10,
+    offset = 0,
+  ): Promise<Conference[]> {
+    return this.conferenceRepository.query(
+      `
+      SELECT *,
+        GREATEST(
+          similarity(conference_name, $1),
+          similarity(conference_category, $1),
+          similarity(country, $1),
+          similarity(state, $1),
+          similarity(street, $1),
+          similarity(local_government, $1)
+        ) AS relevance
+      FROM conference
+      WHERE (
+        similarity(conference_name, $1) > 0.3 OR
+        similarity(conference_category, $1) > 0.3 OR
+        similarity(country, $1) > 0.3 OR
+        similarity(state, $1) > 0.3 OR
+        similarity(street, $1) > 0.3 OR
+        similarity(local_government, $1) > 0.3
+      )
+      AND ($2 IS NULL OR conference_category ILIKE $2)
+      AND ($3 IS NULL OR
+        country ILIKE $3 OR
+        state ILIKE $3 OR
+        street ILIKE $3 OR
+        local_government ILIKE $3
+      )
+      ORDER BY relevance DESC
+      LIMIT $4 OFFSET $5
+      `,
+      [query, category || null, location || null, limit, offset],
+    );
+  }
 }

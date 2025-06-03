@@ -29,6 +29,7 @@ import { UserRole } from "../../common/enums/users-roles.enum";
 import { Roles } from "../../../security/decorators/roles.decorator";
 import { Request } from "express";
 import { User } from "../..//users/entities/user.entity";
+import { SearchConferencesDto } from '../dto/search-conferences.dto';
 
 @Controller("conference")
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -164,5 +165,28 @@ export class ConferenceController {
   @Roles(UserRole.ADMIN)
   remove(@Param("id", ParseUUIDPipe) id: string): Promise<void> {
     return this.conferenceService.remove(id);
+  }
+   @Get('search')
+  async searchConferences(@Query() query: SearchConferencesDto) {
+    const { query: searchTerm, category, location, page, limit } = query;
+
+    const offset = (page - 1) * limit;
+
+    const results = await this. conferenceService.fuzzySearch(
+      searchTerm,
+      category,
+      location,
+      limit,
+      offset,
+    );
+
+    return {
+      data: results,
+      pagination: {
+        page,
+        limit,
+        count: results.length,
+      },
+    };
   }
 }
