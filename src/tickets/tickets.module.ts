@@ -30,17 +30,10 @@ import { PromoCodeModule } from "src/promo-code/promo-code.module";
       User, 
       Conference,
       TicketTier,
-    ]),
-    UsersModule,
-    EventsModule, 
-      Ticket,
-      TicketPurchase,
-      Event,
-      User,
-      Conference,
       Receipt,
     ]),
     UsersModule,
+    EventsModule,
     StripeModule,
     PaymentModule,
     PromoCodeModule
@@ -57,7 +50,6 @@ import { PromoCodeModule } from "src/promo-code/promo-code.module";
       useClass: StripePaymentService,
     },
   ],
-  exports: [TicketService, PdfService, TicketTierService], 
-=======
+  exports: [TicketService, PdfService, TicketTierService],
 })
 export class TicketModule {}

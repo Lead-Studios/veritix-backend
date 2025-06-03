@@ -22,6 +22,8 @@ import { User } from "../../users/entities/user.entity";
 import { EventStatus } from "../../common/enums/event-status.enum";
 import { GalleryItem } from "../../event-gallery/entities/gallery-item.entity";
 import { PromoCode } from "src/promo-code/promoCode.entity";
+import { EventView } from "./event-view.entity";
+import { PurchaseLog } from "./purchase-log.entity";
 
 @Entity()
 export class Event {
@@ -128,4 +130,11 @@ export class Event {
 
   @ManyToOne(() => Category, (category) => category.events)
   category: Category;
+
+  @OneToMany(() => EventView, view => view.event)
+  views: EventView[];
+
+  @OneToMany(() => PurchaseLog, log => log.event)
+  purchaseLogs: PurchaseLog[];
+  
 }
