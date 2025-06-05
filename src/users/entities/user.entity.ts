@@ -41,6 +41,9 @@ export class User {
   })
   role: UserRole;
 
+  @Column({ default: false })
+  isVerified: boolean;
+
   @Column({ default: "local" })
   provider: string;
 
@@ -49,9 +52,6 @@ export class User {
 
   @Column("boolean", { default: true })
   isActive: boolean;
-
-  @Column({ default: false })
-  isVerified: boolean;
 
   @OneToMany(() => Event, (event) => event.organizer)
   events: Event[];

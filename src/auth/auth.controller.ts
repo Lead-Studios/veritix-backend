@@ -84,7 +84,7 @@ export class AuthController {
   @ApiResponse({ status: 200, description: "Email successfully verified" })
   @ApiResponse({ status: 400, description: "Invalid verification token" })
   public async verifyEmail(@Query("token") token: string) {
-    return await this.authService.verifyEmail(token);
+    return await this.authService.verifyUserEmail(token);
   }
 
   @Post("verify-email")

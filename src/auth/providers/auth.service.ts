@@ -28,7 +28,7 @@ export class AuthService {
     return await this.refreshTokenProvider.refreshToken(refreshTokenDto);
   }
 
-  public async verifyEmail(token: string) {
+  public async verifyUserEmail(token: string) {
     return await this.verifyTokenProvider.verifyToken(token);
   }
 
@@ -37,7 +37,7 @@ export class AuthService {
     return await this.verifyTokenProvider.sendToken(email);
   }
 
-   public async handleGoogleLogin(user: any) {
+  public async handleGoogleLogin(user: any) {
     const existingUser = await this.usersService.findOrCreateByGoogle(user);
 
     const payload = { sub: existingUser.id, email: existingUser.email };
