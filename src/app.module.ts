@@ -1,4 +1,5 @@
 import { Module, Logger, OnModuleInit } from "@nestjs/common";
+import { AuditLogModule } from "./audit-log/audit-log.module";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
@@ -74,6 +75,7 @@ import { WebhookModule } from "./webhook/webhook.module";
     SpecialSpeakerModule,
     ConferenceGalleryModule,
     PromoCodeModule,
+    AuditLogModule,
   ],
   controllers: [AppController],
   providers: [AppService, PdfService, JwtStrategy],

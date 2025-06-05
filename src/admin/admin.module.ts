@@ -1,4 +1,5 @@
 import { forwardRef, Module } from "@nestjs/common";
+import { AuditLogModule } from "../audit-log/audit-log.module";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { JwtModule } from "@nestjs/jwt";
 import { PassportModule } from "@nestjs/passport";
@@ -29,6 +30,7 @@ import { TokenVerificationProvider } from "./providers/verification.provider";
   imports: [
     TypeOrmModule.forFeature([Admin, User, CampaignEmail, Event, Ticket]),
     forwardRef(() => UsersModule),
+    forwardRef(() => AuditLogModule),
     PassportModule.register({ defaultStrategy: "admin-jwt" }),
     JwtModule.registerAsync({
       // imports: [ConfigModule],

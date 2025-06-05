@@ -48,4 +48,14 @@ export interface PaymentServiceInterface {
      * @returns Promise resolving to true if payment was successful
      */
     processPayment(amount: number, paymentDetails: PaymentDetails): Promise<boolean>;
+    
+    /**
+     * Process a refund for a payment
+     * @param paymentIntentId The ID of the payment intent to refund
+     * @param userId Optional ID of the user requesting the refund
+     * @param adminId Optional ID of the admin processing the refund
+     * @param metadata Optional additional metadata for the refund
+     * @returns Promise resolving to the refund result
+     */
+    refundPayment(paymentIntentId: string, userId?: string, adminId?: number, metadata?: any): Promise<any>;
 }

@@ -1,4 +1,5 @@
 import { forwardRef, Module } from "@nestjs/common";
+import { AuditLogModule } from "../audit-log/audit-log.module";
 import { AuthService } from "./providers/auth.service";
 import { AuthController } from "./auth.controller";
 import { HashingProvider } from "./providers/hashing-provider";
@@ -18,6 +19,7 @@ import { GoogleStrategy } from "security/strategies/google.strategy";
 @Module({
   imports: [
     forwardRef(() => UsersModule),
+    forwardRef(() => AuditLogModule),
     ConfigModule.forFeature(jwtConfig),
     PassportModule.register({ defaultStrategy: "jwt" }),
     JwtModule.registerAsync({

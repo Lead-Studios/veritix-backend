@@ -1,4 +1,6 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Inject, forwardRef } from "@nestjs/common";
+import { AuditLogService } from "../audit-log/audit-log.service";
+import { AuditLogType } from "../audit-log/entities/audit-log.entity";
 import { ConfigService } from "@nestjs/config";
 import { Stripe } from "stripe";
 
@@ -6,7 +8,11 @@ import { Stripe } from "stripe";
 export class PaymentService {
   private stripe: Stripe;
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    @Inject(forwardRef(() => AuditLogService))
+    private readonly auditLogService: AuditLogService,
+  ) {
     const stripeKey = this.configService.get<string>("STRIPE_SECRET_KEY");
     if (!stripeKey) {
       throw new Error(
@@ -29,10 +35,27 @@ export class PaymentService {
     return this.stripe.paymentIntents.confirm(paymentIntentId);
   }
 
-  async refundPayment(paymentIntentId: string) {
-    return this.stripe.refunds.create({
+  async refundPayment(paymentIntentId: string, userId?: string, adminId?: string, metadata?: any) {
+    const refund = await this.stripe.refunds.create({
       payment_intent: paymentIntentId,
     });
+    
+    // Log the refund action
+    await this.auditLogService.create({
+      type: AuditLogType.TICKET_REFUND,
+      userId,
+      adminId,
+      description: `Refund processed for payment ${paymentIntentId}`,
+      metadata: {
+        paymentIntentId,
+        refundId: refund.id,
+        amount: refund.amount ? Number(refund.amount) : 0,
+        status: refund.status,
+        ...metadata
+      },
+    });
+    
+    return refund;
   }
 
   async processPayment(amount: number, paymentDetails: any): Promise<boolean> {
