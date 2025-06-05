@@ -10,23 +10,23 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
 import { PdfService } from "./utils/pdf.service";
 import { TicketModule } from "./tickets/tickets.module";
 import { SpecialGuestModule } from "./special-guests/special-guests.module";
-import { NotificationModule } from './notification/notification.module';
+import { NotificationModule } from "./notification/notification.module";
 import { EventsModule } from "./events/events.module";
 import { PostersModule } from "./posters/posters.module";
 import databaseConfig from "src/config/database.config";
 import jwtConfig from "src/config/jwt.config";
 import { EventDashboardModule } from "./dashboard/dashboard.module";
 import { EventGalleryModule } from "./event-gallery/event-gallery.module";
-import { ContactUsModule } from './contact-us/contact-us.module';
-import { ConferenceModule } from './conference/conference.module';
-import { ContactModule } from './contact/contact.module';
-import { ConferenceSponsorsModule } from './conference-sponsors/conference-sponsors.module';
+import { ContactUsModule } from "./contact-us/contact-us.module";
+import { ConferenceModule } from "./conference/conference.module";
+import { ContactModule } from "./contact/contact.module";
+import { ConferenceSponsorsModule } from "./conference-sponsors/conference-sponsors.module";
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ".env",
-      load: [databaseConfig, jwtConfig], 
+      load: [databaseConfig, jwtConfig],
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -56,7 +56,7 @@ import { ConferenceSponsorsModule } from './conference-sponsors/conference-spons
     ContactUsModule,
     ConferenceModule,
     ContactModule,
-    ConferenceSponsorsModule
+    ConferenceSponsorsModule,
   ],
   controllers: [AppController],
   providers: [AppService, PdfService],
@@ -67,12 +67,14 @@ export class AppModule implements OnModuleInit {
   private readonly logger = new Logger(AppModule.name);
 
   onModuleInit() {
-    const dbType = this.configService.get('database.type');
-    const dbHost = this.configService.get('database.host');
-    const dbUrl = this.configService.get('database.url');
+    const dbType = this.configService.get("database.type");
+    const dbHost = this.configService.get("database.host");
+    const dbUrl = this.configService.get("database.url");
     this.logger.log(`Database Type: ${dbType}`);
     this.logger.log(`Database Host: ${dbHost}`);
     this.logger.log(`Database URL: ${dbUrl}`);
-    this.logger.log(`Connection to ${dbType} database established successfully through ${dbUrl}.`);
+    this.logger.log(
+      `Connection to ${dbType} database established successfully through ${dbUrl}.`,
+    );
   }
 }
