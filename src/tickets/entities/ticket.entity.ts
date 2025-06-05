@@ -89,4 +89,8 @@ export class Ticket {
 
   @Column({ nullable: true })
   qrCode: string;
+
+  @Column({ nullable: true })
+token: string;
+
 }

@@ -18,6 +18,8 @@ import { ReceiptDto } from "./dto/receipt.dto";
 import { Conference } from "../conference/entities/conference.entity";
 import { StripePaymentService } from "src/payment/services/stripe-payment.service";
 import { PromoCodeService } from "src/promo-code/providers/promo-code.service";
+import { createEvent } from 'ics';
+
 
 @Injectable()
 export class TicketService {
@@ -286,4 +288,44 @@ export class TicketService {
       transactionDate: receipt.transactionDate,
     };
   }
+
+  async generateICalFile(ticketId: string, token: string): Promise<string> {
+  const ticket = await this.ticketRepository.findOne({
+    where: { id: ticketId },
+    relations: ['user', 'event'],
+  });
+
+  if (!ticket) throw new NotFoundException('Ticket not found');
+
+  // Validate token matches ticket's secureToken field
+  if (ticket.token !== token) throw new ForbiddenException('Invalid token');
+
+  const event = ticket.event;
+
+  const { error, value } = createEvent({
+    title: event.title,
+    description: event.description,
+    location: event.location,
+    start: [
+      event.startDate.getFullYear(),
+      event.startDate.getMonth() + 1,
+      event.startDate.getDate(),
+      event.startDate.getHours(),
+      event.startDate.getMinutes(),
+    ],
+    end: [
+      event.endDate.getFullYear(),
+      event.endDate.getMonth() + 1,
+      event.endDate.getDate(),
+      event.endDate.getHours(),
+      event.endDate.getMinutes(),
+    ],
+  });
+
+  if (error) {
+    throw new InternalServerErrorException('Failed to generate calendar file');
+  }
+
+  return value;
+}
 }
