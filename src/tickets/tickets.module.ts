@@ -13,10 +13,11 @@ import { TicketPurchaseService } from "./provider/tickets-purchase.service";
 import { User } from "src/users/entities/user.entity";
 import { ConferenceService } from "src/conference/providers/conference.service";
 import { Conference } from "src/conference/entities/conference.entity";
+import { GroupTicket } from "./entities/group-ticket.entity";
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Ticket, TicketPurchase, Event, User, Conference]),
+    TypeOrmModule.forFeature([Ticket, TicketPurchase, GroupTicket, Event, User, Conference]),
     UsersModule,
   ],
   controllers: [TicketController, TicketPurchaseController],
