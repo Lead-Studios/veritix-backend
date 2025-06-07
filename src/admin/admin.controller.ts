@@ -6,7 +6,10 @@ import {
   UseGuards,
   HttpStatus,
   UseFilters,
+  Req,
 } from "@nestjs/common";
+import { AuditLogService } from "../audit-log/audit-log.service";
+import { AuditLogType } from "../audit-log/entities/audit-log.entity";
 import {
   ApiTags,
   ApiOperation,
@@ -35,7 +38,10 @@ import { Roles, ROLES_KEY } from "security/decorators/roles.decorator";
 export class AdminController {
   private readonly logger = new Logger(AdminController.name);
 
-  constructor(private readonly adminService: AdminService) {}
+  constructor(
+    private readonly adminService: AdminService,
+    private readonly auditLogService: AuditLogService,
+  ) {}
 
   @Get("all-users")
   @ApiOperation({ summary: "Retrieve all users" })
@@ -53,9 +59,23 @@ export class AdminController {
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     description: "Internal server error",
   })
-  async getAllUsers(): Promise<UserResponseDto[]> {
+  async getAllUsers(@Req() request: any): Promise<UserResponseDto[]> {
     try {
       this.logger.log("GET /admin/all-users - Retrieving all users");
+      
+      // Log admin action
+      await this.auditLogService.create({
+        type: AuditLogType.ADMIN_ACTION,
+        adminId: request.user?.id,
+        description: 'Admin retrieved all users',
+        metadata: {
+          action: 'getAllUsers',
+          timestamp: new Date().toISOString(),
+          ipAddress: request.ip,
+          userAgent: request.headers['user-agent'],
+        },
+      });
+      
       return await this.adminService.findAllUsers();
     } catch (error) {
       this.logger.error(
@@ -88,9 +108,24 @@ export class AdminController {
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     description: "Internal server error",
   })
-  async getUserById(@Param("id") id: string): Promise<UserResponseDto> {
+  async getUserById(@Param("id") id: string, @Req() request: any): Promise<UserResponseDto> {
     try {
       this.logger.log(`GET /admin/users/${id} - Retrieving user by ID`);
+      
+      // Log admin action
+      await this.auditLogService.create({
+        type: AuditLogType.ADMIN_ACTION,
+        adminId: request.user?.id,
+        description: `Admin retrieved user details for user ${id}`,
+        metadata: {
+          action: 'getUserById',
+          userId: id,
+          timestamp: new Date().toISOString(),
+          ipAddress: request.ip,
+          userAgent: request.headers['user-agent'],
+        },
+      });
+      
       return await this.adminService.findUserById(id);
     } catch (error) {
       this.logger.error(
@@ -124,11 +159,27 @@ export class AdminController {
   })
   async generateUserReports(
     @Query() filterDto: ReportFilterDto,
+    @Req() request: any,
   ): Promise<ReportResponseDto> {
     try {
       this.logger.log(
         `GET /admin/user/reports - Generating reports with filter: ${JSON.stringify(filterDto)}`,
       );
+      
+      // Log admin action
+      await this.auditLogService.create({
+        type: AuditLogType.ADMIN_ACTION,
+        adminId: request.user?.id,
+        description: 'Admin generated user reports',
+        metadata: {
+          action: 'generateUserReports',
+          filters: filterDto,
+          timestamp: new Date().toISOString(),
+          ipAddress: request.ip,
+          userAgent: request.headers['user-agent'],
+        },
+      });
+      
       return await this.adminService.generateReports(filterDto);
     } catch (error) {
       this.logger.error(

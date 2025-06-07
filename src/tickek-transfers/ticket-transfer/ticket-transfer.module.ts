@@ -6,6 +6,7 @@ import { TicketTransfer } from "./entities/ticket-transfer.entity";
 import { TicketModule } from "../../tickets/tickets.module";
 import { UsersModule } from "../../users/users.module";
 import { NotificationModule } from "../../notification/notification.module";
+import { AuditLogModule } from "../../audit-log/audit-log.module";
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { NotificationModule } from "../../notification/notification.module";
     TicketModule,
     UsersModule,
     NotificationModule,
+    AuditLogModule,
   ],
   controllers: [TicketTransferController],
   providers: [TicketTransferService],

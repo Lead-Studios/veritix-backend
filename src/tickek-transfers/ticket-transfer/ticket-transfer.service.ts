@@ -1,4 +1,6 @@
 import { Injectable, HttpException, HttpStatus } from "@nestjs/common";
+import { AuditLogService } from "../../audit-log/audit-log.service";
+import { AuditLogType } from "../../audit-log/entities/audit-log.entity";
 import { InjectRepository } from "@nestjs/typeorm";
 import type { Repository } from "typeorm";
 import {
@@ -21,6 +23,7 @@ export class TicketTransferService {
     private ticketsService: TicketsService,
     private usersService: UsersService,
     private notificationsService: NotificationsService,
+    private auditLogService: AuditLogService,
   ) {}
 
   async create(userId: string, createTransferDto: CreateTransferDto) {
@@ -106,6 +109,20 @@ export class TicketTransferService {
 
     // Save the transfer
     const savedTransfer = await this.ticketTransferRepository.save(transfer);
+    
+    // Log the transfer creation
+    await this.auditLogService.create({
+      type: AuditLogType.TICKET_TRANSFER,
+      userId: userId,
+      description: `Ticket transfer initiated for ticket ${transfer.ticketId}`,
+      metadata: {
+        transferId: savedTransfer.id,
+        ticketId: transfer.ticketId,
+        recipientEmail: transfer.recipientEmail,
+        recipientId: transfer.recipientId,
+        transferType: transfer.type,
+      },
+    });
 
     // Send notification to recipient if they exist in the system
     if (transfer.recipientId) {
@@ -244,6 +261,20 @@ export class TicketTransferService {
         transfer.recipientId,
       );
       transfer.completedAt = new Date();
+      
+      // Log the ticket transfer acceptance
+      await this.auditLogService.create({
+        type: AuditLogType.TICKET_TRANSFER,
+        userId: userId,
+        description: `Ticket transfer accepted for ticket ${transfer.ticketId}`,
+        metadata: {
+          transferId: transfer.id,
+          ticketId: transfer.ticketId,
+          senderId: transfer.senderId,
+          recipientId: transfer.recipientId,
+          status: TransferStatus.ACCEPTED,
+        },
+      });
     }
 
     // Save the updated transfer
@@ -362,6 +393,20 @@ export class TicketTransferService {
 
     const completedTransfer =
       await this.ticketTransferRepository.save(transfer);
+      
+    // Log the ticket transfer completion
+    await this.auditLogService.create({
+      type: AuditLogType.TICKET_TRANSFER,
+      userId: userId,
+      description: `Ticket transfer completed for ticket ${transfer.ticketId}`,
+      metadata: {
+        transferId: transfer.id,
+        ticketId: transfer.ticketId,
+        senderId: transfer.senderId,
+        recipientId: transfer.recipientId,
+        status: TransferStatus.COMPLETED,
+      },
+    });
 
     // Send notification to sender
     await this.notificationsService.create({
