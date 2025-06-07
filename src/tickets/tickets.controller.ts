@@ -154,4 +154,20 @@ export class TicketController {
   ): Promise<ReceiptDto> {
     return this.ticketService.getReceipt(receiptId, req.user.userId);
   }
+
+  @Get(':id/calendar.ics')
+async downloadICal(
+  @Param('id', ParseUUIDPipe) id: string,
+  @Query('token') token: string,
+  @Res() res: Response,
+) {
+  const icsFile = await this.ticketService.generateICalFile(id, token);
+
+  res.set({
+    'Content-Type': 'text/calendar',
+    'Content-Disposition': `attachment; filename="ticket-${id}.ics"`,
+  });
+
+  res.send(icsFile);
+}
 }

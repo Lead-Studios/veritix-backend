@@ -53,6 +53,7 @@
     "fuzzball": "^2.2.2",
     "handlebars": "^4.7.8",
     "http-errors": "^2.0.0",
+    "ics": "^3.8.1",
     "install": "^0.13.0",
     "istanbul-lib-coverage": "^3.2.2",
     "jsonwebtoken": "^9.0.2",
