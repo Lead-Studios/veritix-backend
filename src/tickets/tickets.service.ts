@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -11,9 +12,12 @@ import { PdfService } from "src/utils/pdf.service";
 import { ConferenceService } from "src/conference/providers/conference.service";
 import { User } from "src/users/entities/user.entity";
 import { UpdateTicketDto } from "./dto/update-ticket.dto";
+import { TicketStatus } from "src/refund/entities/ticket.entity";
+import { RefundTicketDto } from "src/refund/dto/refund-ticket.dto";
 
 @Injectable()
 export class TicketService {
+  eventService: any;
   constructor(
     @InjectRepository(Ticket)
     private readonly ticketRepository: Repository<Ticket>,
@@ -142,7 +146,6 @@ export class TicketService {
     return ticket;
   }
 
-  //fn to generat ticket
   public async generateTicketReceipt(id: string): Promise<string> {
     const ticket = await this.ticketRepository.findOne({
       where: { id: Number(id) },
@@ -153,4 +156,34 @@ export class TicketService {
 
     return this.pdfService.generateTicketReceipt(ticket);
   }
+
+async refundTicket(ticketId: string, dto: RefundTicketDto): Promise<Ticket> {
+  const ticket = await this.ticketRepository.findOne({ where: { id: Number(ticketId) } });
+
+  if (!ticket) {
+    throw new NotFoundException('Ticket not found');
+  }
+
+  if (ticket.status === TicketStatus.REFUNDED) {
+    throw new BadRequestException('Ticket already refunded');
+  }
+
+  const refundAmount = dto.amount ?? ticket.price;
+
+  if (refundAmount > ticket.price) {
+    throw new BadRequestException('Refund amount exceeds ticket price');
+  }
+
+  ticket.status = TicketStatus.REFUNDED;
+  ticket.refundAmount = refundAmount;
+  ticket.refundReason = dto.reason;
+  ticket.refundedAt = new Date();
+
+  await this.ticketRepository.save(ticket);
+
+  await this.eventService.incrementAvailableQuantity(ticket.eventId);
+
+  return ticket;
+}
+
 }

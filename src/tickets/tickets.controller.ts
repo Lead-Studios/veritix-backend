@@ -23,6 +23,7 @@ import * as fs from "fs";
 import { User } from "src/users/entities/user.entity";
 import { RoleDecorator } from "security/decorators/roles.decorator";
 import { UserRole } from "src/common/enums/users-roles.enum";
+import { RefundTicketDto } from "src/refund/dto/refund-ticket.dto";
 
 @Controller("user/tickets")
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -121,4 +122,14 @@ export class TicketController {
       throw new NotFoundException("Receipt generation failed");
     }
   }
+
+   @Post('refund/:ticketId')
+  @UseGuards(RolesGuard)
+async refundTicket(
+  @Param('ticketId') ticketId: string,
+  @Body() dto: RefundTicketDto,
+) {
+  const ticket = await this.ticketService.refundTicket(ticketId, dto);
+  return { message: 'Refund successful', ticket };
+}
 }

@@ -59,5 +59,9 @@ export class Ticket {
 
   @Column()
   conferenceId: number;
+  status: import("c:/Users/USER/Desktop/Mywork/veritix-backend/src/refund/entities/ticket.entity").TicketStatus;
+  refundAmount: any;
+  refundReason: any;
+  refundedAt: Date;
 
 }
