@@ -57,6 +57,12 @@ export class SignInProvider {
       throw new UnauthorizedException("Email or password is incorrect.");
     }
 
+    if (!user.isVerified) {
+      throw new UnauthorizedException(
+        "You need to verify your email to be able log in",
+      );
+    }
+
     // 3. Generate tokens
     const tokens = await this.generateTokensProvider.generateTokens(user);
 
