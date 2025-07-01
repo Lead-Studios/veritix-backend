@@ -3,11 +3,46 @@ import { CreateGalleryImageDto, UpdateGalleryImageDto } from '../dtos/gallery.dt
 export declare class GalleryController {
     private readonly galleryService;
     constructor(galleryService: GalleryService);
-    create(dto: CreateGalleryImageDto): Promise<import("../entities/gallery-image.entity").GalleryImage>;
-    findAll(): Promise<import("../entities/gallery-image.entity").GalleryImage[]>;
-    findOne(id: string): Promise<import("../entities/gallery-image.entity").GalleryImage>;
-    findByEvent(eventId: string): Promise<import("../entities/gallery-image.entity").GalleryImage[]>;
-    update(id: string, dto: UpdateGalleryImageDto): Promise<import("../entities/gallery-image.entity").GalleryImage>;
+    create(dto: CreateGalleryImageDto): Promise<{
+        id: string;
+        imageUrl: string;
+        description: string;
+        eventId: string;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
+    findAll(): Promise<{
+        id: string;
+        imageUrl: string;
+        description: string;
+        eventId: string;
+        createdAt: Date;
+        updatedAt: Date;
+    }[]>;
+    findOne(id: string): Promise<{
+        id: string;
+        imageUrl: string;
+        description: string;
+        eventId: string;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
+    findByEvent(eventId: string): Promise<{
+        id: string;
+        imageUrl: string;
+        description: string;
+        eventId: string;
+        createdAt: Date;
+        updatedAt: Date;
+    }[]>;
+    update(id: string, dto: UpdateGalleryImageDto): Promise<{
+        id: string;
+        imageUrl: string;
+        description: string;
+        eventId: string;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
     remove(id: string): Promise<{
         deleted: boolean;
     }>;

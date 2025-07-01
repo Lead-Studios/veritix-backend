@@ -17,6 +17,8 @@ let GalleryImage = class GalleryImage {
     imageUrl;
     description;
     event;
+    createdAt;
+    updatedAt;
 };
 exports.GalleryImage = GalleryImage;
 __decorate([
@@ -35,6 +37,14 @@ __decorate([
     (0, typeorm_1.ManyToOne)(() => event_entity_1.Event, (event) => event.images, { onDelete: 'CASCADE' }),
     __metadata("design:type", event_entity_1.Event)
 ], GalleryImage.prototype, "event", void 0);
+__decorate([
+    (0, typeorm_1.CreateDateColumn)(),
+    __metadata("design:type", Date)
+], GalleryImage.prototype, "createdAt", void 0);
+__decorate([
+    (0, typeorm_1.UpdateDateColumn)(),
+    __metadata("design:type", Date)
+], GalleryImage.prototype, "updatedAt", void 0);
 exports.GalleryImage = GalleryImage = __decorate([
     (0, typeorm_1.Entity)()
 ], GalleryImage);

@@ -32,6 +32,7 @@ exports.EventController = EventController;
 __decorate([
     (0, common_1.Post)(),
     (0, common_1.UsePipes)(new common_1.ValidationPipe({ whitelist: true })),
+    (0, common_1.UseGuards)(),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [event_dto_1.CreateEventDto]),
@@ -39,6 +40,7 @@ __decorate([
 ], EventController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
+    (0, common_1.UseGuards)(),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)

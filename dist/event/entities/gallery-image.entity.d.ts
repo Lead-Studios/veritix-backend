@@ -4,4 +4,6 @@ export declare class GalleryImage {
     imageUrl: string;
     description: string;
     event: Event;
+    createdAt: Date;
+    updatedAt: Date;
 }

@@ -18,6 +18,7 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const gallery_image_entity_1 = require("../entities/gallery-image.entity");
 const event_entity_1 = require("../entities/event.entity");
+const gallery_resource_1 = require("../resources/gallery.resource");
 let GalleryService = class GalleryService {
     galleryRepo;
     eventRepo;
@@ -36,29 +37,32 @@ let GalleryService = class GalleryService {
             description: dto.description,
             event,
         });
-        return this.galleryRepo.save(image);
+        const saved = await this.galleryRepo.save(image);
+        return gallery_resource_1.GalleryResource.toResponse(saved);
     }
     async findAll() {
-        return this.galleryRepo.find({ relations: ['event'] });
+        const images = await this.galleryRepo.find({ relations: ['event'] });
+        return gallery_resource_1.GalleryResource.toArray(images);
     }
     async findOne(id) {
         const image = await this.galleryRepo.findOne({ where: { id }, relations: ['event'] });
         if (!image)
             throw new common_1.NotFoundException('Image not found');
-        return image;
+        return gallery_resource_1.GalleryResource.toResponse(image);
     }
     async findByEvent(eventId) {
         const event = await this.eventRepo.findOne({ where: { id: eventId }, relations: ['images'] });
         if (!event)
             throw new common_1.NotFoundException('Event not found');
-        return event.images;
+        return gallery_resource_1.GalleryResource.toArray(event.images);
     }
     async update(id, dto) {
         const image = await this.galleryRepo.findOne({ where: { id } });
         if (!image)
             throw new common_1.NotFoundException('Image not found');
         image.description = dto.description;
-        return this.galleryRepo.save(image);
+        const saved = await this.galleryRepo.save(image);
+        return gallery_resource_1.GalleryResource.toResponse(saved);
     }
     async remove(id) {
         const image = await this.galleryRepo.findOne({ where: { id } });

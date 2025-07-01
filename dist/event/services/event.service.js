@@ -17,6 +17,7 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const event_entity_1 = require("../entities/event.entity");
+const event_resource_1 = require("../resources/event.resource");
 let EventService = class EventService {
     eventRepo;
     constructor(eventRepo) {
@@ -24,10 +25,10 @@ let EventService = class EventService {
     }
     create(dto) {
         const event = this.eventRepo.create(dto);
-        return this.eventRepo.save(event);
+        return this.eventRepo.save(event).then(event_resource_1.EventResource.toResponse);
     }
     findAll() {
-        return this.eventRepo.find();
+        return this.eventRepo.find({ relations: ['images'] }).then(event_resource_1.EventResource.toArray);
     }
 };
 exports.EventService = EventService;

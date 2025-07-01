@@ -6,11 +6,46 @@ export declare class GalleryService {
     private readonly galleryRepo;
     private readonly eventRepo;
     constructor(galleryRepo: Repository<GalleryImage>, eventRepo: Repository<Event>);
-    create(dto: CreateGalleryImageDto): Promise<GalleryImage>;
-    findAll(): Promise<GalleryImage[]>;
-    findOne(id: string): Promise<GalleryImage>;
-    findByEvent(eventId: string): Promise<GalleryImage[]>;
-    update(id: string, dto: UpdateGalleryImageDto): Promise<GalleryImage>;
+    create(dto: CreateGalleryImageDto): Promise<{
+        id: string;
+        imageUrl: string;
+        description: string;
+        eventId: string;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
+    findAll(): Promise<{
+        id: string;
+        imageUrl: string;
+        description: string;
+        eventId: string;
+        createdAt: Date;
+        updatedAt: Date;
+    }[]>;
+    findOne(id: string): Promise<{
+        id: string;
+        imageUrl: string;
+        description: string;
+        eventId: string;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
+    findByEvent(eventId: string): Promise<{
+        id: string;
+        imageUrl: string;
+        description: string;
+        eventId: string;
+        createdAt: Date;
+        updatedAt: Date;
+    }[]>;
+    update(id: string, dto: UpdateGalleryImageDto): Promise<{
+        id: string;
+        imageUrl: string;
+        description: string;
+        eventId: string;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
     remove(id: string): Promise<{
         deleted: boolean;
     }>;

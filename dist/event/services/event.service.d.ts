@@ -4,6 +4,14 @@ import { Event } from '../entities/event.entity';
 export declare class EventService {
     private readonly eventRepo;
     constructor(eventRepo: Repository<Event>);
-    create(dto: CreateEventDto): Promise<Event>;
-    findAll(): Promise<Event[]>;
+    create(dto: CreateEventDto): Promise<{
+        id: string;
+        name: string;
+        images: string[];
+    }>;
+    findAll(): Promise<{
+        id: string;
+        name: string;
+        images: string[];
+    }[]>;
 }

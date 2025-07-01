@@ -43,6 +43,7 @@ let GalleryController = class GalleryController {
 exports.GalleryController = GalleryController;
 __decorate([
     (0, common_1.Post)('gallery'),
+    (0, common_1.UseGuards)(),
     (0, common_1.UsePipes)(new common_1.ValidationPipe({ whitelist: true })),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -51,12 +52,14 @@ __decorate([
 ], GalleryController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)('gallery'),
+    (0, common_1.UseGuards)(),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], GalleryController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)('gallery/:id'),
+    (0, common_1.UseGuards)(),
     __param(0, (0, common_1.Param)('id', new common_1.ParseUUIDPipe())),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -64,6 +67,7 @@ __decorate([
 ], GalleryController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Get)('events/:eventId/gallery'),
+    (0, common_1.UseGuards)(),
     __param(0, (0, common_1.Param)('eventId', new common_1.ParseUUIDPipe())),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -71,6 +75,7 @@ __decorate([
 ], GalleryController.prototype, "findByEvent", null);
 __decorate([
     (0, common_1.Put)('gallery/:id'),
+    (0, common_1.UseGuards)(),
     (0, common_1.UsePipes)(new common_1.ValidationPipe({ whitelist: true })),
     __param(0, (0, common_1.Param)('id', new common_1.ParseUUIDPipe())),
     __param(1, (0, common_1.Body)()),
@@ -80,6 +85,7 @@ __decorate([
 ], GalleryController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)('gallery/:id'),
+    (0, common_1.UseGuards)(),
     __param(0, (0, common_1.Param)('id', new common_1.ParseUUIDPipe())),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
