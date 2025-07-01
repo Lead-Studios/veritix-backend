@@ -44,6 +44,9 @@ export class Admin {
   @Column({ type: "timestamp", nullable: true })
   verificationTokenExpiry: Date;
 
+  @Column({ nullable: true })
+  profileImage: string;
+
   @CreateDateColumn()
   createdAt: Date;
 

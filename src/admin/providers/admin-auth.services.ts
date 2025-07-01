@@ -141,54 +141,64 @@ export class AdminAuthService {
   }
 
   async forgotPassword(email: string) {
-  const admin = await this.adminService.findOneByEmail(email);
-  if (!admin) {
+    const admin = await this.adminService.findOneByEmail(email);
+    if (!admin) {
+      return {
+        message: "If your email is registered, you will receive a password reset link",
+      };
+    }
+
+    const resetToken = await this.generateTokenProvider.generatePasswordResetToken(admin);
+    this.logger.log(`Password reset token generated for ${admin.email}: ${resetToken}`);
+
+    // Here you would send the reset token via email
+    // const resetLink = `${frontendUrl}/reset-password?token=${resetToken}`;
+
     return {
       message: "If your email is registered, you will receive a password reset link",
     };
   }
 
-  const resetToken = await this.generateTokenProvider.generatePasswordResetToken(admin);
-  this.logger.log(`Password reset token generated for ${admin.email}: ${resetToken}`);
-
-  // Here you would send the reset token via email
-  // const resetLink = `${frontendUrl}/reset-password?token=${resetToken}`;
-
-  return {
-    message: "If your email is registered, you will receive a password reset link",
-  };
-}
-
+  // Upload profile image for admin user
+  async uploadProfileImage(email: string, file: any) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+    const user = await this.adminService.findOneByEmail(email.trim().toLowerCase());
+    if (!user) {
+      throw new NotFoundException('Admin user not found');
+    }
+    // Save the file path to the profileImage field
+    await this.adminService.updateAdminUser(user.id, { profileImage: file.path });
+    return {
+      message: 'Profile image uploaded successfully',
+      profileImage: file.path,
+    };
+  }
   async resetPassword(token: string, passwordDto: ChangePasswordDto) {
     try {
-    const { email } = await this.tokenProvider.verifyPasswordResetToken(token);
-    
-    const admin = await this.adminService.findOneByEmail(email);
-
-    // Check if new password matches current password
-    const isSamePassword = await this.hashingProvider.comparePassword(
-      passwordDto.newPassword,
-      admin.password
-    );
-    
-    if (isSamePassword) {
-      throw new BadRequestException(
-        "New password must be different from current password"
+      const { email } = await this.tokenProvider.verifyPasswordResetToken(token);
+      const admin = await this.adminService.findOneByEmail(email);
+      // Check if new password matches current password
+      const isSamePassword = await this.hashingProvider.comparePassword(
+        passwordDto.newPassword,
+        admin.password
       );
+      if (isSamePassword) {
+        throw new BadRequestException(
+          "New password must be different from current password"
+        );
+      }
+      const hashedPassword = await this.hashingProvider.hashPassword(passwordDto.newPassword);
+      const updatedUser = await this.adminService.updateAdminUser(admin.id, { password: hashedPassword });
+      this.logger.log(`Updated user: ${JSON.stringify(updatedUser, null, 2)}`);
+      return { 
+        message: "Password updated successfully",
+      };
+    } catch (error) {
+      throw error;
     }
-
-    const hashedPassword = await this.hashingProvider.hashPassword(passwordDto.newPassword);
-    
-    const updatedUser = await this.adminService.updateAdminUser(admin.id, { password: hashedPassword });
-    this.logger.log(`Updated user: ${JSON.stringify(updatedUser, null, 2)}`);
-
-    return { 
-      message: "Password updated successfully",
-    };
-  } catch (error) {
-    throw error;
   }
-}
 
   async sendVerificationEmail(emailDto: EmailDto) {
     return this.tokenProvider.sendToken(emailDto.email);
@@ -200,11 +210,9 @@ export class AdminAuthService {
 
   async getProfile(email: string): Promise<Partial<Admin> | null> {
     const user = await this.adminService.findOneByEmail(email.trim().toLowerCase());
-
     if (!user) {
       throw new NotFoundException('Account not found');
     }
-
     return {
       id: user.id,
       firstName: user.firstName,
@@ -213,7 +221,6 @@ export class AdminAuthService {
       isVerified: user.isVerified,
       role: user.role,
       createdAt: user.createdAt,
-    }
-    
+    };
   }
 }
