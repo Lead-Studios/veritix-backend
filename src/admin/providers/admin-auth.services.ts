@@ -216,4 +216,19 @@ export class AdminAuthService {
     }
     
   }
+
+  async uploadProfileImage(email: string, file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+    // Here you would typically upload to cloud storage or save locally
+    // For demo, just save filename in DB
+    const imageUrl = `/uploads/admins/${file.filename}`;
+    const admin = await this.adminService.findOneByEmail(email);
+    if (!admin) {
+      throw new NotFoundException('Admin not found');
+    }
+    await this.adminService.updateAdminUser(admin.id, { profileImage: imageUrl });
+    return { message: 'Profile image uploaded successfully', imageUrl };
+  }
 }

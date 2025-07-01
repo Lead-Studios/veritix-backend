@@ -33,4 +33,8 @@ export class UpdateAdminDto extends PartialType(CreateAdminDto) {
     message: "Role must be either 'admin' or 'super_admin'",
   })
   role?: string;
+
+  @IsOptional()
+  @IsString()
+  profileImage?: string;
 }

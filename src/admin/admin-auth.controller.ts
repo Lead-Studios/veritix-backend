@@ -9,12 +9,16 @@ import {
   Query,
   UseInterceptors,
   ClassSerializerInterceptor,
+  UploadedFile,
+  UseInterceptors as NestUseInterceptors,
 } from "@nestjs/common";
+import { FileInterceptor } from '@nestjs/platform-express';
 import { AdminAuthService } from "./providers/admin-auth.services";
 import { CreateAdminDto } from "./dto/create-admin.dto";
 import { EmailDto } from "./dto/email.dto";
 import { SignInDto } from "./dto/signIn.dto";
 import { JwtAuthGuard } from "../../security/guards/jwt-auth.guard";
+import { UploadProfileImageDto } from './dto/upload-profile-image.dto';
 import { ChangePasswordDto } from "./dto/change-password.dto";
 
 @Controller("admin/")
@@ -69,9 +73,20 @@ export class AdminAuthController {
     return this.adminAuthService.verifyEmail(token);
   }
 
+
   @Get("profile-details")
   @UseGuards(JwtAuthGuard)
   async getProfile(@Request() req) {
     return this.adminAuthService.getProfile(req.user.email);
+  }
+
+  @Post('upload/profile-image')
+  @UseGuards(JwtAuthGuard)
+  @NestUseInterceptors(FileInterceptor('file'))
+  async uploadProfileImage(
+    @UploadedFile() file: Express.Multer.File,
+    @Request() req
+  ) {
+    return this.adminAuthService.uploadProfileImage(req.user.email, file);
   }
 }

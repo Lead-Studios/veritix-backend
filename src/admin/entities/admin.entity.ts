@@ -26,8 +26,12 @@ export class Admin {
   @Column({ default: "admin" })
   role: string;
 
+
   @Column({ default: false })
   isVerified: boolean;
+
+  @Column({ nullable: true })
+  profileImage: string;
 
   @Column({ nullable: true })
   refreshToken: string;
