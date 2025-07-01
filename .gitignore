@@ -1,1 +1,43 @@
-node_modules
+# Node dependencies
+node_modules/
+
+# Compiled output
+dist/
+build/
+
+# Environment variables
+.env
+.env.*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+log.txt
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# IDEs/editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Test coverage
+coverage/
+
+# TypeScript
+*.tsbuildinfo
+
+# Optional: Ignore SQLite files (if applicable)
+*.sqlite
+*.db
+
+# Optional: Ignore uploads or generated assets
+uploads/
+public/uploads/
