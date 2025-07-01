@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
@@ -16,9 +17,11 @@ export class CollaboratorsService {
     private collaboratorRepository: Repository<Collaborator>,
   ) {}
 
+  private readonly logger = new Logger(CollaboratorsService.name);
+
   async create(
-    file: Express.Multer.File,
     createCollaboratorDto: CreateCollaboratorDto,
+    file?: Express.Multer.File,
   ): Promise<Collaborator> {
     if (!file) {
       throw new BadRequestException("Collaborator image is required");
@@ -46,7 +49,10 @@ export class CollaboratorsService {
     }
   }
 
-  async findAll(): Promise<Collaborator[]> {
+  async findAll(eventId?: string): Promise<Collaborator[]> {
+    if (eventId) {
+      return this.findByEvent(eventId);
+    }
     return this.collaboratorRepository.find();
   }
 
@@ -66,8 +72,8 @@ export class CollaboratorsService {
 
   async update(
     id: string,
-    file: Express.Multer.File,
     updateCollaboratorDto: Partial<CreateCollaboratorDto>,
+    file?: Express.Multer.File,
   ): Promise<Collaborator> {
     const collaborator = await this.findOne(id);
     try {
@@ -107,17 +113,24 @@ export class CollaboratorsService {
     }
   }
 
-  async remove(id: string): Promise<void> {
+  async remove(id: string): Promise<Collaborator> {
     const collaborator = await this.findOne(id);
     try {
       if (collaborator.imageUrl && fs.existsSync(collaborator.imageUrl)) {
         fs.unlinkSync(collaborator.imageUrl);
-        const result = await this.collaboratorRepository.delete(id);
-        if (!result.affected) {
-          throw new NotFoundException("Collaborator not found");
-        }
       }
+
+      const result = await this.collaboratorRepository.delete(id);
+      if (!result.affected) {
+        throw new NotFoundException("Collaborator not found");
+      }
+
+      return collaborator;
     } catch (error) {
+      this.logger.error(
+        `Failed to delete collaborator with id ${id}`,
+        error.stack,
+      );
       throw new BadRequestException("Failed to delete collaborator");
     }
   }

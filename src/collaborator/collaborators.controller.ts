@@ -1,153 +1,142 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Put,
-  Param,
-  Delete,
+import { 
+  Controller, 
+  Get, 
+  Post, 
+  Body, 
+  Patch, 
+  Param, 
+  Delete, 
   UseGuards,
+  Query,
   UseInterceptors,
-  HttpStatus,
-  UploadedFile,
-  ParseUUIDPipe,
-} from "@nestjs/common";
-import { CollaboratorsService } from "./collaborators.service";
-import { CreateCollaboratorDto } from "./dto/create-collaborator.dto";
-import { JwtAuthGuard } from "../../security/guards/jwt-auth.guard";
-import { RolesGuard } from "../../security/guards/rolesGuard/roles.guard";
-import { FileInterceptor } from "@nestjs/platform-express";
-import type { Express } from "express"
-import {
-  ApiBody,
-  ApiConsumes,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from "@nestjs/swagger";
+  UploadedFile
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { CollaboratorsService } from './collaborators.service';
+import { CreateCollaboratorDto } from './dto/create-collaborator.dto';
+import { UpdateCollaboratorDto } from './dto/update-collaborator.dto';
+import { JwtAuthGuard } from 'security/guards/jwt-auth.guard';
+import { RolesGuard } from 'security/guards/rolesGuard/roles.guard';
+import { RoleDecorator } from 'security/decorators/roles.decorator';
+import { UserRole } from 'src/common/enums/users-roles.enum';
+import { Collaborator } from './entities/collaborator.entity';
 
-@ApiTags("collaborators")
-@Controller("collaborators")
+@ApiTags('Collaborators')
+@ApiBearerAuth()
+@Controller('collaborators')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class CollaboratorsController {
   constructor(private readonly collaboratorsService: CollaboratorsService) {}
 
   @Post()
-  @UseInterceptors(FileInterceptor("image"))
-  @ApiOperation({ summary: "Upload a new event Collaborator" })
-  @ApiConsumes("multipart/form-data")
-  @ApiBody({
-    schema: {
-      type: "object",
-      properties: {
-        image: {
-          type: "string",
-          format: "binary",
-        },
-        name: {
-          type: "string",
-        },
-        email: {
-          type: "string",
-        },
-        eventId: {
-          type: "string",
-        },
-      },
-    },
+  @RoleDecorator(UserRole.Admin)
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({ 
+    summary: 'Create collaborator', 
+    description: 'Add a new collaborator to an event'
   })
-  @ApiResponse({
-    status: HttpStatus.CREATED,
-    description: "Collaborator created successfully",
+  @ApiResponse({ 
+    status: 201, 
+    description: 'Collaborator created successfully',
+    type: Collaborator
   })
-  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: "Invalid input" })
-  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
-  @ApiResponse({ status: HttpStatus.FORBIDDEN, description: "Forbidden" })
-  async create(
-    @UploadedFile() file: Express.Multer.File,
+  @ApiResponse({ status: 400, description: 'Invalid input' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Requires Admin role' })
+  create(
     @Body() createCollaboratorDto: CreateCollaboratorDto,
+    @UploadedFile() file: Express.Multer.File
   ) {
-    return this.collaboratorsService.create(file, createCollaboratorDto);
+    return this.collaboratorsService.create(createCollaboratorDto, file);
   }
 
   @Get()
-  @ApiOperation({ summary: "Retrieve all collaborators" })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: "Retrieved all collaborator",
+  @ApiOperation({ 
+    summary: 'Get all collaborators', 
+    description: 'Retrieve all collaborators across all events'
   })
-  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
-  async findAll() {
-    return this.collaboratorsService.findAll();
+  @ApiQuery({
+    name: 'eventId',
+    required: false,
+    description: 'Filter collaborators by event ID',
+    type: String
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'List of collaborators',
+    type: [Collaborator]
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  findAll(@Query('eventId') eventId?: string) {
+    return this.collaboratorsService.findAll(eventId);
   }
 
-  @Get(":id")
-  @ApiOperation({ summary: "Retrieve collaborator by ID" })
-  @ApiResponse({ status: HttpStatus.OK, description: "Retrieved collaborator" })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: "collaborator not found",
+  @Get(':id')
+  @ApiOperation({ 
+    summary: 'Get collaborator by ID', 
+    description: 'Retrieve a specific collaborator by their ID'
   })
-  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
-  async findOne(@Param("id", new ParseUUIDPipe()) id: string) {
+  @ApiParam({
+    name: 'id',
+    description: 'Collaborator ID',
+    example: '123e4567-e89b-12d3-a456-426614174000'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Collaborator found',
+    type: Collaborator
+  })
+  @ApiResponse({ status: 404, description: 'Collaborator not found' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  findOne(@Param('id') id: string) {
     return this.collaboratorsService.findOne(id);
   }
 
-  @Get("event/:eventId")
-  @ApiOperation({ summary: "Retrieve all collaborator for a specific event" })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: "Retrieved collaborator for event",
+  @Patch(':id')
+  @RoleDecorator(UserRole.Admin)
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({ 
+    summary: 'Update collaborator', 
+    description: 'Update details of an existing collaborator'
   })
-  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
-  async findByEvent(@Param("eventId", new ParseUUIDPipe()) eventId: string) {
-    return this.collaboratorsService.findByEvent(eventId);
-  }
-
-  @Put(":id")
-  @UseInterceptors(FileInterceptor("image"))
-  @ApiOperation({ summary: "Update a collaborator" })
-  @ApiConsumes("multipart/form-data")
-  @ApiBody({
-    schema: {
-      type: "object",
-      properties: {
-        image: {
-          type: "string",
-          format: "binary",
-        },
-        name: {
-          type: "string",
-        },
-        email: {
-          type: "string",
-        },
-        eventId: {
-          type: "string",
-        },
-      },
-    },
+  @ApiParam({
+    name: 'id',
+    description: 'Collaborator ID',
+    example: '123e4567-e89b-12d3-a456-426614174000'
   })
-  @ApiResponse({ status: HttpStatus.OK, description: "collaborator updated successfully" })
-  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: "Invalid input" })
-  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: "Collaborator not found" })
-  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
-  @ApiResponse({ status: HttpStatus.FORBIDDEN, description: "Forbidden" })
-  async update(
-    @Param('id', new ParseUUIDPipe()) id: string,
-    @UploadedFile() file: Express.Multer.File,
-    @Body() updateCollaboratorDto: Partial<CreateCollaboratorDto>,
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Collaborator updated successfully',
+    type: Collaborator
+  })
+  @ApiResponse({ status: 404, description: 'Collaborator not found' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Requires Admin role' })
+  update(
+    @Param('id') id: string, 
+    @Body() updateCollaboratorDto: UpdateCollaboratorDto,
+    @UploadedFile() file?: Express.Multer.File
   ) {
-    return this.collaboratorsService.update(id, file, updateCollaboratorDto);
+    return this.collaboratorsService.update(id, updateCollaboratorDto, file);
   }
 
-  @Delete(":id")
-  @ApiOperation({ summary: 'Delete a collaborator' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'collaborator deleted successfully' })
-  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Collaborator not found' })
-  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
-  @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden' })
-  remove(@Param("id") id: string) {
+  @Delete(':id')
+  @RoleDecorator(UserRole.Admin)
+  @ApiOperation({ 
+    summary: 'Delete collaborator', 
+    description: 'Remove a collaborator from an event'
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Collaborator ID',
+    example: '123e4567-e89b-12d3-a456-426614174000'
+  })
+  @ApiResponse({ status: 200, description: 'Collaborator deleted successfully' })
+  @ApiResponse({ status: 404, description: 'Collaborator not found' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Requires Admin role' })
+  remove(@Param('id') id: string) {
     return this.collaboratorsService.remove(id);
   }
 }

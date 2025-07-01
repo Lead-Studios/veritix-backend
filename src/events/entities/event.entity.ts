@@ -77,10 +77,9 @@ export class Event {
   @Column({ nullable: true })
   instagram: string;
 
-  @ManyToMany(() => Sponsor, (sponsor) => sponsor.events)
+  @ManyToMany(() => Sponsor, (sponsor) => sponsor.event)
   sponsors: Sponsor[];
 
-  // Relations - Make them optional
   @OneToMany(() => Ticket, (ticket) => ticket.event)
   tickets: Ticket[];
 
@@ -104,6 +103,6 @@ export class Event {
   @OneToMany(() => EventGallery, (eventGallery) => eventGallery.event)
   eventGallery: EventGallery[];
 
-  @ManyToOne(() => Category, category => category.events)
+  @ManyToOne(() => Category, (category) => category.events)
   category: Category;
 }

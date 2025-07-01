@@ -112,4 +112,98 @@ export class EventGalleryService {
       throw new NotFoundException("Image not found");
     }
   }
+
+  // async create(
+  //   createGalleryItemDto: CreateGalleryItemDto,
+  //   file: Express.Multer.File,
+  // ): Promise<GalleryItem> {
+  //   const event = await this.eventRepository.findOne({
+  //     where: { id: createGalleryItemDto.eventId },
+  //   });
+  //   if (!event) {
+  //     throw new Error("Event not found");
+  //   }
+
+  //   const galleryItem = this.galleryItemRepository.create({
+  //     url: file.path,
+  //     type: createGalleryItemDto.type,
+  //     description: createGalleryItemDto.description,
+  //     event,
+  //   });
+
+  //   return this.galleryItemRepository.save(galleryItem);
+  // }
+
+  // async createBatch(
+  //   createGalleryItemDto: CreateGalleryItemDto,
+  //   files: Express.Multer.File[],
+  // ): Promise<GalleryItem[]> {
+  //   const event = await this.eventRepository.findOne({
+  //     where: { id: createGalleryItemDto.eventId },
+  //   });
+  //   if (!event) {
+  //     throw new Error("Event not found");
+  //   }
+
+  //   const galleryItems = files.map((file) =>
+  //     this.galleryItemRepository.create({
+  //       url: file.path,
+  //       type: createGalleryItemDto.type,
+  //       description: createGalleryItemDto.description,
+  //       event,
+  //     }),
+  //   );
+
+  //   return this.galleryItemRepository.save(galleryItems);
+  // }
+
+  // async findAll(filters: {
+  //   eventId?: string;
+  //   type?: string;
+  // }): Promise<GalleryItem[]> {
+  //   const where: any = {};
+  //   if (filters.eventId) {
+  //     where.event = { id: filters.eventId };
+  //   }
+  //   if (filters.type) {
+  //     where.type = filters.type;
+  //   }
+  //   return this.galleryItemRepository.find({ where });
+  // }
+
+  // async findOne(id: string): Promise<GalleryItem> {
+  //   const galleryItem = await this.galleryItemRepository.findOne({
+  //     where: { id },
+  //   });
+  //   if (!galleryItem) {
+  //     throw new Error("Gallery item not found");
+  //   }
+  //   return galleryItem;
+  // }
+
+  // async update(
+  //   id: string,
+  //   updateGalleryItemDto: UpdateGalleryItemDto,
+  // ): Promise<GalleryItem> {
+  //   const galleryItem = await this.findOne(id);
+  //   Object.assign(galleryItem, updateGalleryItemDto);
+  //   return this.galleryItemRepository.save(galleryItem);
+  // }
+
+  // async remove(id: string): Promise<void> {
+  //   const galleryItem = await this.findOne(id);
+  //   await this.galleryItemRepository.remove(galleryItem);
+  // }
+
+  // async setFeatured(id: string): Promise<GalleryItem> {
+  //   const galleryItem = await this.findOne(id);
+  //   galleryItem.isFeatured = true;
+  //   return this.galleryItemRepository.save(galleryItem);
+  // }
+
+  // async removeFeatured(id: string): Promise<GalleryItem> {
+  //   const galleryItem = await this.findOne(id);
+  //   galleryItem.isFeatured = false;
+  //   return this.galleryItemRepository.save(galleryItem);
+  // }
 }
