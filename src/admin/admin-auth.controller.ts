@@ -80,7 +80,7 @@ export class AdminAuthController {
     return this.adminAuthService.getProfile(req.user.email);
   }
   /**
-   * Upload profile image for admin user
+   * Upload profile image for admin users
    */
   @Post('upload/profile-image')
   @UseGuards(JwtAuthGuard)
