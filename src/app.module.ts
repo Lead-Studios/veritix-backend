@@ -11,6 +11,7 @@ import { EventService } from './event/services/event.service';
 import { Event } from './event/entities/event.entity';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
+import { TicketModule } from './ticket/ticket.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { UserModule } from './user/user.module';
     TypeOrmModule.forFeature([Event, GalleryImage]),
     AuthModule,
     UserModule,
+    TicketModule,
   ],
   controllers: [AppController, GalleryController, EventController],
   providers: [AppService, GalleryService, EventService],
