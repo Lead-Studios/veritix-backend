@@ -11,6 +11,13 @@ const common_1 = require("@nestjs/common");
 const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
 const database_module_1 = require("./database.module");
+const typeorm_1 = require("@nestjs/typeorm");
+const gallery_image_entity_1 = require("./event/entities/gallery-image.entity");
+const gallery_service_1 = require("./event/services/gallery.service");
+const event_controller_1 = require("./event/controllers/event.controller");
+const gallery_controller_1 = require("./event/controllers/gallery.controller");
+const event_service_1 = require("./event/services/event.service");
+const event_entity_1 = require("./event/entities/event.entity");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -18,9 +25,10 @@ exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
             database_module_1.DatabaseModule,
+            typeorm_1.TypeOrmModule.forFeature([event_entity_1.Event, gallery_image_entity_1.GalleryImage]),
         ],
-        controllers: [app_controller_1.AppController],
-        providers: [app_service_1.AppService],
+        controllers: [app_controller_1.AppController, gallery_controller_1.GalleryController, event_controller_1.EventController],
+        providers: [app_service_1.AppService, gallery_service_1.GalleryService, event_service_1.EventService],
     })
 ], AppModule);
 //# sourceMappingURL=app.module.js.map
