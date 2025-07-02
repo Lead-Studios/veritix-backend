@@ -12,6 +12,8 @@ import { Event } from './event/entities/event.entity';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { TicketModule } from './ticket/ticket.module';
+import { AdminModule } from './admin/admin.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -20,6 +22,8 @@ import { TicketModule } from './ticket/ticket.module';
     AuthModule,
     UserModule,
     TicketModule,
+    AdminModule,
+    AnalyticsModule,
   ],
   controllers: [AppController, GalleryController, EventController],
   providers: [AppService, GalleryService, EventService],
