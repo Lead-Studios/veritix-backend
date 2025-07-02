@@ -14,6 +14,7 @@ import { UserModule } from './user/user.module';
 import { TicketModule } from './ticket/ticket.module';
 import { AdminModule } from './admin/admin.module';
 import { PosterModule } from './poster/poster.module';
+import { SponsorModule } from './event/sponsor.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { PosterModule } from './poster/poster.module';
     TicketModule,
     AdminModule,
     PosterModule,
+    SponsorModule,
   ],
   controllers: [AppController, GalleryController, EventController],
   providers: [AppService, GalleryService, EventService],
