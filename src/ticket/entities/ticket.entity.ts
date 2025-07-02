@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+} from 'typeorm';
 import { Event } from '../../event/entities/event.entity';
 import { User } from '../../user/entities/user.entity';
 
@@ -36,4 +43,4 @@ export class Ticket {
 
   @UpdateDateColumn()
   updatedAt: Date;
-} 
+}
