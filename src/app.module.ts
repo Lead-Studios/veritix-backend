@@ -13,6 +13,7 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { TicketModule } from './ticket/ticket.module';
 import { AdminModule } from './admin/admin.module';
+import { PosterModule } from './poster/poster.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { AdminModule } from './admin/admin.module';
     UserModule,
     TicketModule,
     AdminModule,
+    PosterModule,
   ],
   controllers: [AppController, GalleryController, EventController],
   providers: [AppService, GalleryService, EventService],
