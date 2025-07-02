@@ -19,4 +19,22 @@ export class Event {
 
   @OneToMany(() => Collaborator, (collaborator) => collaborator.event)
   collaborators: Collaborator[];
+
+  @Column('timestamp')
+  date: Date;
+
+  @Column()
+  country: string;
+
+  @Column()
+  state: string;
+
+  @Column()
+  street: string;
+
+  @Column()
+  localGovernment: string;
+
+  @Column('int')
+  ticketQuantity: number;
 } 
