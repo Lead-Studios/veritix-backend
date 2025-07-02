@@ -20,6 +20,15 @@ export class User {
   @Column('simple-array', { default: 'user' })
   roles: string[];
 
+  @Column({ nullable: true })
+  name: string;
+
+  @Column({ nullable: true })
+  phone: string;
+
+  @Column({ nullable: true })
+  profileImage: string;
+
   @CreateDateColumn()
   createdAt: Date;
 
