@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { Event } from './event.entity';
 
 @Entity()
@@ -14,4 +14,10 @@ export class GalleryImage {
 
   @ManyToOne(() => Event, (event) => event.images, { onDelete: 'CASCADE' })
   event: Event;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 } 
