@@ -17,6 +17,7 @@ import { PosterModule } from './poster/poster.module';
 import { SponsorModule } from './event/sponsor.module';
 import { CollaboratorModule } from './event/collaborator.module';
 import { SpecialGuestModule } from './special-guest/special-guest.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { SpecialGuestModule } from './special-guest/special-guest.module';
     SponsorModule,
     CollaboratorModule,
     SpecialGuestModule,
+    AnalyticsModule,
   ],
   controllers: [AppController, GalleryController, EventController],
   providers: [AppService, GalleryService, EventService],

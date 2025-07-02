@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateEventDto } from '../dtos/event.dto';
 import { Event } from '../entities/event.entity';
+import { EventResource } from '../resources/event.resource';
 
 @Injectable()
 export class EventService {
@@ -13,10 +14,10 @@ export class EventService {
 
   create(dto: CreateEventDto) {
     const event = this.eventRepo.create(dto);
-    return this.eventRepo.save(event);
+    return this.eventRepo.save(event).then(EventResource.toResponse);
   }
 
   findAll() {
-    return this.eventRepo.find();
+    return this.eventRepo.find({ relations: ['images'] }).then(EventResource.toArray);
   }
 } 
