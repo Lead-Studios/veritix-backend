@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MulterModule } from '@nestjs/platform-express';
+
 import { User } from './entities/user.entity';
 import { UserService } from './user.service';
 import { UserController } from './user.controller';
@@ -14,4 +15,4 @@ import { ProfileController } from './controllers/profile.controller';
   controllers: [UserController, ProfileController],
   exports: [UserService, EmailService, ProfileService],
 })
-export class UserModule {} 
+export class UserModule {}
