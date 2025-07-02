@@ -12,10 +12,16 @@ import { EventService } from './services/event.service';
 import { ReportService } from './services/report.service';
 import { EventController } from './controllers/event.controller';
 import { ReportController } from './controllers/report.controller';
+import { User } from '../user/entities/user.entity';
+import { UserService } from './services/user.service';
+import { UserReportService } from './services/user-report.service';
+import { UserController } from './controllers/user.controller';
+import { UserReportController } from './controllers/user-report.controller';
+import { TicketHistory } from 'src/ticket/entities/ticket-history.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([CampaignEmail, Event])],
-  providers: [DashboardService, TicketService, CampaignEmailService, EventService, ReportService],
-  controllers: [DashboardController, TicketController, CampaignEmailController, EventController, ReportController],
+  imports: [TypeOrmModule.forFeature([CampaignEmail, Event, User, TicketHistory])],
+  providers: [DashboardService, TicketService, CampaignEmailService, EventService, ReportService, UserService, UserReportService],
+  controllers: [DashboardController, TicketController, CampaignEmailController, EventController, ReportController, UserController, UserReportController],
 })
 export class AdminModule {} 
