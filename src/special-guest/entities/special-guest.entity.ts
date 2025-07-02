@@ -1,35 +1,28 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
 import { Event } from '../../event/entities/event.entity';
-import { User } from '../../user/entities/user.entity';
 
 @Entity()
-export class Ticket {
+export class SpecialGuest {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column()
-  name: string;
+  image: string;
 
   @ManyToOne(() => Event, { eager: true, onDelete: 'CASCADE' })
   event: Event;
 
-  @ManyToOne(() => User, { eager: true, nullable: true })
-  createdBy: User;
+  @Column()
+  name: string;
 
-  @Column('int')
-  quantity: number;
+  @Column({ nullable: true })
+  facebook: string;
 
-  @Column('decimal')
-  price: number;
+  @Column({ nullable: true })
+  twitter: string;
 
-  @Column('text')
-  description: string;
-
-  @Column('timestamp')
-  deadlineDate: Date;
-
-  @Column({ default: false })
-  isReserved: boolean;
+  @Column({ nullable: true })
+  instagram: string;
 
   @CreateDateColumn()
   createdAt: Date;
