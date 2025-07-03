@@ -20,6 +20,7 @@ import { SponsorModule } from './event/sponsor.module';
 import { CollaboratorModule } from './event/collaborator.module';
 import { SpecialGuestModule } from './special-guest/special-guest.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { NotificationModule } from './notification/notification.module';
 import { EventsModule } from './events/events.module';
 
 
@@ -37,6 +38,7 @@ import { EventsModule } from './events/events.module';
     CollaboratorModule,
     SpecialGuestModule,
     AnalyticsModule,
+    NotificationModule
     EventsModule,
   ],
   controllers: [AppController, GalleryController, EventController],

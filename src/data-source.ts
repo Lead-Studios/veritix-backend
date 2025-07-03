@@ -1,11 +1,10 @@
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 import * as dotenv from 'dotenv';
-import { join } from 'path';
 
 dotenv.config();
 
-const rootDir = process.cwd();
+const isProd = process.env.NODE_ENV === 'production';
 
 export const AppDataSource = new DataSource({
   type: 'postgres',
@@ -14,7 +13,8 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  entities: ['src/**/*.entity.ts'],
-  migrations: ['src/database/migrations/*.ts'],
+  entities: [isProd ? 'dist/**/*.entity.js' : 'src/**/*.entity.ts'],
+  migrations: [isProd ? 'dist/database/migrations/*.js' : 'src/database/migrations/*.ts'],
+
   synchronize: false,
 }); 
