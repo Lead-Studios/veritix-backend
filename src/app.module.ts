@@ -23,7 +23,6 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { NotificationModule } from './notification/notification.module';
 import { EventsModule } from './events/events.module';
 
-
 @Module({
   imports: [
     DatabaseModule,
