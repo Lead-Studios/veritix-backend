@@ -40,9 +40,11 @@ import { UserReportService } from './services/user-report.service';
 import { UserController } from './controllers/user.controller';
 import { UserReportController } from './controllers/user-report.controller';
 import { TicketHistory } from 'src/ticket/entities/ticket-history.entity';
+import { Ticket } from '../ticket/entities/ticket.entity';
+import { GalleryImage } from '../event/entities/gallery-image.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([CampaignEmail, Event, User, TicketHistory])],
+  imports: [TypeOrmModule.forFeature([CampaignEmail, Event, User, TicketHistory, Ticket, GalleryImage])],
   providers: [DashboardService, TicketService, CampaignEmailService, EventService, ReportService, UserService, UserReportService],
   controllers: [DashboardController, TicketController, CampaignEmailController, EventController, ReportController, UserController, UserReportController],
 })
