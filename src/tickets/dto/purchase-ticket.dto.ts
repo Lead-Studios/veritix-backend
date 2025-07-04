@@ -60,6 +60,11 @@ export class PurchaseTicketDto {
   @IsNotEmpty()
   paymentToken: string;
 
+  // Optional promo code
+  @IsString()
+  @IsNotEmpty({ each: false })
+  promoCode?: string;
+
   // Conference/session ticketing support
   @IsString()
   @IsNotEmpty()

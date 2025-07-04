@@ -2,6 +2,7 @@ import { Controller, Post, Get, Put, Delete, Param, Body, Query, UseGuards, Req 
 import { TicketService } from '../services/ticket.service';
 import { CreateTicketDto } from '../dtos/create-ticket.dto';
 import { UpdateTicketDto } from '../dtos/update-ticket.dto';
+import { CreatePromoCodeDto } from '../dtos/create-promo-code.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
@@ -59,4 +60,19 @@ export class TicketController {
   remove(@Param('id') id: string) {
     return this.ticketService.remove(id);
   }
-} 
+
+  @Post('/events/:eventId/promo-codes')
+  @ApiOperation({ summary: 'Create a promo code for an event' })
+  @ApiParam({ name: 'eventId', type: 'string' })
+  @ApiBody({ type: CreatePromoCodeDto })
+  @Roles('admin')
+  createPromoCode(@Param('eventId') eventId: string, @Body() dto: CreatePromoCodeDto) {
+    return this.ticketService.createPromoCode(eventId, dto);
+  }
+
+  @Post('/apply-code')
+  @ApiOperation({ summary: 'Apply a promo code' })
+  applyPromoCode(@Body() body: { eventId: string; code: string }) {
+    return this.ticketService.applyPromoCode(body.eventId, body.code);
+  }
+}
