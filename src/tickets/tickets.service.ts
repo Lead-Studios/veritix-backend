@@ -27,6 +27,16 @@ export class TicketsService {
 
   constructor(private readonly paymentService: PaymentService) {}
 
+  async applyPromoCode(eventId: string, code: string) {
+    // For demo: always 10% off if code is 'PROMO10' and event matches
+    if (code === 'PROMO10') {
+      const event = this.events.find(e => e.id === eventId);
+      if (!event) throw new BadRequestException('Event not found');
+      return { valid: true, discount: 0.1 };
+    }
+    throw new BadRequestException('Invalid promo code');
+  }
+
   async purchaseTickets(userId: string, dto: PurchaseTicketDto): Promise<ReceiptDto> {
     const user = this.users.find(u => u.id === userId);
     if (!user) throw new NotFoundException('User not found');
@@ -35,7 +45,19 @@ export class TicketsService {
     if (dto.ticketQuantity > event.availableTickets) {
       throw new BadRequestException('Not enough tickets available');
     }
-    const totalPrice = event.pricePerTicket * dto.ticketQuantity;
+    let discount = 0;
+    if (dto.promoCode) {
+      try {
+        const promo = await this.applyPromoCode(dto.eventId, dto.promoCode);
+        discount = promo.discount;
+      } catch (e) {
+        throw new BadRequestException('Invalid or expired promo code');
+      }
+    }
+    let totalPrice = event.pricePerTicket * dto.ticketQuantity;
+    if (discount > 0) {
+      totalPrice = totalPrice * (1 - discount);
+    }
     // Process payment
     const paymentConfirmationId = await this.paymentService.processPayment(dto.paymentToken, totalPrice);
     // Update event ticket inventory
