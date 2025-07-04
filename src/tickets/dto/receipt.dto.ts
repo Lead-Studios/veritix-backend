@@ -13,6 +13,8 @@ export class ReceiptDto {
     quantity: number;
     pricePerTicket: number;
     totalPrice: number;
+    type?: 'conference' | 'session';
+    sessions?: string[] | 'all';
   };
   totalAmountPaid: number;
   transactionDate: string;

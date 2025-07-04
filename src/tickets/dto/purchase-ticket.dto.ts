@@ -59,4 +59,13 @@ export class PurchaseTicketDto {
   @IsString()
   @IsNotEmpty()
   paymentToken: string;
-} 
+
+  // Conference/session ticketing support
+  @IsString()
+  @IsNotEmpty()
+  ticketType: 'conference' | 'session';
+
+  @IsString({ each: true })
+  @IsNotEmpty({ each: true })
+  sessionIds?: string[]; // Required if ticketType is 'session'
+}

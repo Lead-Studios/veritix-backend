@@ -40,6 +40,16 @@ export class TicketsService {
     const paymentConfirmationId = await this.paymentService.processPayment(dto.paymentToken, totalPrice);
     // Update event ticket inventory
     event.availableTickets -= dto.ticketQuantity;
+    // Conference/session ticketing logic
+    let ticketInfo = {};
+    if (dto.ticketType === 'conference') {
+      ticketInfo = { type: 'conference', sessions: 'all' };
+    } else if (dto.ticketType === 'session') {
+      if (!dto.sessionIds || !dto.sessionIds.length) {
+        throw new BadRequestException('Session IDs required for session ticket');
+      }
+      ticketInfo = { type: 'session', sessions: dto.sessionIds };
+    }
     // Create purchase record
     const purchase: TicketPurchase = {
       id: 'ORDER-' + Date.now(),
@@ -53,6 +63,7 @@ export class TicketsService {
       paymentConfirmationId,
       status: TicketPurchaseStatus.CONFIRMED,
       transactionDate: new Date(),
+      ...ticketInfo,
     };
     this.purchases.push(purchase);
     // Generate receipt
@@ -71,6 +82,8 @@ export class TicketsService {
         quantity: purchase.ticketQuantity,
         pricePerTicket: purchase.pricePerTicket,
         totalPrice: purchase.totalPrice,
+        type: purchase.type,
+        sessions: purchase.sessions,
       },
       totalAmountPaid: purchase.totalPrice,
       transactionDate: purchase.transactionDate.toISOString(),
@@ -97,9 +110,11 @@ export class TicketsService {
         quantity: purchase.ticketQuantity,
         pricePerTicket: purchase.pricePerTicket,
         totalPrice: purchase.totalPrice,
+        type: purchase.type,
+        sessions: purchase.sessions,
       },
       totalAmountPaid: purchase.totalPrice,
       transactionDate: purchase.transactionDate.toISOString(),
     };
   }
-} 
+}

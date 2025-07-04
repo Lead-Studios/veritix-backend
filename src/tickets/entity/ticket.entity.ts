@@ -14,4 +14,6 @@ export class TicketPurchase {
   paymentConfirmationId: string;
   status: TicketPurchaseStatus;
   transactionDate: Date;
-} 
+  type?: 'conference' | 'session';
+  sessions?: string[] | 'all';
+}
