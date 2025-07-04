@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { GalleryImage } from './gallery-image.entity';
 import { Sponsor } from './sponsor.entity';
 import { Collaborator } from './collaborator.entity';
+import { Notification } from '../../notification/entities/notification.entity';
 
 @Entity()
 export class Event {
@@ -19,4 +20,25 @@ export class Event {
 
   @OneToMany(() => Collaborator, (collaborator) => collaborator.event)
   collaborators: Collaborator[];
+
+  @OneToMany(() => Notification, (notification) => notification.event)
+  notifications: Notification[];
+
+  @Column('timestamp')
+  date: Date;
+
+  @Column()
+  country: string;
+
+  @Column()
+  state: string;
+
+  @Column()
+  street: string;
+
+  @Column()
+  localGovernment: string;
+
+  @Column('int')
+  ticketQuantity: number;
 } 

@@ -2,6 +2,7 @@ import { Controller, Post, Get, Body, UsePipes, ValidationPipe, UseGuards, Query
 import { EventService } from '../services/event.service';
 import { CreateEventDto } from '../dtos/event.dto';
 import { ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
+
 // import { AuthGuard } from '../../auth/auth.guard';
 // import { RolesGuard } from '../../auth/roles.guard';
 
@@ -76,3 +77,22 @@ export class EventController {
     return this.eventService.findAll({ name, location, page, limit });
   }
 }
+
+
+  @Get('search')
+  @ApiOperation({ summary: 'Search events by name, category, and location with fuzzy matching' })
+  @ApiQuery({ name: 'query', required: false, description: 'Event name or keyword' })
+  @ApiQuery({ name: 'category', required: false, description: 'Event category' })
+  @ApiQuery({ name: 'location', required: false, description: 'Location in format Country,State,City' })
+  @ApiQuery({ name: 'page', required: false, description: 'Page number', type: Number })
+  @ApiQuery({ name: 'limit', required: false, description: 'Results per page', type: Number })
+  async searchEvents(
+    @Query('query') query?: string,
+    @Query('category') category?: string,
+    @Query('location') location?: string,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 20,
+  ) {
+    return this.eventService.searchEvents({ query, category, location, page, limit });
+  }
+} 
