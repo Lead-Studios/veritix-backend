@@ -27,6 +27,9 @@ export class Ticket {
   @Column({ type: "uuid" })
   eventId: string
 
+  @Column({ type: "varchar", length: 255, nullable: true })
+  conferenceId: string
+
   @Column({ type: "uuid" })
   purchaserId: string
 
