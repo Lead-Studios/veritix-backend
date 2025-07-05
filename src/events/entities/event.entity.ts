@@ -138,6 +138,6 @@ export class Event {
   @OneToMany(() => PurchaseLog, (log) => log.event)
   purchaseLogs: PurchaseLog[];
 
-  // @OneToMany(() => TicketTier, (tier) => tier.event)
-  // ticketTiers: TicketTier[];
+  @OneToMany(() => TicketTier, (tier) => tier.event)
+  ticketTiers: TicketTier[];
 }
