@@ -24,6 +24,7 @@ import { GalleryItem } from "../../event-gallery/entities/gallery-item.entity";
 import { PromoCode } from "src/promo-code/promoCode.entity";
 import { EventView } from "./event-view.entity";
 import { PurchaseLog } from "./purchase-log.entity";
+import { TicketTier } from "src/ticket-tier/entities/entities/ticket-tier.entity";
 
 @Entity()
 export class Event {
@@ -131,10 +132,12 @@ export class Event {
   @ManyToOne(() => Category, (category) => category.events)
   category: Category;
 
-  @OneToMany(() => EventView, view => view.event)
+  @OneToMany(() => EventView, (view) => view.event)
   views: EventView[];
 
-  @OneToMany(() => PurchaseLog, log => log.event)
+  @OneToMany(() => PurchaseLog, (log) => log.event)
   purchaseLogs: PurchaseLog[];
-  
+
+  @OneToMany(() => TicketTier, (tier) => tier.event)
+  ticketTiers: TicketTier[];
 }
