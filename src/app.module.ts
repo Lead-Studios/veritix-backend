@@ -27,9 +27,10 @@ import { CacheModule } from "@nestjs/cache-manager";
 import { ConferencePosterManagementModule } from "./conference-poster-management/conference-poster-management.module";
 import { ConferenceGalleryModule } from "./conference-gallery/conference-gallery.module";
 import { JwtStrategy } from "../security/strategies/jwt.strategy";
-import { PromoCodeModule } from "./promo-code/promo-code.module";
+import { PromoCodeModule } from './promo-code/promo-code.module';
 import { WebhookModule } from "./webhook/webhook.module";
-import { TicketTierModule } from "./ticket-tier/ticket-tier.module";
+import { TicketTierModule } from './ticket-tier/ticket-tier.module';
+import { TicketTierService } from './ticket-tier.service';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -80,7 +81,7 @@ import { TicketTierModule } from "./ticket-tier/ticket-tier.module";
     TicketTierModule,
   ],
   controllers: [AppController],
-  providers: [AppService, PdfService, JwtStrategy],
+  providers: [AppService, PdfService, JwtStrategy, TicketTierService],
   exports: [PdfService, AppService],
 })
 export class AppModule implements OnModuleInit {
