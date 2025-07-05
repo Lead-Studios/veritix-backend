@@ -24,6 +24,8 @@ import { NotificationModule } from './notification/notification.module';
 import { EventsModule } from './events/events.module';
 import { ConferenceModule } from './conference/conference.module';
 import { TicketTierModule } from './ticket-tier/ticket-tier.module';
+import { BadgeModule } from './badge/badge.module';
+import { MailerModule } from './mailer/mailer..module';
 
 @Module({
   imports: [
@@ -42,7 +44,9 @@ import { TicketTierModule } from './ticket-tier/ticket-tier.module';
     NotificationModule,
     EventsModule,
     ConferenceModule,
-    TicketTierModule
+    TicketTierModule,
+    BadgeModule,
+    MailerModule
   ],
   controllers: [AppController, GalleryController, EventController],
   providers: [AppService, GalleryService, EventService],
