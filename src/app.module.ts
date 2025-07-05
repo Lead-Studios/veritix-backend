@@ -23,6 +23,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { NotificationModule } from './notification/notification.module';
 import { EventsModule } from './events/events.module';
 import { ConferenceModule } from './conference/conference.module';
+import { TicketTierModule } from './ticket-tier/ticket-tier.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { ConferenceModule } from './conference/conference.module';
     NotificationModule,
     EventsModule,
     ConferenceModule,
+    TicketTierModule
   ],
   controllers: [AppController, GalleryController, EventController],
   providers: [AppService, GalleryService, EventService],
