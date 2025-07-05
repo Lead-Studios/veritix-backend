@@ -27,6 +27,8 @@ import { TicketTierModule } from './ticket-tier/ticket-tier.module';
 import { BadgeModule } from './badge/badge.module';
 import { MailerModule } from './mailer/mailer..module';
 import { AnalyticsEventModule } from './analytics-event/analytics-event.module';
+import { WaitlistEntryModule } from './waitlist-entry/waitlist-entry.module';
+import { ConferenceSearchModule } from './conference-search/conference-search.module';
 
 @Module({
   imports: [
@@ -48,7 +50,9 @@ import { AnalyticsEventModule } from './analytics-event/analytics-event.module';
     TicketTierModule,
     BadgeModule,
     MailerModule,
-    AnalyticsEventModule
+    AnalyticsEventModule,
+    WaitlistEntryModule,
+    ConferenceSearchModule
   ],
   controllers: [AppController, GalleryController, EventController],
   providers: [AppService, GalleryService, EventService],
