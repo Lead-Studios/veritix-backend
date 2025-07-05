@@ -28,6 +28,7 @@ import { BadgeModule } from './badge/badge.module';
 import { MailerModule } from './mailer/mailer..module';
 import { AnalyticsEventModule } from './analytics-event/analytics-event.module';
 import { WaitlistEntryModule } from './waitlist-entry/waitlist-entry.module';
+import { ConferenceSearchModule } from './conference-search/conference-search.module';
 
 @Module({
   imports: [
@@ -50,7 +51,8 @@ import { WaitlistEntryModule } from './waitlist-entry/waitlist-entry.module';
     BadgeModule,
     MailerModule,
     AnalyticsEventModule,
-    WaitlistEntryModule
+    WaitlistEntryModule,
+    ConferenceSearchModule
   ],
   controllers: [AppController, GalleryController, EventController],
   providers: [AppService, GalleryService, EventService],
