@@ -26,6 +26,7 @@ import { ConferenceModule } from './conference/conference.module';
 import { TicketTierModule } from './ticket-tier/ticket-tier.module';
 import { BadgeModule } from './badge/badge.module';
 import { MailerModule } from './mailer/mailer..module';
+import { AnalyticsEventModule } from './analytics-event/analytics-event.module';
 
 @Module({
   imports: [
@@ -46,7 +47,8 @@ import { MailerModule } from './mailer/mailer..module';
     ConferenceModule,
     TicketTierModule,
     BadgeModule,
-    MailerModule
+    MailerModule,
+    AnalyticsEventModule
   ],
   controllers: [AppController, GalleryController, EventController],
   providers: [AppService, GalleryService, EventService],
