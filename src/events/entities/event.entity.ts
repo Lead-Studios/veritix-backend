@@ -6,10 +6,7 @@ import {
   ManyToOne,
   ManyToMany,
   DeleteDateColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
 } from "typeorm";
-import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { Ticket } from "../../tickets/entities/ticket.entity";
 import { SpecialGuest } from "../../special-guests/entities/special-guest.entity";
 import { Sponsor } from "../../sponsors/sponsor.entity";
