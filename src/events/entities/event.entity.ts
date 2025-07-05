@@ -24,7 +24,7 @@ import { GalleryItem } from "../../event-gallery/entities/gallery-item.entity";
 import { PromoCode } from "src/promo-code/promoCode.entity";
 import { EventView } from "./event-view.entity";
 import { PurchaseLog } from "./purchase-log.entity";
-import { TicketTier } from "src/ticket-tier/entities/entities/ticket-tier.entity";
+import { TicketTier } from "src/ticket-tier/entities/ticket-tier.entity";
 
 @Entity()
 export class Event {

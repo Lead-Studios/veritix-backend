@@ -30,7 +30,6 @@ import { JwtStrategy } from "../security/strategies/jwt.strategy";
 import { PromoCodeModule } from "./promo-code/promo-code.module";
 import { WebhookModule } from "./webhook/webhook.module";
 import { TicketTierModule } from "./ticket-tier/ticket-tier.module";
-import { TicketTierService } from "./ticket-tier/ticket-tier.service";
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -81,7 +80,7 @@ import { TicketTierService } from "./ticket-tier/ticket-tier.service";
     TicketTierModule,
   ],
   controllers: [AppController],
-  providers: [AppService, PdfService, JwtStrategy, TicketTierService],
+  providers: [AppService, PdfService, JwtStrategy],
   exports: [PdfService, AppService],
 })
 export class AppModule implements OnModuleInit {
