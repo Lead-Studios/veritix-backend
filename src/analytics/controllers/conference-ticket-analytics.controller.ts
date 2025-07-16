@@ -149,8 +149,8 @@ export class ConferenceTicketAnalyticsController {
   async exportTicketAnalytics(
     @Param('conferenceId') conferenceId: string,
     @Query('format', new ParseEnumPipe(ExportFormat)) format: ExportFormat,
-    @Query('filter') filter?: TimeFilter,
     @Res() res: Response,
+    @Query('filter') filter?: TimeFilter,
     @Request() req?: any,
   ): Promise<void> {
     // Check if user has access to this conference

@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { Sponsor } from '../entities/sponsor.entity';
 import { CreateSponsorDto } from '../dtos/create-sponsor.dto';
 import { UpdateSponsorDto } from '../dtos/update-sponsor.dto';
-import { Event } from '../entities/event.entity';
+import { Event } from '../../events/entities/event.entity';
 import * as AWS from 'aws-sdk';
 import { File as MulterFile } from 'multer';
 

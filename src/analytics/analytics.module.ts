@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TicketHistory } from '../ticket/entities/ticket-history.entity';
-import { Ticket } from '../ticketing/entities/ticket.entity';
+import { TicketingTicket } from '../ticketing/entities/ticket.entity';
 import { Conference } from '../conference/entities/conference.entity';
 import { Session } from './entities/session.entity';
 import { Attendance } from './entities/attendance.entity';
@@ -20,7 +20,7 @@ import { ExportService } from './services/export.service';
   imports: [
     TypeOrmModule.forFeature([
       TicketHistory, 
-      Ticket, 
+      TicketingTicket, 
       Conference,
       Session,
       Attendance,

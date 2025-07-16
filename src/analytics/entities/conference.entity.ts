@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn } from "typeorm"
-import { Session } from "./session.entity"
+// import { Session } from "./session.entity"
 
 @Entity("conferences")
 export class Conference {
@@ -25,10 +25,10 @@ export class Conference {
   organizerId: string
 
   @OneToMany(
-    () => Session,
-    (session) => session.conference,
+    "Session",
+    (session: any) => session.conference,
   )
-  sessions: Session[]
+  sessions: any[]
 
   @CreateDateColumn()
   createdAt: Date

@@ -1,8 +1,8 @@
 import { Controller, Post, Get, Patch, Delete, Param, Query } from "@nestjs/common"
-import type { RefundService } from "../services/refund.service"
-import type { CreateRefundDto } from "../dto/create-refund.dto"
-import type { UpdateRefundDto } from "../dto/update-refund.dto"
-import type { BulkRefundDto } from "../dto/bulk-refund.dto"
+import { RefundService } from "../services/refund.service"
+import { CreateRefundDto } from "../dto/create-refund.dto"
+import { UpdateRefundDto } from "../dto/update-refund.dto"
+import { BulkRefundDto } from "../dto/bulk-refund.dto"
 
 @Controller("refunds")
 export class RefundController {

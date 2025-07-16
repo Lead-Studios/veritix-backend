@@ -1,12 +1,12 @@
 import { Test, type TestingModule } from "@nestjs/testing"
 import { getRepositoryToken } from "@nestjs/typeorm"
-import type { Repository } from "typeorm"
+import { Repository } from "typeorm"
 import { AnalyticsService } from "../services/analytics.service"
 import { Conference } from "../entities/conference.entity"
 import { Session } from "../entities/session.entity"
 import { Attendance } from "../entities/attendance.entity"
 import { Feedback } from "../entities/feedback.entity"
-import type { AnalyticsFilterDto } from "../dto/analytics-filter.dto"
+import { AnalyticsFilterDto } from "../dto/analytics-filter.dto"
 import { jest } from "@jest/globals" // Import jest to declare it
 
 describe("AnalyticsService", () => {

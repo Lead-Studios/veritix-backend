@@ -76,4 +76,8 @@ export class TrackPurchaseDto {
   @IsOptional()
   @IsString()
   city?: string
+
+  @IsOptional()
+  @IsString()
+  ipAddress?: string
 }

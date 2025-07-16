@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, MoreThanOrEqual, LessThanOrEqual } from 'typeorm';
-import { Ticket } from '../../ticketing/entities/ticket.entity';
+import { TicketingTicket } from '../../ticketing/entities/ticket.entity';
 import { Conference } from '../../conference/entities/conference.entity';
 import { 
   TimeFilter, 
@@ -16,8 +16,8 @@ import { Response } from 'express';
 @Injectable()
 export class ConferenceTicketAnalyticsService {
   constructor(
-    @InjectRepository(Ticket)
-    private readonly ticketRepo: Repository<Ticket>,
+    @InjectRepository(TicketingTicket)
+    private readonly ticketRepo: Repository<TicketingTicket>,
     @InjectRepository(Conference)
     private readonly conferenceRepo: Repository<Conference>,
   ) {}

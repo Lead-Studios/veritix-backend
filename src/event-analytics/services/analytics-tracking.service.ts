@@ -1,11 +1,11 @@
 import { Injectable } from "@nestjs/common"
-import type { Repository } from "typeorm"
-import type { EventView } from "../entities/event-view.entity"
-import type { PurchaseLog } from "../entities/purchase-log.entity"
-import type { EventEngagement } from "../entities/event-engagement.entity"
-import type { TrackViewDto } from "../dto/track-view.dto"
-import type { TrackPurchaseDto } from "../dto/track-purchase.dto"
-import type { TrackEngagementDto } from "../dto/track-engagement.dto"
+import { Repository } from "typeorm"
+import { EventView } from "../entities/event-view.entity"
+import { PurchaseLog } from "../entities/purchase-log.entity"
+import { EventEngagement } from "../entities/event-engagement.entity"
+import { TrackViewDto } from "../dto/track-view.dto"
+import { TrackPurchaseDto } from "../dto/track-purchase.dto"
+import { TrackEngagementDto } from "../dto/track-engagement.dto"
 
 @Injectable()
 export class AnalyticsTrackingService {
@@ -36,7 +36,7 @@ export class AnalyticsTrackingService {
       ...trackPurchaseDto,
       ipAddress: ipAddress || trackPurchaseDto.ipAddress,
       trafficSource: this.normalizeTrafficSource(trackPurchaseDto.trafficSource, trackPurchaseDto.referrerUrl),
-      completedAt: trackPurchaseDto.status === "completed" ? new Date() : null,
+      completedAt: trackPurchaseDto.status === "completed" ? new Date() : undefined,
     })
 
     await this.purchaseLogRepository.save(purchaseLog)

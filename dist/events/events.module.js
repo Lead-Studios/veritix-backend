@@ -20,6 +20,7 @@ exports.EventsModule = EventsModule = __decorate([
         imports: [typeorm_1.TypeOrmModule.forFeature([event_entity_1.Event])],
         controllers: [events_controller_1.EventsController],
         providers: [events_service_1.EventsService],
+        exports: [events_service_1.EventsService],
     })
 ], EventsModule);
 //# sourceMappingURL=events.module.js.map

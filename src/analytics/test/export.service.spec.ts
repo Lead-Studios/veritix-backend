@@ -1,7 +1,7 @@
 import { Test, type TestingModule } from "@nestjs/testing"
-import type { Response } from "express"
+import { Response } from "express"
 import { ExportService } from "../services/export.service"
-import type { DashboardResponseDto } from "../dto/dashboard-response.dto"
+import { DashboardResponseDto } from "../dto/dashboard-response.dto"
 import { jest } from "@jest/globals"
 
 describe("ExportService", () => {

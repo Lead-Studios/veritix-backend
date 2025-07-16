@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException, BadRequestException } from "@nestjs/common"
-import type { Repository } from "typeorm"
-import type { User } from "./entities/user.entity"
-import type { CreateUserDto } from "./dto/create-user.dto"
-import type { UpdateUserDto } from "./dto/update-user.dto"
+import { Repository } from "typeorm"
+import { User } from "./entities/user.entity"
+import { CreateUserDto } from "./dto/create-user.dto"
+import { UpdateUserDto } from "./dto/update-user.dto"
 import { Role } from "../rbac/enums/role.enum"
 import * as bcrypt from "bcrypt"
 
@@ -53,7 +53,7 @@ export class UsersService {
     return user
   }
 
-  async findByEmail(email: string): Promise<User> {
+  async findByEmail(email: string): Promise<User | null> {
     return this.usersRepository.findOne({ where: { email } })
   }
 

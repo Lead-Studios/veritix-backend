@@ -1,8 +1,8 @@
 import { Injectable } from "@nestjs/common"
-import type { Response } from "express"
+import { Response } from "express"
 import * as PDFKit from "pdfkit"
-import type { DashboardResponseDto } from "../dto/dashboard-response.dto"
-import type { SessionAnalyticsDashboardDto } from "../dto/session-analytics.dto"
+import { DashboardResponseDto } from "../dto/dashboard-response.dto"
+import { SessionAnalyticsDashboardDto } from "../dto/session-analytics.dto"
 
 @Injectable()
 export class ExportService {
@@ -164,7 +164,7 @@ export class ExportService {
     csv += "DAILY ATTENDANCE\n"
     csv += "Date,Total Sessions,Total Attendance,Average Attendance Per Session\n"
     data.dailyAttendance.forEach((item) => {
-      csv += `${item.date},${item.totalSessions},${item.totalAttendance},${item.averageAttendancePerSession.toFixed(2)}\n`
+      csv += `${item.date},${item.totalSessions},${item.totalAttendance},${item.averageAttendance.toFixed(2)}\n`
     })
     csv += "\n"
 

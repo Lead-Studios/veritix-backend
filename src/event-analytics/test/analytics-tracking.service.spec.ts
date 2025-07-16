@@ -1,13 +1,13 @@
 import { Test, type TestingModule } from "@nestjs/testing"
 import { getRepositoryToken } from "@nestjs/typeorm"
-import type { Repository } from "typeorm"
+import { Repository } from "typeorm"
 import { AnalyticsTrackingService } from "../services/analytics-tracking.service"
 import { EventView } from "../entities/event-view.entity"
 import { PurchaseLog } from "../entities/purchase-log.entity"
 import { EventEngagement, EngagementType } from "../entities/event-engagement.entity"
-import type { TrackViewDto } from "../dto/track-view.dto"
-import type { TrackPurchaseDto } from "../dto/track-purchase.dto"
-import type { TrackEngagementDto } from "../dto/track-engagement.dto"
+import { TrackViewDto } from "../dto/track-view.dto"
+import { TrackPurchaseDto } from "../dto/track-purchase.dto"
+import { TrackEngagementDto } from "../dto/track-engagement.dto"
 import { jest } from "@jest/globals"
 
 describe("AnalyticsTrackingService", () => {

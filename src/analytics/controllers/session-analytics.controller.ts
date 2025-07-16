@@ -1,6 +1,6 @@
 import { Controller, Get, Query, Param, Res, ValidationPipe, UseGuards } from "@nestjs/common"
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery } from "@nestjs/swagger"
-import type { Response } from "express"
+import { Response } from "express"
 import { SessionAnalyticsService } from "../services/session-analytics.service"
 import { ExportService } from "../services/export.service"
 import { SessionAnalyticsFilterDto } from "../dto/session-analytics.dto"
@@ -98,7 +98,8 @@ export class SessionAnalyticsController {
     }
 
     if (res) {
-      return res.json(data)
+      res.json(data)
+      return
     }
 
     return data
