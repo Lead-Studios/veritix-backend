@@ -5,7 +5,7 @@ import { Poster } from '../entities/poster.entity';
 import { CreatePosterDto } from '../dtos/create-poster.dto';
 import { UpdatePosterDto } from '../dtos/update-poster.dto';
 import { PosterResource } from '../resources/poster.resource';
-import { Event } from '../../event/entities/event.entity';
+import { Event } from '../../events/entities/event.entity';
 import * as AWS from 'aws-sdk';
 import { File as MulterFile } from 'multer';
 

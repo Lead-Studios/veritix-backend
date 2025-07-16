@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { Collaborator } from '../entities/collaborator.entity';
 import { CreateCollaboratorDto } from '../dtos/create-collaborator.dto';
 import { UpdateCollaboratorDto } from '../dtos/update-collaborator.dto';
-import { Event } from '../entities/event.entity';
+import { Event } from '../../events/entities/event.entity';
 import * as AWS from 'aws-sdk';
 import { File as MulterFile } from 'multer';
 

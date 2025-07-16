@@ -1,17 +1,20 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from "@nestjs/common"
-import type { Repository } from "typeorm"
-import type { Event } from "../entities/event.entity"
-import { type Ticket, TicketStatus } from "../entities/ticket.entity"
-import type { QrCodeService } from "./qr-code.service"
-import type { PurchaseTicketDto } from "../dto/purchase-ticket.dto"
-import type { ScanTicketDto } from "../dto/scan-ticket.dto"
-import type { TicketResponseDto, ScanResultDto, PurchaseResponseDto } from "../dto/ticket-response.dto"
+import { InjectRepository } from "@nestjs/typeorm"
+import { Repository } from "typeorm"
+import { TicketingEvent } from "../entities/event.entity"
+import { TicketingTicket, TicketStatus } from "../entities/ticket.entity"
+import { QrCodeService } from "./qr-code.service"
+import { PurchaseTicketDto } from "../dto/purchase-ticket.dto"
+import { ScanTicketDto } from "../dto/scan-ticket.dto"
+import { TicketResponseDto, ScanResultDto, PurchaseResponseDto } from "../dto/ticket-response.dto"
 
 @Injectable()
 export class TicketingService {
   constructor(
-    private eventRepository: Repository<Event>,
-    private ticketRepository: Repository<Ticket>,
+    @InjectRepository(TicketingEvent)
+    private eventRepository: Repository<TicketingEvent>,
+    @InjectRepository(TicketingTicket)
+    private ticketRepository: Repository<TicketingTicket>,
     private qrCodeService: QrCodeService,
   ) {}
 
@@ -45,7 +48,7 @@ export class TicketingService {
     }
 
     // Generate tickets
-    const tickets: Ticket[] = []
+    const tickets: TicketingTicket[] = []
     const totalAmount = event.ticketPrice * quantity
 
     for (let i = 0; i < quantity; i++) {

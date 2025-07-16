@@ -1,11 +1,11 @@
 import { Controller, Get, Post } from "@nestjs/common"
-import type { Request } from "express"
-import type { EventAnalyticsService } from "../services/event-analytics.service"
-import type { AnalyticsTrackingService } from "../services/analytics-tracking.service"
-import type { TrackViewDto } from "../dto/track-view.dto"
-import type { TrackPurchaseDto } from "../dto/track-purchase.dto"
-import type { TrackEngagementDto } from "../dto/track-engagement.dto"
-import type { AnalyticsFilterDto } from "../dto/analytics-response.dto"
+import { Request } from "express"
+import { EventAnalyticsService } from "../services/event-analytics.service"
+import { AnalyticsTrackingService } from "../services/analytics-tracking.service"
+import { TrackViewDto } from "../dto/track-view.dto"
+import { TrackPurchaseDto } from "../dto/track-purchase.dto"
+import { TrackEngagementDto } from "../dto/track-engagement.dto"
+import { AnalyticsFilterDto } from "../dto/analytics-response.dto"
 
 @Controller("events")
 export class EventAnalyticsController {

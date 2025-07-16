@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, JoinColumn } from "typeorm"
-import { Ticket } from "../../ticketing/entities/ticket.entity"
+import { TicketingTicket } from "../../ticketing/entities/ticket.entity"
 
 export enum RefundStatus {
   PENDING = "pending",
@@ -88,11 +88,11 @@ export class Refund {
   refundPercentage: number // Percentage of original amount being refunded
 
   @ManyToOne(
-    () => Ticket,
+    () => TicketingTicket,
     (ticket) => ticket.id,
   )
   @JoinColumn({ name: "ticketId" })
-  ticket: Ticket
+  ticket: TicketingTicket
 
   @CreateDateColumn()
   createdAt: Date

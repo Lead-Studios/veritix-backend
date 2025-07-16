@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Event } from '../../event/entities/event.entity';
+import { Event } from '../../events/entities/event.entity';
 import { Ticket } from '../../ticket/entities/ticket.entity';
 import { TicketHistory } from '../../ticket/entities/ticket-history.entity';
 import { GalleryImage } from '../../event/entities/gallery-image.entity';
@@ -32,7 +32,7 @@ export class DashboardService {
   async getEventDashboard(eventId: string) {
     const event = await this.eventRepo.findOne({
       where: { id: eventId },
-      relations: ['images'],
+      relations: ['galleryImages'],
     });
     if (!event) throw new NotFoundException('Event not found');
 
@@ -52,7 +52,7 @@ export class DashboardService {
     const ticketsAvailable = ticketQuantity - totalTicketsSold;
 
     // Get event image (first image)
-    const eventImage = event.images && event.images.length > 0 ? event.images[0].imageUrl : null;
+    const eventImage = event.galleryImages && event.galleryImages.length > 0 ? event.galleryImages[0].imageUrl : null;
 
     return EventDashboardResource.toResponse({
       event,

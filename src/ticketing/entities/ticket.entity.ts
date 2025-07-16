@@ -7,7 +7,7 @@ import {
   UpdateDateColumn,
   JoinColumn,
 } from "typeorm"
-import { Event } from "./event.entity"
+import { TicketingEvent } from "./event.entity"
 
 export enum TicketStatus {
   ACTIVE = "active",
@@ -16,8 +16,8 @@ export enum TicketStatus {
   EXPIRED = "expired",
 }
 
-@Entity("tickets")
-export class Ticket {
+@Entity("ticketing_tickets")
+export class TicketingTicket {
   @PrimaryGeneratedColumn("uuid")
   id: string
 
@@ -68,11 +68,11 @@ export class Ticket {
   purchaseDate: Date
 
   @ManyToOne(
-    () => Event,
-    (event) => event.tickets,
+    () => TicketingEvent,
+    (event) => event.ticketingTickets,
   )
   @JoinColumn({ name: "eventId" })
-  event: Event
+  event: TicketingEvent
 
   @CreateDateColumn()
   createdAt: Date

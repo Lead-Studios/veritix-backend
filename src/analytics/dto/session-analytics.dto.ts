@@ -46,6 +46,18 @@ export class SessionAnalyticsFilterDto {
   @IsOptional()
   @IsUUID()
   conferenceId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Export data to CSV format',
+  })
+  @IsOptional()
+  exportToCsv?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Export data to PDF format',
+  })
+  @IsOptional()
+  exportToPdf?: boolean;
 }
 
 export class SessionAttendanceDto {

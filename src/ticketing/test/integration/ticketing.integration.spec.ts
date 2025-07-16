@@ -1,6 +1,6 @@
 import { Test, type TestingModule } from "@nestjs/testing"
 import { TypeOrmModule } from "@nestjs/typeorm"
-import type { Repository } from "typeorm"
+import { Repository } from "typeorm"
 import { TicketingModule } from "../../ticketing.module"
 import { TicketingService } from "../../services/ticketing.service"
 import { QrCodeService } from "../../services/qr-code.service"

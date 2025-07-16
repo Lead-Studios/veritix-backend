@@ -73,4 +73,8 @@ export class TrackViewDto {
   @IsOptional()
   @IsUUID()
   purchaseId?: string
+
+  @IsOptional()
+  @IsString()
+  ipAddress?: string
 }

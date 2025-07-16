@@ -1,14 +1,14 @@
 import { Test, type TestingModule } from "@nestjs/testing"
 import { getRepositoryToken } from "@nestjs/typeorm"
 import { ForbiddenException } from "@nestjs/common"
-import type { Repository } from "typeorm"
+import { Repository } from "typeorm"
 import { EventAnalyticsService } from "../services/event-analytics.service"
 import { EventView } from "../entities/event-view.entity"
 import { PurchaseLog } from "../entities/purchase-log.entity"
 import { EventEngagement } from "../entities/event-engagement.entity"
-import { Event } from "../../ticketing/entities/event.entity"
+import { TicketingEvent } from "../../ticketing/entities/event.entity"
 import { Refund } from "../../refunds/entities/refund.entity"
-import type { AnalyticsFilterDto } from "../dto/analytics-response.dto"
+import { AnalyticsFilterDto } from "../dto/analytics-response.dto"
 import { jest } from "@jest/globals"
 
 describe("EventAnalyticsService", () => {

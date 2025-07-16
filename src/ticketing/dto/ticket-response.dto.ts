@@ -1,4 +1,4 @@
-import type { TicketStatus } from "../entities/ticket.entity"
+import { TicketStatus } from "../entities/ticket.entity"
 
 export class TicketResponseDto {
   id: string

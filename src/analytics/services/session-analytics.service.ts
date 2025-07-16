@@ -8,6 +8,7 @@ import { Conference } from "../entities/conference.entity"
 import {
   SessionAnalyticsFilterDto,
   SessionAnalyticsDashboardDto,
+  TimeFilter,
   SessionAttendanceDto,
   DailyAttendanceDto,
   SpeakerAnalyticsDto,
@@ -130,24 +131,18 @@ export class SessionAnalyticsService {
       endDate = new Date(selectedDate.setHours(23, 59, 59, 999))
     } else {
       switch (filters.timeFilter) {
-        case "today":
+        case TimeFilter.DAILY:
           startDate = new Date(now.setHours(0, 0, 0, 0))
           endDate = new Date(now.setHours(23, 59, 59, 999))
           break
-        case "week":
+        case TimeFilter.WEEKLY:
           startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
           endDate = now
           break
-        case "month":
+        case TimeFilter.MONTHLY:
           startDate = new Date(now.getFullYear(), now.getMonth(), 1)
           endDate = now
           break
-        case "quarter":
-          startDate = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1)
-          endDate = now
-          break
-        case "year":
-          startDate = new Date(now.getFullYear(), 0, 1)
           endDate = now
           break
         default:
@@ -309,10 +304,13 @@ export class SessionAnalyticsService {
       date: result.date,
       totalSessions: Number.parseInt(result.totalSessions) || 0,
       totalAttendance: Number.parseInt(result.totalAttendance) || 0,
-      averageAttendancePerSession:
+      averageAttendance:
         Number.parseInt(result.totalSessions) > 0
           ? Number.parseInt(result.totalAttendance) / Number.parseInt(result.totalSessions)
           : 0,
+      averageRating: Number.parseFloat(result.averageRating) || 0,
+      onTimeSessions: Number.parseInt(result.onTimeSessions) || 0,
+      punctualityPercentage: Number.parseFloat(result.punctualityPercentage) || 0,
     }))
   }
 

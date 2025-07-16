@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { TicketService } from './ticket.service';
 import { PromoCode } from '../entities/promo-code.entity';
-import { Event } from '../../event/entities/event.entity';
+import { Event } from '../../events/entities/event.entity';
 import { Ticket } from '../entities/ticket.entity';
 import { User } from '../../user/entities/user.entity';
 import { Repository } from 'typeorm';

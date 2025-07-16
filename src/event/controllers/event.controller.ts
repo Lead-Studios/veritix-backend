@@ -76,8 +76,6 @@ export class EventController {
   ) {
     return this.eventService.findAll({ name, location, page, limit });
   }
-}
-
 
   @Get('search')
   @ApiOperation({ summary: 'Search events by name, category, and location with fuzzy matching' })
