@@ -27,7 +27,10 @@ import { TicketTierModule } from './ticket-tier/ticket-tier.module';
 import { BadgeModule } from './badge/badge.module';
 // import { MailerModule } from './mailer/mailer.module';
 import { AnalyticsEventModule } from './analytics-event/analytics-event.module';
+import { WaitlistEntryModule } from './waitlist-entry/waitlist-entry.module';
+
 import { TicketingModule } from './ticketing/ticketing.module';
+
 
 @Module({
   imports: [
@@ -48,6 +51,11 @@ import { TicketingModule } from './ticketing/ticketing.module';
     ConferenceModule,
     TicketTierModule,
     BadgeModule,
+
+    MailerModule,
+    AnalyticsEventModule,
+    WaitlistEntryModule
+
     // MailerModule,
     AnalyticsEventModule,
     TicketingModule
