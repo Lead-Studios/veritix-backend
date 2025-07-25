@@ -13,6 +13,17 @@ import { ConferenceService } from './services/conference.service';
 import { ConferenceController } from './controllers/conference.controller';
 
 @Module({
+  imports: [
+    TypeOrmModule.forFeature([
+      Conference,
+      Session,
+      Speaker,
+      Track,
+      AttendeeSession,
+      SessionFeedback,
+      Certificate,
+    ]),
+  ],
   imports: [TypeOrmModule.forFeature([
     Conference, Session, Speaker, Track, AttendeeSession, SessionFeedback, Certificate, Attendee, SessionCheckIn
   ])],
