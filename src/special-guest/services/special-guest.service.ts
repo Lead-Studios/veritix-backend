@@ -5,7 +5,7 @@ import { SpecialGuest } from '../entities/special-guest.entity';
 import { CreateSpecialGuestDto } from '../dtos/create-special-guest.dto';
 import { UpdateSpecialGuestDto } from '../dtos/update-special-guest.dto';
 import { SpecialGuestResource } from '../resources/special-guest.resource';
-import { Event } from '../../event/entities/event.entity';
+import { Event } from '../../events/entities/event.entity';
 import * as AWS from 'aws-sdk';
 import { Express } from 'express';
 import { File as MulterFile } from 'multer';

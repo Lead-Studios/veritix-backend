@@ -3,7 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { Ticket } from './entities/ticket.entity';
 import { TicketHistory } from './entities/ticket-history.entity';
-import { Event } from '../event/entities/event.entity';
+import { Event } from '../events/entities/event.entity';
 import { User } from '../user/entities/user.entity';
 import { PromoCode } from './entities/promo-code.entity';
 

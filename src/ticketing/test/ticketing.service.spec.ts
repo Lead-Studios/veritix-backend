@@ -1,13 +1,13 @@
 import { Test, type TestingModule } from "@nestjs/testing"
 import { getRepositoryToken } from "@nestjs/typeorm"
 import { NotFoundException, BadRequestException, ForbiddenException } from "@nestjs/common"
-import type { Repository } from "typeorm"
+import { Repository } from "typeorm"
 import { TicketingService } from "../services/ticketing.service"
 import { QrCodeService } from "../services/qr-code.service"
 import { Event } from "../entities/event.entity"
 import { Ticket, TicketStatus } from "../entities/ticket.entity"
-import type { PurchaseTicketDto } from "../dto/purchase-ticket.dto"
-import type { ScanTicketDto } from "../dto/scan-ticket.dto"
+import { PurchaseTicketDto } from "../dto/purchase-ticket.dto"
+import { ScanTicketDto } from "../dto/scan-ticket.dto"
 import { jest } from "@jest/globals"
 
 describe("TicketingService", () => {

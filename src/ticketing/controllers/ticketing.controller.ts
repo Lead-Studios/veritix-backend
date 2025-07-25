@@ -1,7 +1,7 @@
 import { Controller, Post, Get, Patch, Param, Query } from "@nestjs/common"
-import type { TicketingService } from "../services/ticketing.service"
-import type { PurchaseTicketDto } from "../dto/purchase-ticket.dto"
-import type { ScanTicketDto } from "../dto/scan-ticket.dto"
+import { TicketingService } from "../services/ticketing.service"
+import { PurchaseTicketDto } from "../dto/purchase-ticket.dto"
+import { ScanTicketDto } from "../dto/scan-ticket.dto"
 
 @Controller("ticketing")
 export class TicketingController {

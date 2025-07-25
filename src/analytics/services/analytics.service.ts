@@ -1,11 +1,12 @@
 import { Injectable } from "@nestjs/common"
+import { InjectRepository } from "@nestjs/typeorm"
 import { type Repository, Between } from "typeorm"
-import type { Conference } from "../entities/conference.entity"
-import type { Session } from "../entities/session.entity"
-import type { Attendance } from "../entities/attendance.entity"
-import type { Feedback } from "../entities/feedback.entity"
-import type { AnalyticsFilterDto } from "../dto/analytics-filter.dto"
-import type {
+import { Conference } from "../entities/conference.entity"
+import { Session } from "../entities/session.entity"
+import { Attendance } from "../entities/attendance.entity"
+import { Feedback } from "../entities/feedback.entity"
+import { AnalyticsFilterDto } from "../dto/analytics-filter.dto"
+import {
   DashboardResponseDto,
   AttendanceStatsDto,
   SessionPopularityDto,
@@ -17,9 +18,13 @@ import type {
 @Injectable()
 export class AnalyticsService {
   constructor(
+    @InjectRepository(Conference)
     private conferenceRepository: Repository<Conference>,
+    @InjectRepository(Session)
     private sessionRepository: Repository<Session>,
+    @InjectRepository(Attendance)
     private attendanceRepository: Repository<Attendance>,
+    @InjectRepository(Feedback)
     private feedbackRepository: Repository<Feedback>,
   ) {}
 

@@ -6,7 +6,7 @@ import { AnalyticsTrackingService } from './services/analytics-tracking.service'
 import { EventView } from './entities/event-view.entity';
 import { PurchaseLog } from './entities/purchase-log.entity';
 import { EventEngagement } from './entities/event-engagement.entity';
-import { Event } from '../ticketing/entities/event.entity';
+import { TicketingEvent } from '../ticketing/entities/event.entity';
 import { Refund } from '../refunds/entities/refund.entity';
 
 @Module({
@@ -15,7 +15,7 @@ import { Refund } from '../refunds/entities/refund.entity';
       EventView,
       PurchaseLog,
       EventEngagement,
-      Event,
+      TicketingEvent,
       Refund,
     ]),
   ],

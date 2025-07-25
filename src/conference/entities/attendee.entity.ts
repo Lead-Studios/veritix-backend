@@ -1,4 +1,5 @@
-import { Column, OneToMany } from "typeorm";
+import { Entity, Column, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { SessionCheckIn } from "./session-check-in.entity";
 
 @Entity()
 export class Attendee {
@@ -17,6 +18,6 @@ export class Attendee {
   @Column()
   ticketType: string; // e.g., VIP, Regular, SPEAKER
 
-  @OneToMany(() => SessionCheckIn, session => session.attendee)
-  sessions: SessionCheckIn[];
+  @OneToMany(() => SessionCheckIn, (sessionCheckIn) => sessionCheckIn.attendee)
+  sessionCheckIns: SessionCheckIn[];
 }
