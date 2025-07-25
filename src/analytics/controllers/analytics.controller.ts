@@ -1,9 +1,9 @@
 import { Controller, Get, Query, Res, ValidationPipe } from "@nestjs/common"
-import type { Response } from "express"
-import type { AnalyticsService } from "../services/analytics.service"
-import type { ExportService } from "../services/export.service"
-import type { AnalyticsFilterDto } from "../dto/analytics-filter.dto"
-import type { DashboardResponseDto } from "../dto/dashboard-response.dto"
+import { Response } from "express"
+import { AnalyticsService } from "../services/analytics.service"
+import { ExportService } from "../services/export.service"
+import { AnalyticsFilterDto } from "../dto/analytics-filter.dto"
+import { DashboardResponseDto } from "../dto/dashboard-response.dto"
 
 @Controller("analytics")
 export class AnalyticsController {
@@ -29,7 +29,8 @@ export class AnalyticsController {
     }
 
     if (res) {
-      return res.json(data)
+      res.json(data)
+      return
     }
 
     return data

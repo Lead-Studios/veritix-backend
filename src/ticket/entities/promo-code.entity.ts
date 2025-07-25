@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
-import { Event } from '../../event/entities/event.entity';
+import { Event } from '../../events/entities/event.entity';
 
 @Entity()
 export class PromoCode {

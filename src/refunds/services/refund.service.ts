@@ -1,20 +1,20 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from "@nestjs/common"
-import type { Repository } from "typeorm"
-import { type Refund, RefundStatus, RefundReason } from "../entities/refund.entity"
-import type { Ticket } from "../../ticketing/entities/ticket.entity"
+import { Repository } from "typeorm"
+import { Refund, RefundStatus, RefundReason } from "../entities/refund.entity"
+import { TicketingTicket } from "../../ticketing/entities/ticket.entity"
 import { TicketStatus } from "../../ticketing/entities/ticket.entity"
-import type { Event } from "../../ticketing/entities/event.entity"
-import type { CreateRefundDto } from "../dto/create-refund.dto"
-import type { UpdateRefundDto } from "../dto/update-refund.dto"
-import type { BulkRefundDto } from "../dto/bulk-refund.dto"
-import type { RefundResponseDto, RefundStatsDto, BulkRefundResponseDto } from "../dto/refund-response.dto"
+import { TicketingEvent } from "../../ticketing/entities/event.entity"
+import { CreateRefundDto } from "../dto/create-refund.dto"
+import { UpdateRefundDto } from "../dto/update-refund.dto"
+import { BulkRefundDto } from "../dto/bulk-refund.dto"
+import { RefundResponseDto, RefundStatsDto, BulkRefundResponseDto } from "../dto/refund-response.dto"
 
 @Injectable()
 export class RefundService {
   constructor(
     private refundRepository: Repository<Refund>,
-    private ticketRepository: Repository<Ticket>,
-    private eventRepository: Repository<Event>,
+    private ticketRepository: Repository<TicketingTicket>,
+    private eventRepository: Repository<TicketingEvent>,
   ) {}
 
   /**
@@ -99,7 +99,7 @@ export class RefundService {
       reasonDescription,
       status: autoProcess ? RefundStatus.APPROVED : RefundStatus.PENDING,
       processedBy,
-      processedAt: autoProcess ? new Date() : null,
+      processedAt: autoProcess ? new Date() : undefined,
       internalNotes,
       customerMessage,
       isPartialRefund: finalRefundPercentage < 100,
@@ -371,7 +371,7 @@ export class RefundService {
 
     const ticketIds = tickets.map((ticket) => ticket.id)
 
-    return this.processBulkRefunds({
+    return await this.processBulkRefunds({
       ticketIds,
       processedBy: organizerId,
       refundPercentage,
@@ -386,7 +386,7 @@ export class RefundService {
   /**
    * Helper method to process ticket status after refund
    */
-  private async processRefundTicket(ticket: Ticket, refund: Refund): Promise<void> {
+  private async processRefundTicket(ticket: TicketingTicket, refund: Refund): Promise<void> {
     // Mark ticket as cancelled if full refund, or keep as refunded for partial
     if (refund.refundPercentage === 100) {
       ticket.status = TicketStatus.CANCELLED
@@ -399,7 +399,7 @@ export class RefundService {
   /**
    * Helper method to map refund entity to response DTO
    */
-  private mapToResponseDto(refund: Refund, ticket: Ticket): RefundResponseDto {
+  private mapToResponseDto(refund: Refund, ticket: TicketingTicket): RefundResponseDto {
     return {
       id: refund.id,
       ticketId: refund.ticketId,

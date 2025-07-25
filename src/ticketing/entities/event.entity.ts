@@ -1,8 +1,8 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn } from "typeorm"
-import { Ticket } from "./ticket.entity"
+import { TicketingTicket } from "./ticket.entity"
 
-@Entity("events")
-export class Event {
+@Entity("ticketing_events")
+export class TicketingEvent {
   @PrimaryGeneratedColumn("uuid")
   id: string
 
@@ -34,10 +34,10 @@ export class Event {
   isActive: boolean
 
   @OneToMany(
-    () => Ticket,
+    () => TicketingTicket,
     (ticket) => ticket.event,
   )
-  tickets: Ticket[]
+  ticketingTickets: TicketingTicket[]
 
   @CreateDateColumn()
   createdAt: Date

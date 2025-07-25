@@ -1,10 +1,10 @@
 import { Test, type TestingModule } from "@nestjs/testing"
 import { TypeOrmModule } from "@nestjs/typeorm"
-import type { Repository } from "typeorm"
+import { Repository } from "typeorm"
 import { RefundsModule } from "../../refunds.module"
 import { RefundService } from "../../services/refund.service"
 import { Refund, RefundStatus, RefundReason } from "../../entities/refund.entity"
-import { Event } from "../../../ticketing/entities/event.entity"
+import { TicketingEvent } from "../../../ticketing/entities/event.entity"
 import { Ticket, TicketStatus } from "../../../ticketing/entities/ticket.entity"
 
 describe("Refund Integration Tests", () => {

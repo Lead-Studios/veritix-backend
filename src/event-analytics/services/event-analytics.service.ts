@@ -1,15 +1,16 @@
 import { Injectable, ForbiddenException } from '@nestjs/common';
-import type { Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Between } from 'typeorm';
-import type { EventView } from '../entities/event-view.entity';
-import type { PurchaseLog } from '../entities/purchase-log.entity';
+import { EventView } from '../entities/event-view.entity';
+import { PurchaseLog } from '../entities/purchase-log.entity';
 import {
   type EventEngagement,
   EngagementType,
 } from '../entities/event-engagement.entity';
-import type { Event } from '../../ticketing/entities/event.entity';
-import type { Refund } from '../../refunds/entities/refund.entity';
-import type {
+import { TicketingEvent } from '../../ticketing/entities/event.entity';
+import { RefundStatus } from '../../refunds/entities/refund.entity';
+import { Refund } from '../../refunds/entities/refund.entity';
+import {
   EventAnalyticsDto,
   AnalyticsFilterDto,
 } from '../dto/analytics-response.dto';
@@ -20,7 +21,7 @@ export class EventAnalyticsService {
     private eventViewRepository: Repository<EventView>,
     private purchaseLogRepository: Repository<PurchaseLog>,
     private eventEngagementRepository: Repository<EventEngagement>,
-    private eventRepository: Repository<Event>,
+    private eventRepository: Repository<TicketingEvent>,
     private refundRepository: Repository<Refund>,
   ) {}
 
@@ -124,7 +125,7 @@ export class EventAnalyticsService {
 
     // Get refund amount
     const refunds = await this.refundRepository.find({
-      where: { eventId, status: 'processed' },
+      where: { eventId, status: RefundStatus.PROCESSED },
     });
     const refundAmount = refunds.reduce(
       (sum, r) => sum + Number(r.refundAmount),

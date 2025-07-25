@@ -10,7 +10,7 @@ import { GalleryService } from './event/services/gallery.service';
 import { EventController } from './event/controllers/event.controller';
 import { GalleryController } from './event/controllers/gallery.controller';
 import { EventService } from './event/services/event.service';
-import { Event } from './event/entities/event.entity';
+import { Event } from './events/entities/event.entity';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { TicketModule } from './ticket/ticket.module';
@@ -25,10 +25,13 @@ import { EventsModule } from './events/events.module';
 import { ConferenceModule } from './conference/conference.module';
 import { TicketTierModule } from './ticket-tier/ticket-tier.module';
 import { BadgeModule } from './badge/badge.module';
-import { MailerModule } from './mailer/mailer..module';
+// import { MailerModule } from './mailer/mailer.module';
 import { AnalyticsEventModule } from './analytics-event/analytics-event.module';
 import { WaitlistEntryModule } from './waitlist-entry/waitlist-entry.module';
 import { ConferenceSearchModule } from './conference-search/conference-search.module';
+
+import { TicketingModule } from './ticketing/ticketing.module';
+
 
 @Module({
   imports: [
@@ -49,10 +52,17 @@ import { ConferenceSearchModule } from './conference-search/conference-search.mo
     ConferenceModule,
     TicketTierModule,
     BadgeModule,
+
     MailerModule,
     AnalyticsEventModule,
     WaitlistEntryModule,
     ConferenceSearchModule
+
+    WaitlistEntryModule
+
+    // MailerModule,
+    AnalyticsEventModule,
+    TicketingModule
   ],
   controllers: [AppController, GalleryController, EventController],
   providers: [AppService, GalleryService, EventService],

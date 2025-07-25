@@ -8,7 +8,7 @@ import {
   UpdateDateColumn,
   JoinColumn,
 } from "typeorm"
-import { Conference } from "./conference.entity"
+// import { Conference } from "./conference.entity"
 import { Attendance } from "./attendance.entity"
 import { Feedback } from "./feedback.entity"
 
@@ -48,11 +48,11 @@ export class Session {
   conferenceId: string
 
   @ManyToOne(
-    () => Conference,
-    (conference) => conference.sessions,
+    "Conference",
+    (conference: any) => conference.sessions,
   )
   @JoinColumn({ name: "conferenceId" })
-  conference: Conference
+  conference: any
 
   @OneToMany(
     () => Attendance,

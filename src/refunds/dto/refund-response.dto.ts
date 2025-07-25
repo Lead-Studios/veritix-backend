@@ -1,4 +1,4 @@
-import type { RefundStatus, RefundReason } from "../entities/refund.entity"
+import { RefundStatus, RefundReason } from "../entities/refund.entity"
 
 export class RefundResponseDto {
   id: string

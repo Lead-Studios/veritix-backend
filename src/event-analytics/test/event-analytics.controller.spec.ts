@@ -1,13 +1,13 @@
 import { Test, type TestingModule } from "@nestjs/testing"
-import type { Request } from "express"
+import { Request } from "express"
 import { EventAnalyticsController } from "../controllers/event-analytics.controller"
 import { EventAnalyticsService } from "../services/event-analytics.service"
 import { AnalyticsTrackingService } from "../services/analytics-tracking.service"
 import { EngagementType } from "../entities/event-engagement.entity"
-import type { TrackViewDto } from "../dto/track-view.dto"
-import type { TrackPurchaseDto } from "../dto/track-purchase.dto"
-import type { TrackEngagementDto } from "../dto/track-engagement.dto"
-import type { AnalyticsFilterDto } from "../dto/analytics-response.dto"
+import { TrackViewDto } from "../dto/track-view.dto"
+import { TrackPurchaseDto } from "../dto/track-purchase.dto"
+import { TrackEngagementDto } from "../dto/track-engagement.dto"
+import { AnalyticsFilterDto } from "../dto/analytics-response.dto"
 import { jest } from "@jest/globals"
 
 describe("EventAnalyticsController", () => {

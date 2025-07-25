@@ -6,7 +6,7 @@ import { Repository } from 'typeorm';
 import { AnalyticsResponseDto } from './dto/analytics-response.dto';
 import { EventView } from './entities/event-view.entity';
 import { PurchaseLog } from './entities/purchase-log.entity';
-import { Event } from '../event/entities/event.entity';
+import { Event } from '../events/entities/event.entity';
 
 @Injectable()
 export class AnalyticsEventService {
@@ -67,8 +67,8 @@ export class AnalyticsEventService {
 
   private async getTicketSalesData(eventId: string, dateFilter: any) {
     const whereCondition = dateFilter
-      ? { eventId, createdAt: dateFilter, status: 'completed' as const }
-      : { eventId, status: 'completed' as const };
+      ? { eventId, createdAt: dateFilter, status: 'completed' as 'completed' }
+      : { eventId, status: 'completed' as 'completed' };
 
     const purchases = await this.purchaseLogRepository.find({
       where: whereCondition,
@@ -208,7 +208,7 @@ export class AnalyticsEventService {
     const [totalViews, purchases] = await Promise.all([
       this.eventViewRepository.count({ where: whereCondition }),
       this.purchaseLogRepository.find({
-        where: { ...whereCondition, status: 'completed' },
+        where: { ...whereCondition, status: 'completed' as 'completed' },
       }),
     ]);
 
@@ -232,8 +232,8 @@ export class AnalyticsEventService {
 
   private async getRevenueData(eventId: string, dateFilter: any) {
     const whereCondition = dateFilter
-      ? { eventId, createdAt: dateFilter, status: 'completed' }
-      : { eventId, status: 'completed' };
+      ? { eventId, createdAt: dateFilter, status: 'completed' as 'completed' }
+      : { eventId, status: 'completed' as 'completed' };
 
     const purchases = await this.purchaseLogRepository.find({
       where: whereCondition,

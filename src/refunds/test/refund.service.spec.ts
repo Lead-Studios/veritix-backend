@@ -1,12 +1,12 @@
 import { Test, type TestingModule } from "@nestjs/testing"
 import { getRepositoryToken } from "@nestjs/typeorm"
 import { NotFoundException, BadRequestException, ForbiddenException } from "@nestjs/common"
-import type { Repository } from "typeorm"
+import { Repository } from "typeorm"
 import { RefundService } from "../services/refund.service"
 import { Refund, RefundStatus, RefundReason } from "../entities/refund.entity"
 import { Ticket, TicketStatus } from "../../ticketing/entities/ticket.entity"
-import { Event } from "../../ticketing/entities/event.entity"
-import type { CreateRefundDto } from "../dto/create-refund.dto"
+import { TicketingEvent } from "../../ticketing/entities/event.entity"
+import { CreateRefundDto } from "../dto/create-refund.dto"
 import { jest } from "@jest/globals"
 
 describe("RefundService", () => {

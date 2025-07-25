@@ -1,6 +1,6 @@
 import { Test, type TestingModule } from "@nestjs/testing"
 import { TypeOrmModule } from "@nestjs/typeorm"
-import type { Repository } from "typeorm"
+import { Repository } from "typeorm"
 import { AnalyticsModule } from "../../analytics.module"
 import { AnalyticsService } from "../../services/analytics.service"
 import { Conference } from "../../entities/conference.entity"

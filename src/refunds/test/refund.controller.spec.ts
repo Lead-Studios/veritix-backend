@@ -2,8 +2,8 @@ import { Test, type TestingModule } from "@nestjs/testing"
 import { RefundController, TicketRefundController } from "../controllers/refund.controller"
 import { RefundService } from "../services/refund.service"
 import { RefundReason, RefundStatus } from "../entities/refund.entity"
-import type { CreateRefundDto } from "../dto/create-refund.dto"
-import type { BulkRefundDto } from "../dto/bulk-refund.dto"
+import { CreateRefundDto } from "../dto/create-refund.dto"
+import { BulkRefundDto } from "../dto/bulk-refund.dto"
 import { jest } from "@jest/globals"
 
 describe("RefundController", () => {

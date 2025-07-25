@@ -1,8 +1,8 @@
 import { Test, type TestingModule } from "@nestjs/testing"
 import { TicketingController } from "../controllers/ticketing.controller"
 import { TicketingService } from "../services/ticketing.service"
-import type { PurchaseTicketDto } from "../dto/purchase-ticket.dto"
-import type { ScanTicketDto } from "../dto/scan-ticket.dto"
+import { PurchaseTicketDto } from "../dto/purchase-ticket.dto"
+import { ScanTicketDto } from "../dto/scan-ticket.dto"
 import { TicketStatus } from "../entities/ticket.entity"
 import { jest } from "@jest/globals"
 

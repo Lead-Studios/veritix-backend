@@ -5,7 +5,7 @@ import { Ticket } from '../entities/ticket.entity';
 import { CreateTicketDto } from '../dtos/create-ticket.dto';
 import { UpdateTicketDto } from '../dtos/update-ticket.dto';
 import { TicketResource } from '../resources/ticket.resource';
-import { Event } from '../../event/entities/event.entity';
+import { Event } from '../../events/entities/event.entity';
 import { User } from '../../user/entities/user.entity';
 import { PromoCode } from '../entities/promo-code.entity';
 import { CreatePromoCodeDto } from '../dtos/create-promo-code.dto';
