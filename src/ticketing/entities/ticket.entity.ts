@@ -7,13 +7,18 @@ import {
   UpdateDateColumn,
   JoinColumn,
 } from "typeorm"
-import { TicketingEvent } from "./event.entity"
+import { TicketingEvent, TicketType } from "./event.entity"
 
 export enum TicketStatus {
   ACTIVE = "active",
   USED = "used",
   CANCELLED = "cancelled",
   EXPIRED = "expired",
+}
+
+export enum TicketFormat {
+  QR = "qr",
+  NFT = "nft",
 }
 
 @Entity("ticketing_tickets")
@@ -39,13 +44,13 @@ export class TicketingTicket {
   @Column({ type: "varchar", length: 255 })
   purchaserEmail: string
 
-  @Column({ type: "text" })
+  @Column({ type: "text", nullable: true })
   qrCodeData: string
 
-  @Column({ type: "text" })
+  @Column({ type: "text", nullable: true })
   qrCodeImage: string // Base64 encoded QR code image
 
-  @Column({ type: "varchar", length: 500 })
+  @Column({ type: "varchar", length: 500, nullable: true })
   secureHash: string // Signed hash for verification
 
   @Column({
@@ -54,6 +59,32 @@ export class TicketingTicket {
     default: TicketStatus.ACTIVE,
   })
   status: TicketStatus
+
+  @Column({
+    type: "enum",
+    enum: TicketFormat,
+    default: TicketFormat.QR,
+  })
+  format: TicketFormat
+
+  // NFT-specific fields
+  @Column({ type: "varchar", length: 255, nullable: true })
+  nftTokenId: string
+
+  @Column({ type: "varchar", length: 255, nullable: true })
+  nftContractAddress: string
+
+  @Column({ type: "varchar", length: 255, nullable: true })
+  nftTokenUri: string
+
+  @Column({ type: "varchar", length: 255, nullable: true })
+  nftTransactionHash: string
+
+  @Column({ type: "varchar", length: 255, nullable: true })
+  nftPlatform: string // 'polygon', 'zora', etc.
+
+  @Column({ type: "text", nullable: true })
+  nftMetadata: string // JSON string of NFT metadata
 
   @Column({ type: "timestamp", nullable: true })
   usedAt: Date

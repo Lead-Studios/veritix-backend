@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import { Repository } from "typeorm"
-import { TicketingEvent } from "../entities/event.entity"
-import { TicketingTicket, TicketStatus } from "../entities/ticket.entity"
+import { TicketingEvent, TicketType } from "../entities/event.entity"
+import { TicketingTicket, TicketStatus, TicketFormat } from "../entities/ticket.entity"
 import { QrCodeService } from "./qr-code.service"
 import { PurchaseTicketDto } from "../dto/purchase-ticket.dto"
 import { ScanTicketDto } from "../dto/scan-ticket.dto"
@@ -47,6 +47,9 @@ export class TicketingService {
       throw new BadRequestException("Not enough tickets available")
     }
 
+    // Determine ticket format based on event configuration
+    const ticketFormat = this.determineTicketFormat(event)
+
     // Generate tickets
     const tickets: TicketingTicket[] = []
     const totalAmount = event.ticketPrice * quantity
@@ -64,6 +67,7 @@ export class TicketingService {
         pricePaid: event.ticketPrice,
         purchaseDate: new Date(),
         status: TicketStatus.ACTIVE,
+        format: ticketFormat,
         qrCodeData: "", // Will be updated after QR generation
         qrCodeImage: "",
         secureHash: "",
@@ -71,7 +75,7 @@ export class TicketingService {
 
       const savedTicket = await this.ticketRepository.save(ticket)
 
-      // Generate QR code with the actual ticket ID
+      // Generate QR code for verification (even for NFT tickets)
       const qrCodeResult = await this.qrCodeService.generateQrCode(savedTicket.id, eventId, purchaserId)
 
       // Update ticket with QR code data
@@ -95,6 +99,11 @@ export class TicketingService {
       status: ticket.status,
       pricePaid: ticket.pricePaid,
       purchaseDate: ticket.purchaseDate,
+      format: ticket.format,
+      nftTokenId: ticket.nftTokenId,
+      nftContractAddress: ticket.nftContractAddress,
+      nftTokenUri: ticket.nftTokenUri,
+      nftPlatform: ticket.nftPlatform,
     }))
 
     return {
@@ -103,6 +112,19 @@ export class TicketingService {
       tickets: ticketResponses,
       totalAmount,
     }
+  }
+
+  /**
+   * Determine ticket format based on event configuration
+   */
+  private determineTicketFormat(event: TicketingEvent): TicketFormat {
+    // If NFT is enabled and ticket type is NFT or HYBRID, return NFT
+    if (event.nftEnabled && (event.ticketType === TicketType.NFT || event.ticketType === TicketType.HYBRID)) {
+      return TicketFormat.NFT
+    }
+    
+    // Otherwise, return QR format
+    return TicketFormat.QR
   }
 
   /**
@@ -235,8 +257,13 @@ export class TicketingService {
       status: ticket.status,
       pricePaid: ticket.pricePaid,
       purchaseDate: ticket.purchaseDate,
+      format: ticket.format,
       usedAt: ticket.usedAt,
       scannedBy: ticket.scannedBy,
+      nftTokenId: ticket.nftTokenId,
+      nftContractAddress: ticket.nftContractAddress,
+      nftTokenUri: ticket.nftTokenUri,
+      nftPlatform: ticket.nftPlatform,
     }
   }
 
@@ -261,8 +288,13 @@ export class TicketingService {
       status: ticket.status,
       pricePaid: ticket.pricePaid,
       purchaseDate: ticket.purchaseDate,
+      format: ticket.format,
       usedAt: ticket.usedAt,
       scannedBy: ticket.scannedBy,
+      nftTokenId: ticket.nftTokenId,
+      nftContractAddress: ticket.nftContractAddress,
+      nftTokenUri: ticket.nftTokenUri,
+      nftPlatform: ticket.nftPlatform,
     }))
   }
 
@@ -296,8 +328,13 @@ export class TicketingService {
       status: ticket.status,
       pricePaid: ticket.pricePaid,
       purchaseDate: ticket.purchaseDate,
+      format: ticket.format,
       usedAt: ticket.usedAt,
       scannedBy: ticket.scannedBy,
+      nftTokenId: ticket.nftTokenId,
+      nftContractAddress: ticket.nftContractAddress,
+      nftTokenUri: ticket.nftTokenUri,
+      nftPlatform: ticket.nftPlatform,
     }))
   }
 

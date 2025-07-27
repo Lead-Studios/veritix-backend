@@ -1,4 +1,4 @@
-import { TicketStatus } from "../entities/ticket.entity"
+import { TicketStatus, TicketFormat } from "../entities/ticket.entity"
 
 export class TicketResponseDto {
   id: string
@@ -11,8 +11,13 @@ export class TicketResponseDto {
   status: TicketStatus
   pricePaid: number
   purchaseDate: Date
+  format: TicketFormat
   usedAt?: Date
   scannedBy?: string
+  nftTokenId?: string
+  nftContractAddress?: string
+  nftTokenUri?: string
+  nftPlatform?: string
 }
 
 export class ScanResultDto {
