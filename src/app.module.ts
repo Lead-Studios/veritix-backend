@@ -29,6 +29,7 @@ import { BadgeModule } from './badge/badge.module';
 import { AnalyticsEventModule } from './analytics-event/analytics-event.module';
 import { WaitlistEntryModule } from './waitlist-entry/waitlist-entry.module';
 import { ConferenceSearchModule } from './conference-search/conference-search.module';
+import { FunnelTrackingModule } from './funnel-tracking/funnel-tracking.module';
 
 import { TicketingModule } from './ticketing/ticketing.module';
 
@@ -56,9 +57,8 @@ import { TicketingModule } from './ticketing/ticketing.module';
     MailerModule,
     AnalyticsEventModule,
     WaitlistEntryModule,
-    ConferenceSearchModule
-
-    WaitlistEntryModule
+    ConferenceSearchModule,
+    FunnelTrackingModule,
 
     // MailerModule,
     AnalyticsEventModule,
