@@ -30,6 +30,7 @@ import { AnalyticsEventModule } from './analytics-event/analytics-event.module';
 import { WaitlistEntryModule } from './waitlist-entry/waitlist-entry.module';
 import { ConferenceSearchModule } from './conference-search/conference-search.module';
 import { FunnelTrackingModule } from './funnel-tracking/funnel-tracking.module';
+import { NftTicketsModule } from './nft-tickets/nft-tickets.module';
 
 import { TicketingModule } from './ticketing/ticketing.module';
 
@@ -54,14 +55,11 @@ import { TicketingModule } from './ticketing/ticketing.module';
     TicketTierModule,
     BadgeModule,
 
-    MailerModule,
     AnalyticsEventModule,
     WaitlistEntryModule,
     ConferenceSearchModule,
     FunnelTrackingModule,
-
-    // MailerModule,
-    AnalyticsEventModule,
+    NftTicketsModule,
     TicketingModule
   ],
   controllers: [AppController, GalleryController, EventController],
