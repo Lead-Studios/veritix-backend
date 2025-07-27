@@ -21,6 +21,7 @@ import { ContactUsModule } from "./contact-us/contact-us.module";
 import { ConferenceModule } from "./conference/conference.module";
 import { ContactModule } from "./contact/contact.module";
 import { ConferenceSponsorsModule } from "./conference-sponsors/conference-sponsors.module";
+import { CheckoutModule } from "./checkout/checkout.module";
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -57,6 +58,7 @@ import { ConferenceSponsorsModule } from "./conference-sponsors/conference-spons
     ConferenceModule,
     ContactModule,
     ConferenceSponsorsModule,
+    CheckoutModule,
   ],
   controllers: [AppController],
   providers: [AppService, PdfService],
