@@ -18,4 +18,4 @@ export class ReceiptDto {
   };
   totalAmountPaid: number;
   transactionDate: string;
-} 
+}

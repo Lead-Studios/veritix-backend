@@ -12,4 +12,4 @@ export class EventAnalyticsResource {
       filter: filter || 'all',
     };
   }
-} 
+}

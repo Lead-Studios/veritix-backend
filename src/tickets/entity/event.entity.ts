@@ -6,4 +6,4 @@ export class Event {
   totalTickets: number;
   ticketsSold: number;
   pricePerTicket: number;
-} 
+}

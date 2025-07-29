@@ -18,4 +18,4 @@ export class UserResource {
   static toArray(users: User[]) {
     return users.map(UserResource.toResponse);
   }
-} 
+}

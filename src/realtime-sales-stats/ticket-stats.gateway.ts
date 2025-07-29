@@ -8,16 +8,13 @@ import {
   OnGatewayDisconnect,
   OnGatewayInit,
 } from '@nestjs/websockets';
-import {
-  Logger,
-  UseFilters,
-} from '@nestjs/common';
+import { Logger, UseFilters } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { WsAuthGuard } from './guards/ws-auth.guard';
-import { 
-  TicketStatsDto, 
-  TicketSaleUpdateDto, 
-  EventSubscriptionDto 
+import {
+  TicketStatsDto,
+  TicketSaleUpdateDto,
+  EventSubscriptionDto,
 } from './dto/ticket-stats.dto';
 import { WsExceptionFilter } from './filters/ws-exception.filter';
 
@@ -57,7 +54,9 @@ export class TicketStatsGateway
     }
 
     this.connectedClients.set(client.id, client);
-    this.logger.log(`Client connected: ${client.id} (User: ${client.data.user.sub})`);
+    this.logger.log(
+      `Client connected: ${client.id} (User: ${client.data.user.sub})`,
+    );
 
     // Send initial connection confirmation
     client.emit('connected', {
@@ -100,11 +99,11 @@ export class TicketStatsGateway
     @MessageBody() data: EventSubscriptionDto,
   ) {
     const { eventId } = data;
-    
+
     this.logger.log(`Client ${client.id} unsubscribing from event ${eventId}`);
-    
+
     client.leave(`event-${eventId}`);
-    
+
     client.emit('unsubscription-confirmed', {
       eventId,
       message: `Unsubscribed from event ${eventId}`,
@@ -120,7 +119,7 @@ export class TicketStatsGateway
     @MessageBody() data: EventSubscriptionDto,
   ) {
     const { eventId } = data;
-    
+
     // Mock data - in real implementation, fetch from database
     const currentStats: TicketStatsDto = {
       eventId,
@@ -139,9 +138,9 @@ export class TicketStatsGateway
   // Method to broadcast ticket sale updates (called from service)
   broadcastTicketSaleUpdate(update: TicketSaleUpdateDto) {
     const room = `event-${update.eventId}`;
-    
+
     this.logger.log(`Broadcasting ticket sale update to room: ${room}`);
-    
+
     this.server.to(room).emit('ticket-sale-update', {
       ...update,
       type: 'TICKET_SOLD',
@@ -151,9 +150,9 @@ export class TicketStatsGateway
   // Method to broadcast comprehensive stats update
   broadcastStatsUpdate(stats: TicketStatsDto) {
     const room = `event-${stats.eventId}`;
-    
+
     this.logger.log(`Broadcasting stats update to room: ${room}`);
-    
+
     this.server.to(room).emit('stats-update', stats);
   }
 

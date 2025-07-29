@@ -16,4 +16,4 @@ export class ReportService {
     };
     return ReportResource.toResponse(report);
   }
-} 
+}

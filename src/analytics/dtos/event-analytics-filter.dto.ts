@@ -7,4 +7,4 @@ export class EventAnalyticsFilterDto {
   @IsOptional()
   @IsString()
   filter?: 'daily' | 'weekly' | 'monthly' | 'yearly';
-} 
+}

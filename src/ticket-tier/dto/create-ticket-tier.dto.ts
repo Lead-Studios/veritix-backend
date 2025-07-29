@@ -1,4 +1,13 @@
-import { IsNotEmpty, IsNumber, IsString, Min, IsOptional, IsEnum, ValidateNested, IsArray } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsString,
+  Min,
+  IsOptional,
+  IsEnum,
+  ValidateNested,
+  IsArray,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { PricingStrategy } from '../enums/pricing-strategy.enum';
 

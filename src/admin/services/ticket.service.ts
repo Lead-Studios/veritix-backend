@@ -5,6 +5,8 @@ import { ResolveTicketDto } from '../dtos/resolve-ticket.dto';
 export class TicketService {
   async resolveTicket(dto: ResolveTicketDto) {
     // TODO: Implement real ticket resolution logic
-    return { message: `Ticket ${dto.ticketId} resolved with: ${dto.resolution}` };
+    return {
+      message: `Ticket ${dto.ticketId} resolved with: ${dto.resolution}`,
+    };
   }
-} 
+}

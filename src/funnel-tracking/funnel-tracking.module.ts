@@ -9,14 +9,10 @@ import { FunnelStats } from './entities/funnel-stats.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      FunnelAction,
-      FunnelSession,
-      FunnelStats,
-    ]),
+    TypeOrmModule.forFeature([FunnelAction, FunnelSession, FunnelStats]),
   ],
   controllers: [FunnelTrackingController],
   providers: [FunnelTrackingService, FunnelTrackingMiddleware],
   exports: [FunnelTrackingService, FunnelTrackingMiddleware],
 })
-export class FunnelTrackingModule {} 
+export class FunnelTrackingModule {}

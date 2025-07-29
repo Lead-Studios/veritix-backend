@@ -1,30 +1,30 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable } from '@nestjs/common';
 import {
   FraudRule,
   FraudSeverity,
   Order,
   FraudContext,
-} from "./fraud-detection.types";
+} from './fraud-detection.types';
 
 @Injectable()
 export class FraudRuleService {
   private rules: FraudRule[] = [
     {
-      name: "MASS_PURCHASE",
-      description: "Order contains unusually high quantity of items",
+      name: 'MASS_PURCHASE',
+      description: 'Order contains unusually high quantity of items',
       severity: FraudSeverity.MEDIUM,
       enabled: true,
       check: (order: Order) => {
         const totalQuantity = order.items.reduce(
           (sum, item) => sum + item.quantity,
-          0
+          0,
         );
         return totalQuantity > 10; // Flag orders with more than 10 items
       },
     },
     {
-      name: "HIGH_VALUE_ORDER",
-      description: "Order amount exceeds normal threshold",
+      name: 'HIGH_VALUE_ORDER',
+      description: 'Order amount exceeds normal threshold',
       severity: FraudSeverity.HIGH,
       enabled: true,
       check: (order: Order) => {
@@ -32,8 +32,8 @@ export class FraudRuleService {
       },
     },
     {
-      name: "DUPLICATE_IP_MULTIPLE_USERS",
-      description: "Same IP address used by multiple users",
+      name: 'DUPLICATE_IP_MULTIPLE_USERS',
+      description: 'Same IP address used by multiple users',
       severity: FraudSeverity.MEDIUM,
       enabled: true,
       check: (order: Order, context: FraudContext) => {
@@ -43,8 +43,8 @@ export class FraudRuleService {
       },
     },
     {
-      name: "RAPID_ORDERS",
-      description: "Multiple orders from same user in short time",
+      name: 'RAPID_ORDERS',
+      description: 'Multiple orders from same user in short time',
       severity: FraudSeverity.HIGH,
       enabled: true,
       check: (order: Order, context: FraudContext) => {
@@ -53,14 +53,14 @@ export class FraudRuleService {
           (o) =>
             new Date(order.timestamp).getTime() -
               new Date(o.timestamp).getTime() <
-            300000 // 5 minutes
+            300000, // 5 minutes
         );
         return recentOrders.length > 2; // Flag if more than 2 orders in 5 minutes
       },
     },
     {
-      name: "MISMATCHED_ADDRESSES",
-      description: "Billing and shipping addresses are in different countries",
+      name: 'MISMATCHED_ADDRESSES',
+      description: 'Billing and shipping addresses are in different countries',
       severity: FraudSeverity.MEDIUM,
       enabled: true,
       check: (order: Order) => {
@@ -68,8 +68,8 @@ export class FraudRuleService {
       },
     },
     {
-      name: "SUSPICIOUS_EMAIL_PATTERN",
-      description: "Email follows suspicious patterns",
+      name: 'SUSPICIOUS_EMAIL_PATTERN',
+      description: 'Email follows suspicious patterns',
       severity: FraudSeverity.LOW,
       enabled: true,
       check: (order: Order) => {
@@ -85,8 +85,8 @@ export class FraudRuleService {
       },
     },
     {
-      name: "VELOCITY_CHECK",
-      description: "Unusual velocity of orders from IP",
+      name: 'VELOCITY_CHECK',
+      description: 'Unusual velocity of orders from IP',
       severity: FraudSeverity.HIGH,
       enabled: true,
       check: (order: Order, context: FraudContext) => {
@@ -95,7 +95,7 @@ export class FraudRuleService {
           (o) =>
             new Date(order.timestamp).getTime() -
               new Date(o.timestamp).getTime() <
-            86400000 // 24 hours
+            86400000, // 24 hours
         );
         return last24Hours.length > 5; // Flag if more than 5 orders from IP in 24 hours
       },

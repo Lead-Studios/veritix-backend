@@ -1,13 +1,22 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from "@nestjs/common"
-import { Repository } from "typeorm"
-import { Refund, RefundStatus, RefundReason } from "../entities/refund.entity"
-import { TicketingTicket } from "../../ticketing/entities/ticket.entity"
-import { TicketStatus } from "../../ticketing/entities/ticket.entity"
-import { TicketingEvent } from "../../ticketing/entities/event.entity"
-import { CreateRefundDto } from "../dto/create-refund.dto"
-import { UpdateRefundDto } from "../dto/update-refund.dto"
-import { BulkRefundDto } from "../dto/bulk-refund.dto"
-import { RefundResponseDto, RefundStatsDto, BulkRefundResponseDto } from "../dto/refund-response.dto"
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
+import { Repository } from 'typeorm';
+import { Refund, RefundStatus, RefundReason } from '../entities/refund.entity';
+import { TicketingTicket } from '../../ticketing/entities/ticket.entity';
+import { TicketStatus } from '../../ticketing/entities/ticket.entity';
+import { TicketingEvent } from '../../ticketing/entities/event.entity';
+import { CreateRefundDto } from '../dto/create-refund.dto';
+import { UpdateRefundDto } from '../dto/update-refund.dto';
+import { BulkRefundDto } from '../dto/bulk-refund.dto';
+import {
+  RefundResponseDto,
+  RefundStatsDto,
+  BulkRefundResponseDto,
+} from '../dto/refund-response.dto';
 
 @Injectable()
 export class RefundService {
@@ -20,7 +29,9 @@ export class RefundService {
   /**
    * Create a refund request
    */
-  async createRefund(createRefundDto: CreateRefundDto): Promise<RefundResponseDto> {
+  async createRefund(
+    createRefundDto: CreateRefundDto,
+  ): Promise<RefundResponseDto> {
     const {
       ticketId,
       processedBy,
@@ -32,58 +43,64 @@ export class RefundService {
       customerMessage,
       autoProcess = false,
       refundPercentage,
-    } = createRefundDto
+    } = createRefundDto;
 
     // Get ticket with event details
     const ticket = await this.ticketRepository.findOne({
       where: { id: ticketId },
-      relations: ["event"],
-    })
+      relations: ['event'],
+    });
 
     if (!ticket) {
-      throw new NotFoundException("Ticket not found")
+      throw new NotFoundException('Ticket not found');
     }
 
     // Verify ticket can be refunded
     if (ticket.status === TicketStatus.CANCELLED) {
-      throw new BadRequestException("Cannot refund a cancelled ticket")
+      throw new BadRequestException('Cannot refund a cancelled ticket');
     }
 
     if (ticket.status === TicketStatus.EXPIRED) {
-      throw new BadRequestException("Cannot refund an expired ticket")
+      throw new BadRequestException('Cannot refund an expired ticket');
     }
 
     // Check if refund already exists
     const existingRefund = await this.refundRepository.findOne({
       where: { ticketId },
-    })
+    });
 
     if (existingRefund) {
-      throw new BadRequestException("Refund request already exists for this ticket")
+      throw new BadRequestException(
+        'Refund request already exists for this ticket',
+      );
     }
 
     // Calculate refund amount
-    let finalRefundAmount = refundAmount
-    let finalRefundPercentage = 0
+    let finalRefundAmount = refundAmount;
+    let finalRefundPercentage = 0;
 
     if (refundPercentage !== undefined) {
-      finalRefundAmount = (Number(ticket.pricePaid) * refundPercentage) / 100
-      finalRefundPercentage = refundPercentage
+      finalRefundAmount = (Number(ticket.pricePaid) * refundPercentage) / 100;
+      finalRefundPercentage = refundPercentage;
     } else if (finalRefundAmount === undefined) {
       // Full refund by default
-      finalRefundAmount = Number(ticket.pricePaid)
-      finalRefundPercentage = 100
+      finalRefundAmount = Number(ticket.pricePaid);
+      finalRefundPercentage = 100;
     } else {
-      finalRefundPercentage = Math.round((finalRefundAmount / Number(ticket.pricePaid)) * 100)
+      finalRefundPercentage = Math.round(
+        (finalRefundAmount / Number(ticket.pricePaid)) * 100,
+      );
     }
 
     // Validate refund amount
     if (finalRefundAmount > Number(ticket.pricePaid)) {
-      throw new BadRequestException("Refund amount cannot exceed original ticket price")
+      throw new BadRequestException(
+        'Refund amount cannot exceed original ticket price',
+      );
     }
 
     if (finalRefundAmount < 0) {
-      throw new BadRequestException("Refund amount cannot be negative")
+      throw new BadRequestException('Refund amount cannot be negative');
     }
 
     // Create refund record
@@ -104,53 +121,63 @@ export class RefundService {
       customerMessage,
       isPartialRefund: finalRefundPercentage < 100,
       refundPercentage: finalRefundPercentage,
-    })
+    });
 
-    const savedRefund = await this.refundRepository.save(refund)
+    const savedRefund = await this.refundRepository.save(refund);
 
     // If auto-processing, update ticket status
     if (autoProcess) {
-      await this.processRefundTicket(ticket, savedRefund)
+      await this.processRefundTicket(ticket, savedRefund);
     }
 
-    return this.mapToResponseDto(savedRefund, ticket)
+    return this.mapToResponseDto(savedRefund, ticket);
   }
 
   /**
    * Process a pending refund
    */
-  async processRefund(refundId: string, updateDto: UpdateRefundDto): Promise<RefundResponseDto> {
+  async processRefund(
+    refundId: string,
+    updateDto: UpdateRefundDto,
+  ): Promise<RefundResponseDto> {
     const refund = await this.refundRepository.findOne({
       where: { id: refundId },
-      relations: ["ticket", "ticket.event"],
-    })
+      relations: ['ticket', 'ticket.event'],
+    });
 
     if (!refund) {
-      throw new NotFoundException("Refund not found")
+      throw new NotFoundException('Refund not found');
     }
 
-    if (refund.status !== RefundStatus.PENDING && refund.status !== RefundStatus.APPROVED) {
-      throw new BadRequestException("Refund has already been processed or rejected")
+    if (
+      refund.status !== RefundStatus.PENDING &&
+      refund.status !== RefundStatus.APPROVED
+    ) {
+      throw new BadRequestException(
+        'Refund has already been processed or rejected',
+      );
     }
 
     // Update refund details
-    Object.assign(refund, updateDto)
+    Object.assign(refund, updateDto);
 
     if (updateDto.status === RefundStatus.PROCESSED) {
-      refund.processedAt = new Date()
-      await this.processRefundTicket(refund.ticket, refund)
+      refund.processedAt = new Date();
+      await this.processRefundTicket(refund.ticket, refund);
     } else if (updateDto.status === RefundStatus.REJECTED) {
-      refund.processedAt = new Date()
+      refund.processedAt = new Date();
     }
 
-    const updatedRefund = await this.refundRepository.save(refund)
-    return this.mapToResponseDto(updatedRefund, refund.ticket)
+    const updatedRefund = await this.refundRepository.save(refund);
+    return this.mapToResponseDto(updatedRefund, refund.ticket);
   }
 
   /**
    * Process bulk refunds
    */
-  async processBulkRefunds(bulkRefundDto: BulkRefundDto): Promise<BulkRefundResponseDto> {
+  async processBulkRefunds(
+    bulkRefundDto: BulkRefundDto,
+  ): Promise<BulkRefundResponseDto> {
     const {
       ticketIds,
       processedBy,
@@ -161,11 +188,11 @@ export class RefundService {
       internalNotes,
       customerMessage,
       autoProcess = false,
-    } = bulkRefundDto
+    } = bulkRefundDto;
 
-    const processedRefunds: RefundResponseDto[] = []
-    const failedRefunds: Array<{ ticketId: string; error: string }> = []
-    let totalAmount = 0
+    const processedRefunds: RefundResponseDto[] = [];
+    const failedRefunds: Array<{ ticketId: string; error: string }> = [];
+    let totalAmount = 0;
 
     for (const ticketId of ticketIds) {
       try {
@@ -179,16 +206,16 @@ export class RefundService {
           internalNotes,
           customerMessage,
           autoProcess,
-        }
+        };
 
-        const refund = await this.createRefund(refundDto)
-        processedRefunds.push(refund)
-        totalAmount += refund.refundAmount
+        const refund = await this.createRefund(refundDto);
+        processedRefunds.push(refund);
+        totalAmount += refund.refundAmount;
       } catch (error) {
         failedRefunds.push({
           ticketId,
           error: error.message,
-        })
+        });
       }
     }
 
@@ -198,7 +225,7 @@ export class RefundService {
       processedRefunds,
       failedRefunds,
       totalAmount,
-    }
+    };
   }
 
   /**
@@ -207,92 +234,118 @@ export class RefundService {
   async getRefund(refundId: string): Promise<RefundResponseDto> {
     const refund = await this.refundRepository.findOne({
       where: { id: refundId },
-      relations: ["ticket", "ticket.event"],
-    })
+      relations: ['ticket', 'ticket.event'],
+    });
 
     if (!refund) {
-      throw new NotFoundException("Refund not found")
+      throw new NotFoundException('Refund not found');
     }
 
-    return this.mapToResponseDto(refund, refund.ticket)
+    return this.mapToResponseDto(refund, refund.ticket);
   }
 
   /**
    * Get refunds by event (for organizers)
    */
-  async getRefundsByEvent(eventId: string, organizerId: string): Promise<RefundResponseDto[]> {
+  async getRefundsByEvent(
+    eventId: string,
+    organizerId: string,
+  ): Promise<RefundResponseDto[]> {
     // Verify organizer owns the event
     const event = await this.eventRepository.findOne({
       where: { id: eventId, organizerId },
-    })
+    });
 
     if (!event) {
-      throw new ForbiddenException("You don't have permission to view refunds for this event")
+      throw new ForbiddenException(
+        "You don't have permission to view refunds for this event",
+      );
     }
 
     const refunds = await this.refundRepository.find({
       where: { eventId },
-      relations: ["ticket", "ticket.event"],
-      order: { createdAt: "DESC" },
-    })
+      relations: ['ticket', 'ticket.event'],
+      order: { createdAt: 'DESC' },
+    });
 
-    return refunds.map((refund) => this.mapToResponseDto(refund, refund.ticket))
+    return refunds.map((refund) =>
+      this.mapToResponseDto(refund, refund.ticket),
+    );
   }
 
   /**
    * Get refunds by purchaser
    */
-  async getRefundsByPurchaser(purchaserId: string): Promise<RefundResponseDto[]> {
+  async getRefundsByPurchaser(
+    purchaserId: string,
+  ): Promise<RefundResponseDto[]> {
     const refunds = await this.refundRepository.find({
       where: { purchaserId },
-      relations: ["ticket", "ticket.event"],
-      order: { createdAt: "DESC" },
-    })
+      relations: ['ticket', 'ticket.event'],
+      order: { createdAt: 'DESC' },
+    });
 
-    return refunds.map((refund) => this.mapToResponseDto(refund, refund.ticket))
+    return refunds.map((refund) =>
+      this.mapToResponseDto(refund, refund.ticket),
+    );
   }
 
   /**
    * Get refund statistics for an event
    */
-  async getRefundStats(eventId: string, organizerId: string): Promise<RefundStatsDto> {
+  async getRefundStats(
+    eventId: string,
+    organizerId: string,
+  ): Promise<RefundStatsDto> {
     // Verify organizer owns the event
     const event = await this.eventRepository.findOne({
       where: { id: eventId, organizerId },
-    })
+    });
 
     if (!event) {
-      throw new ForbiddenException("You don't have permission to view refund stats for this event")
+      throw new ForbiddenException(
+        "You don't have permission to view refund stats for this event",
+      );
     }
 
     const refunds = await this.refundRepository.find({
       where: { eventId },
-    })
+    });
 
-    const totalRefunds = refunds.length
-    const totalRefundAmount = refunds.reduce((sum, refund) => sum + Number(refund.refundAmount), 0)
-    const pendingRefunds = refunds.filter((r) => r.status === RefundStatus.PENDING).length
-    const processedRefunds = refunds.filter((r) => r.status === RefundStatus.PROCESSED).length
-    const rejectedRefunds = refunds.filter((r) => r.status === RefundStatus.REJECTED).length
-    const averageRefundAmount = totalRefunds > 0 ? totalRefundAmount / totalRefunds : 0
+    const totalRefunds = refunds.length;
+    const totalRefundAmount = refunds.reduce(
+      (sum, refund) => sum + Number(refund.refundAmount),
+      0,
+    );
+    const pendingRefunds = refunds.filter(
+      (r) => r.status === RefundStatus.PENDING,
+    ).length;
+    const processedRefunds = refunds.filter(
+      (r) => r.status === RefundStatus.PROCESSED,
+    ).length;
+    const rejectedRefunds = refunds.filter(
+      (r) => r.status === RefundStatus.REJECTED,
+    ).length;
+    const averageRefundAmount =
+      totalRefunds > 0 ? totalRefundAmount / totalRefunds : 0;
 
     // Group by reason
     const refundsByReason = refunds.reduce(
       (acc, refund) => {
-        acc[refund.reason] = (acc[refund.reason] || 0) + 1
-        return acc
+        acc[refund.reason] = (acc[refund.reason] || 0) + 1;
+        return acc;
       },
       {} as Record<RefundReason, number>,
-    )
+    );
 
     // Group by status
     const refundsByStatus = refunds.reduce(
       (acc, refund) => {
-        acc[refund.status] = (acc[refund.status] || 0) + 1
-        return acc
+        acc[refund.status] = (acc[refund.status] || 0) + 1;
+        return acc;
       },
       {} as Record<RefundStatus, number>,
-    )
+    );
 
     return {
       totalRefunds,
@@ -303,37 +356,45 @@ export class RefundService {
       averageRefundAmount,
       refundsByReason,
       refundsByStatus,
-    }
+    };
   }
 
   /**
    * Cancel a refund request (only if pending)
    */
-  async cancelRefund(refundId: string, requesterId: string): Promise<{ success: boolean; message: string }> {
+  async cancelRefund(
+    refundId: string,
+    requesterId: string,
+  ): Promise<{ success: boolean; message: string }> {
     const refund = await this.refundRepository.findOne({
       where: { id: refundId },
-      relations: ["ticket", "ticket.event"],
-    })
+      relations: ['ticket', 'ticket.event'],
+    });
 
     if (!refund) {
-      throw new NotFoundException("Refund not found")
+      throw new NotFoundException('Refund not found');
     }
 
     // Only organizer or purchaser can cancel
-    if (refund.purchaserId !== requesterId && refund.ticket.event.organizerId !== requesterId) {
-      throw new ForbiddenException("You don't have permission to cancel this refund")
+    if (
+      refund.purchaserId !== requesterId &&
+      refund.ticket.event.organizerId !== requesterId
+    ) {
+      throw new ForbiddenException(
+        "You don't have permission to cancel this refund",
+      );
     }
 
     if (refund.status !== RefundStatus.PENDING) {
-      throw new BadRequestException("Can only cancel pending refund requests")
+      throw new BadRequestException('Can only cancel pending refund requests');
     }
 
-    await this.refundRepository.remove(refund)
+    await this.refundRepository.remove(refund);
 
     return {
       success: true,
-      message: "Refund request cancelled successfully",
-    }
+      message: 'Refund request cancelled successfully',
+    };
   }
 
   /**
@@ -348,28 +409,30 @@ export class RefundService {
     // Verify organizer owns the event
     const event = await this.eventRepository.findOne({
       where: { id: eventId, organizerId },
-    })
+    });
 
     if (!event) {
-      throw new ForbiddenException("You don't have permission to process refunds for this event")
+      throw new ForbiddenException(
+        "You don't have permission to process refunds for this event",
+      );
     }
 
     // Get all active tickets for the event
     const tickets = await this.ticketRepository.find({
       where: { eventId, status: TicketStatus.ACTIVE },
-    })
+    });
 
     if (tickets.length === 0) {
       return {
         success: true,
-        message: "No active tickets found for refund",
+        message: 'No active tickets found for refund',
         processedRefunds: [],
         failedRefunds: [],
         totalAmount: 0,
-      }
+      };
     }
 
-    const ticketIds = tickets.map((ticket) => ticket.id)
+    const ticketIds = tickets.map((ticket) => ticket.id);
 
     return await this.processBulkRefunds({
       ticketIds,
@@ -380,32 +443,38 @@ export class RefundService {
       reasonDescription: `Event "${event.name}" has been cancelled`,
       customerMessage: `We apologize for the inconvenience. Your ticket for "${event.name}" has been refunded due to event cancellation.`,
       autoProcess: true,
-    })
+    });
   }
 
   /**
    * Helper method to process ticket status after refund
    */
-  private async processRefundTicket(ticket: TicketingTicket, refund: Refund): Promise<void> {
+  private async processRefundTicket(
+    ticket: TicketingTicket,
+    refund: Refund,
+  ): Promise<void> {
     // Mark ticket as cancelled if full refund, or keep as refunded for partial
     if (refund.refundPercentage === 100) {
-      ticket.status = TicketStatus.CANCELLED
+      ticket.status = TicketStatus.CANCELLED;
     }
     // Note: We could add a REFUNDED status to TicketStatus enum if needed
 
-    await this.ticketRepository.save(ticket)
+    await this.ticketRepository.save(ticket);
   }
 
   /**
    * Helper method to map refund entity to response DTO
    */
-  private mapToResponseDto(refund: Refund, ticket: TicketingTicket): RefundResponseDto {
+  private mapToResponseDto(
+    refund: Refund,
+    ticket: TicketingTicket,
+  ): RefundResponseDto {
     return {
       id: refund.id,
       ticketId: refund.ticketId,
       ticketNumber: ticket.ticketNumber,
       eventId: refund.eventId,
-      eventName: ticket.event?.name || "Unknown Event",
+      eventName: ticket.event?.name || 'Unknown Event',
       purchaserId: refund.purchaserId,
       purchaserName: ticket.purchaserName,
       purchaserEmail: ticket.purchaserEmail,
@@ -423,6 +492,6 @@ export class RefundService {
       isPartialRefund: refund.isPartialRefund,
       refundPercentage: refund.refundPercentage,
       createdAt: refund.createdAt,
-    }
+    };
   }
 }

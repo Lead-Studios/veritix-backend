@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, Index } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  CreateDateColumn,
+  Index,
+} from 'typeorm';
 import { Event } from '../../events/entities/event.entity';
 import { User } from '../../user/entities/user.entity';
 
@@ -16,16 +23,22 @@ export class Notification {
   @Index()
   user: User;
 
-  @ManyToOne(() => Event, (event) => event.notifications, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Event, (event) => event.notifications, {
+    onDelete: 'CASCADE',
+  })
   @Index()
   event: Event;
 
   @Column('text')
   message: string;
 
-  @Column({ type: 'enum', enum: NotificationStatus, default: NotificationStatus.Unread })
+  @Column({
+    type: 'enum',
+    enum: NotificationStatus,
+    default: NotificationStatus.Unread,
+  })
   status: NotificationStatus;
 
   @CreateDateColumn()
   timestamp: Date;
-} 
+}

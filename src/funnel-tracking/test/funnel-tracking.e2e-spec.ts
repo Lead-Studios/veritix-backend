@@ -2,7 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../../app.module';
-import { FunnelStage, FunnelActionType } from '../entities/funnel-action.entity';
+import {
+  FunnelStage,
+  FunnelActionType,
+} from '../entities/funnel-action.entity';
 
 describe('FunnelTracking (e2e)', () => {
   let app: INestApplication;
@@ -73,7 +76,7 @@ describe('FunnelTracking (e2e)', () => {
           sessionId: sessionId,
           userId: 'user-456',
           ticketTier: 'VIP',
-          price: 150.00,
+          price: 150.0,
         })
         .expect(201);
 
@@ -89,7 +92,7 @@ describe('FunnelTracking (e2e)', () => {
           sessionId: sessionId,
           userId: 'user-456',
           quantity: 2,
-          totalPrice: 300.00,
+          totalPrice: 300.0,
         })
         .expect(201);
 
@@ -119,7 +122,7 @@ describe('FunnelTracking (e2e)', () => {
           sessionId: sessionId,
           userId: 'user-456',
           purchaseId: 'purchase-789',
-          totalSpent: 300.00,
+          totalSpent: 300.0,
         })
         .expect(201);
 
@@ -141,7 +144,7 @@ describe('FunnelTracking (e2e)', () => {
           actionName: 'enter_payment_details',
           metadata: {
             paymentMethod: 'credit_card',
-            amount: 300.00,
+            amount: 300.0,
           },
           timeOnPage: 45,
         })
@@ -158,7 +161,7 @@ describe('FunnelTracking (e2e)', () => {
         .post(`/funnel-tracking/session/${sessionId}/complete`)
         .send({
           purchaseId: 'purchase-789',
-          totalSpent: 300.00,
+          totalSpent: 300.0,
         })
         .expect(200);
 
@@ -198,11 +201,15 @@ describe('FunnelTracking (e2e)', () => {
     });
 
     it('should get funnel statistics with date range', async () => {
-      const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      const startDate = new Date(
+        Date.now() - 30 * 24 * 60 * 60 * 1000,
+      ).toISOString();
       const endDate = new Date().toISOString();
 
       const response = await request(app.getHttpServer())
-        .get(`/funnel-tracking/stats/event-123?startDate=${startDate}&endDate=${endDate}`)
+        .get(
+          `/funnel-tracking/stats/event-123?startDate=${startDate}&endDate=${endDate}`,
+        )
         .expect(200);
 
       expect(response.body.dateRange.startDate).toBeDefined();
@@ -264,7 +271,7 @@ describe('FunnelTracking (e2e)', () => {
           sessionId: fullSessionId,
           userId: 'user-full-journey',
           ticketTier: 'General',
-          price: 50.00,
+          price: 50.0,
         })
         .expect(201);
 
@@ -276,7 +283,7 @@ describe('FunnelTracking (e2e)', () => {
           sessionId: fullSessionId,
           userId: 'user-full-journey',
           quantity: 1,
-          totalPrice: 50.00,
+          totalPrice: 50.0,
         })
         .expect(201);
 
@@ -298,7 +305,7 @@ describe('FunnelTracking (e2e)', () => {
           sessionId: fullSessionId,
           userId: 'user-full-journey',
           purchaseId: 'purchase-full-journey',
-          totalSpent: 50.00,
+          totalSpent: 50.0,
         })
         .expect(201);
 
@@ -312,4 +319,4 @@ describe('FunnelTracking (e2e)', () => {
       expect(statsResponse.body.stages.length).toBeGreaterThan(0);
     });
   });
-}); 
+});

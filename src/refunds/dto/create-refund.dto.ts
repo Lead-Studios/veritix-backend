@@ -1,45 +1,54 @@
-import { IsUUID, IsOptional, IsNumber, IsEnum, IsString, Min, Max, IsBoolean } from "class-validator"
-import { RefundReason } from "../entities/refund.entity"
+import {
+  IsUUID,
+  IsOptional,
+  IsNumber,
+  IsEnum,
+  IsString,
+  Min,
+  Max,
+  IsBoolean,
+} from 'class-validator';
+import { RefundReason } from '../entities/refund.entity';
 
 export class CreateRefundDto {
   @IsUUID()
-  ticketId: string
+  ticketId: string;
 
   @IsUUID()
-  processedBy: string
+  processedBy: string;
 
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
-  refundAmount?: number
+  refundAmount?: number;
 
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
-  processingFee?: number
+  processingFee?: number;
 
   @IsEnum(RefundReason)
-  reason: RefundReason
+  reason: RefundReason;
 
   @IsOptional()
   @IsString()
-  reasonDescription?: string
+  reasonDescription?: string;
 
   @IsOptional()
   @IsString()
-  internalNotes?: string
+  internalNotes?: string;
 
   @IsOptional()
   @IsString()
-  customerMessage?: string
+  customerMessage?: string;
 
   @IsOptional()
   @IsBoolean()
-  autoProcess?: boolean = false
+  autoProcess?: boolean = false;
 
   @IsOptional()
   @IsNumber()
   @Min(0)
   @Max(100)
-  refundPercentage?: number
+  refundPercentage?: number;
 }

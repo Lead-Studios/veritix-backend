@@ -29,7 +29,10 @@ export class ConferenceController {
 
   @Post(':id/sessions')
   createSession(@Param('id') conferenceId: number, @Body() data: any) {
-    return this.conferenceService.createSession({ ...data, conference: { id: conferenceId } });
+    return this.conferenceService.createSession({
+      ...data,
+      conference: { id: conferenceId },
+    });
   }
 
   @Patch('sessions/:id')
@@ -38,8 +41,14 @@ export class ConferenceController {
   }
 
   @Post('sessions/:id/speakers')
-  assignSpeakers(@Param('id') sessionId: number, @Body('speakerIds') speakerIds: number[]) {
-    return this.conferenceService.assignSpeakersToSession(sessionId, speakerIds);
+  assignSpeakers(
+    @Param('id') sessionId: number,
+    @Body('speakerIds') speakerIds: number[],
+  ) {
+    return this.conferenceService.assignSpeakersToSession(
+      sessionId,
+      speakerIds,
+    );
   }
 
   @Post('speakers')
@@ -53,7 +62,10 @@ export class ConferenceController {
   }
 
   @Post('sessions/:id/select')
-  selectSession(@Param('id') sessionId: number, @Body('attendeeId') attendeeId: string) {
+  selectSession(
+    @Param('id') sessionId: number,
+    @Body('attendeeId') attendeeId: string,
+  ) {
     return this.conferenceService.selectSession(attendeeId, sessionId);
   }
 
@@ -65,14 +77,22 @@ export class ConferenceController {
   @Post('sessions/:id/feedback')
   submitSessionFeedback(
     @Param('id') sessionId: number,
-    @Body() dto: SessionFeedbackDto & { attendeeId: string }
+    @Body() dto: SessionFeedbackDto & { attendeeId: string },
   ) {
-    return this.conferenceService.submitSessionFeedback(dto.attendeeId, { sessionId, rating: dto.rating, comment: dto.comment });
+    return this.conferenceService.submitSessionFeedback(dto.attendeeId, {
+      sessionId,
+      rating: dto.rating,
+      comment: dto.comment,
+    });
   }
 
   @Post('certificates/issue')
   issueCertificate(@Body() dto: IssueCertificateDto) {
-    return this.conferenceService.issueCertificate(dto.conferenceId, dto.attendeeId, dto.fileUrl);
+    return this.conferenceService.issueCertificate(
+      dto.conferenceId,
+      dto.attendeeId,
+      dto.fileUrl,
+    );
   }
 
   @Get(':id/analytics')

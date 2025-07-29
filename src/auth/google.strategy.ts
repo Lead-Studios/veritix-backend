@@ -13,8 +13,13 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     });
   }
 
-  async validate(accessToken: string, refreshToken: string, profile: any, done: Function) {
+  async validate(
+    accessToken: string,
+    refreshToken: string,
+    profile: any,
+    done: Function,
+  ) {
     // TODO: Implement Google OAuth validation
     done(null, profile);
   }
-} 
+}

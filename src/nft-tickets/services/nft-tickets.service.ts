@@ -1,13 +1,28 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { NftTicket, NftTicketStatus, NftPlatform } from '../entities/nft-ticket.entity';
-import { NftMintingConfig, NftTicketType } from '../entities/nft-minting-config.entity';
+import {
+  NftTicket,
+  NftTicketStatus,
+  NftPlatform,
+} from '../entities/nft-ticket.entity';
+import {
+  NftMintingConfig,
+  NftTicketType,
+} from '../entities/nft-minting-config.entity';
 import { TicketingEvent } from '../../ticketing/entities/event.entity';
 import { PolygonService } from './polygon.service';
 import { ZoraService } from './zora.service';
 import { NftMetadataService, NftMetadata } from './nft-metadata.service';
-import { MintNftTicketDto, NftTicketResponseDto } from '../dto/mint-nft-ticket.dto';
+import {
+  MintNftTicketDto,
+  NftTicketResponseDto,
+} from '../dto/mint-nft-ticket.dto';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
@@ -29,7 +44,9 @@ export class NftTicketsService {
   /**
    * Mint NFT ticket
    */
-  async mintNftTicket(mintDto: MintNftTicketDto): Promise<NftTicketResponseDto> {
+  async mintNftTicket(
+    mintDto: MintNftTicketDto,
+  ): Promise<NftTicketResponseDto> {
     // 1. Get event and validate
     const event = await this.eventRepository.findOne({
       where: { id: mintDto.eventId },
@@ -50,7 +67,9 @@ export class NftTicketsService {
 
     // 3. Check if NFT tickets are enabled
     if (!config.nftEnabled) {
-      throw new BadRequestException('NFT tickets are not enabled for this event');
+      throw new BadRequestException(
+        'NFT tickets are not enabled for this event',
+      );
     }
 
     // 4. Create NFT ticket record
@@ -61,7 +80,8 @@ export class NftTicketsService {
       purchaserName: mintDto.purchaserName,
       purchaserEmail: mintDto.purchaserEmail,
       purchaserWalletAddress: mintDto.purchaserWalletAddress,
-      platform: mintDto.platform || config.preferredPlatform || NftPlatform.POLYGON,
+      platform:
+        mintDto.platform || config.preferredPlatform || NftPlatform.POLYGON,
       status: NftTicketStatus.PENDING,
       pricePaid: mintDto.pricePaid,
       purchaseDate: new Date(),
@@ -93,7 +113,11 @@ export class NftTicketsService {
       });
 
       // Generate metadata
-      const metadata = this.nftMetadataService.generateTicketMetadata(event, nftTicket, config);
+      const metadata = this.nftMetadataService.generateTicketMetadata(
+        event,
+        nftTicket,
+        config,
+      );
 
       // Validate metadata
       const validation = this.nftMetadataService.validateMetadata(metadata);
@@ -210,20 +234,22 @@ export class NftTicketsService {
       order: { createdAt: 'DESC' },
     });
 
-    return nftTickets.map(ticket => this.mapToResponseDto(ticket));
+    return nftTickets.map((ticket) => this.mapToResponseDto(ticket));
   }
 
   /**
    * Get NFT tickets by purchaser
    */
-  async getNftTicketsByPurchaser(purchaserId: string): Promise<NftTicketResponseDto[]> {
+  async getNftTicketsByPurchaser(
+    purchaserId: string,
+  ): Promise<NftTicketResponseDto[]> {
     const nftTickets = await this.nftTicketRepository.find({
       where: { purchaserId },
       relations: ['event'],
       order: { createdAt: 'DESC' },
     });
 
-    return nftTickets.map(ticket => this.mapToResponseDto(ticket));
+    return nftTickets.map((ticket) => this.mapToResponseDto(ticket));
   }
 
   /**
@@ -325,7 +351,10 @@ export class NftTicketsService {
   /**
    * Burn NFT ticket (if configured)
    */
-  async burnNftTicket(nftTicketId: string, ownerAddress: string): Promise<{
+  async burnNftTicket(
+    nftTicketId: string,
+    ownerAddress: string,
+  ): Promise<{
     success: boolean;
     transactionHash?: string;
     error?: string;
@@ -377,14 +406,25 @@ export class NftTicketsService {
     failed: number;
     transferred: number;
   }> {
-    const [total, pending, minting, minted, failed, transferred] = await Promise.all([
-      this.nftTicketRepository.count({ where: { eventId } }),
-      this.nftTicketRepository.count({ where: { eventId, status: NftTicketStatus.PENDING } }),
-      this.nftTicketRepository.count({ where: { eventId, status: NftTicketStatus.MINTING } }),
-      this.nftTicketRepository.count({ where: { eventId, status: NftTicketStatus.MINTED } }),
-      this.nftTicketRepository.count({ where: { eventId, status: NftTicketStatus.FAILED } }),
-      this.nftTicketRepository.count({ where: { eventId, status: NftTicketStatus.TRANSFERRED } }),
-    ]);
+    const [total, pending, minting, minted, failed, transferred] =
+      await Promise.all([
+        this.nftTicketRepository.count({ where: { eventId } }),
+        this.nftTicketRepository.count({
+          where: { eventId, status: NftTicketStatus.PENDING },
+        }),
+        this.nftTicketRepository.count({
+          where: { eventId, status: NftTicketStatus.MINTING },
+        }),
+        this.nftTicketRepository.count({
+          where: { eventId, status: NftTicketStatus.MINTED },
+        }),
+        this.nftTicketRepository.count({
+          where: { eventId, status: NftTicketStatus.FAILED },
+        }),
+        this.nftTicketRepository.count({
+          where: { eventId, status: NftTicketStatus.TRANSFERRED },
+        }),
+      ]);
 
     return {
       total,
@@ -397,7 +437,9 @@ export class NftTicketsService {
   }
 
   // Helper methods
-  private async createDefaultConfig(eventId: string): Promise<NftMintingConfig> {
+  private async createDefaultConfig(
+    eventId: string,
+  ): Promise<NftMintingConfig> {
     const config = this.nftMintingConfigRepository.create({
       id: uuidv4(),
       eventId,
@@ -435,4 +477,4 @@ export class NftTicketsService {
       metadata: nftTicket.metadata,
     };
   }
-} 
+}

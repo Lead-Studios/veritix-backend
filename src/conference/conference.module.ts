@@ -24,9 +24,19 @@ import { ConferenceController } from './controllers/conference.controller';
       Certificate,
     ]),
   ],
-  imports: [TypeOrmModule.forFeature([
-    Conference, Session, Speaker, Track, AttendeeSession, SessionFeedback, Certificate, Attendee, SessionCheckIn
-  ])],
+  imports: [
+    TypeOrmModule.forFeature([
+      Conference,
+      Session,
+      Speaker,
+      Track,
+      AttendeeSession,
+      SessionFeedback,
+      Certificate,
+      Attendee,
+      SessionCheckIn,
+    ]),
+  ],
   providers: [ConferenceService],
   controllers: [ConferenceController],
   exports: [ConferenceService],

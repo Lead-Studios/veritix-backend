@@ -41,7 +41,9 @@ export class UserReportService {
     const users = await this.userRepo.count();
 
     // New users in period
-    const newUsers = await this.userRepo.count({ where: { createdAt: Between(start, end) } });
+    const newUsers = await this.userRepo.count({
+      where: { createdAt: Between(start, end) },
+    });
 
     // Active users: users with ticket purchases in period
     const activeUserIds = await this.ticketHistoryRepo
@@ -62,4 +64,4 @@ export class UserReportService {
     };
     return UserReportResource.toResponse(report);
   }
-} 
+}

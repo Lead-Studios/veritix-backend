@@ -38,4 +38,4 @@ export class EventService {
     await this.eventRepo.delete(dto.eventId);
     return { deleted: true };
   }
-} 
+}

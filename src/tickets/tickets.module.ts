@@ -8,4 +8,4 @@ import { PaymentService } from './payment.service';
   providers: [TicketsService, PaymentService],
   exports: [TicketsService],
 })
-export class TicketsModule {} 
+export class TicketsModule {}

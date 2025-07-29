@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  CreateDateColumn,
+} from 'typeorm';
 import { User } from '../../user/entities/user.entity';
 import { Ticket } from './ticket.entity';
 
@@ -21,4 +27,4 @@ export class TicketHistory {
 
   @Column()
   transactionId: string;
-} 
+}

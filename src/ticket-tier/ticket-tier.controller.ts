@@ -27,7 +27,9 @@ export class TicketTierController {
   }
 
   @Get(':eventId')
-  findByEvent(@Param('eventId') eventId: string): Promise<TicketTierResponseDto[]> {
+  findByEvent(
+    @Param('eventId') eventId: string,
+  ): Promise<TicketTierResponseDto[]> {
     return this.ticketTierService.findByEvent(eventId);
   }
 
@@ -38,6 +40,8 @@ export class TicketTierController {
 
   @Get('tier/:id/price')
   getCurrentPrice(@Param('id') id: string): Promise<{ currentPrice: number }> {
-    return this.ticketTierService.getCurrentPrice(id).then(price => ({ currentPrice: price }));
+    return this.ticketTierService
+      .getCurrentPrice(id)
+      .then((price) => ({ currentPrice: price }));
   }
 }

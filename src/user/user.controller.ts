@@ -1,4 +1,13 @@
-import { Controller, Post, Body, UsePipes, ValidationPipe, Get, Req, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UsePipes,
+  ValidationPipe,
+  Get,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -23,4 +32,4 @@ export class UserController {
   }
 
   // Add profile and other endpoints as needed
-} 
+}

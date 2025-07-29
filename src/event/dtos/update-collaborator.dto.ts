@@ -16,4 +16,4 @@ export class UpdateCollaboratorDto {
   @IsOptional()
   @IsUUID()
   eventId?: string;
-} 
+}

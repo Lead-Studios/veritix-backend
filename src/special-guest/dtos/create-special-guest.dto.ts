@@ -21,4 +21,4 @@ export class CreateSpecialGuestDto {
   @IsOptional()
   @IsUrl()
   instagram?: string;
-} 
+}

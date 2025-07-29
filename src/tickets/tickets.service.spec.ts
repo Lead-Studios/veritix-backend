@@ -29,8 +29,18 @@ describe('TicketsService', () => {
     const dto = {
       eventId: 'event1',
       ticketQuantity: 1,
-      billingDetails: { fullName: 'John Doe', email: 'john@example.com', phoneNumber: '123' },
-      address: { country: 'A', state: 'B', city: 'C', street: 'D', postalCode: 'E' },
+      billingDetails: {
+        fullName: 'John Doe',
+        email: 'john@example.com',
+        phoneNumber: '123',
+      },
+      address: {
+        country: 'A',
+        state: 'B',
+        city: 'C',
+        street: 'D',
+        postalCode: 'E',
+      },
       paymentToken: 'tok',
     };
     const receipt = await service.purchaseTickets('user1', dto);
@@ -44,42 +54,90 @@ describe('TicketsService', () => {
     const dto = {
       eventId: 'event1',
       ticketQuantity: 1,
-      billingDetails: { fullName: 'John Doe', email: 'john@example.com', phoneNumber: '123' },
-      address: { country: 'A', state: 'B', city: 'C', street: 'D', postalCode: 'E' },
+      billingDetails: {
+        fullName: 'John Doe',
+        email: 'john@example.com',
+        phoneNumber: '123',
+      },
+      address: {
+        country: 'A',
+        state: 'B',
+        city: 'C',
+        street: 'D',
+        postalCode: 'E',
+      },
       paymentToken: 'tok',
     };
-    await expect(service.purchaseTickets('invalid', dto)).rejects.toThrow(NotFoundException);
+    await expect(service.purchaseTickets('invalid', dto)).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
   it('should throw if event not found', async () => {
     const dto = {
       eventId: 'invalid',
       ticketQuantity: 1,
-      billingDetails: { fullName: 'John Doe', email: 'john@example.com', phoneNumber: '123' },
-      address: { country: 'A', state: 'B', city: 'C', street: 'D', postalCode: 'E' },
+      billingDetails: {
+        fullName: 'John Doe',
+        email: 'john@example.com',
+        phoneNumber: '123',
+      },
+      address: {
+        country: 'A',
+        state: 'B',
+        city: 'C',
+        street: 'D',
+        postalCode: 'E',
+      },
       paymentToken: 'tok',
     };
-    await expect(service.purchaseTickets('user1', dto)).rejects.toThrow(NotFoundException);
+    await expect(service.purchaseTickets('user1', dto)).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
   it('should throw if not enough tickets', async () => {
     const dto = {
       eventId: 'event1',
       ticketQuantity: 999,
-      billingDetails: { fullName: 'John Doe', email: 'john@example.com', phoneNumber: '123' },
-      address: { country: 'A', state: 'B', city: 'C', street: 'D', postalCode: 'E' },
+      billingDetails: {
+        fullName: 'John Doe',
+        email: 'john@example.com',
+        phoneNumber: '123',
+      },
+      address: {
+        country: 'A',
+        state: 'B',
+        city: 'C',
+        street: 'D',
+        postalCode: 'E',
+      },
       paymentToken: 'tok',
     };
-    await expect(service.purchaseTickets('user1', dto)).rejects.toThrow(BadRequestException);
+    await expect(service.purchaseTickets('user1', dto)).rejects.toThrow(
+      BadRequestException,
+    );
   });
 
   it('should throw if payment fails', async () => {
-    jest.spyOn(paymentService, 'processPayment').mockRejectedValueOnce(new Error('fail'));
+    jest
+      .spyOn(paymentService, 'processPayment')
+      .mockRejectedValueOnce(new Error('fail'));
     const dto = {
       eventId: 'event1',
       ticketQuantity: 1,
-      billingDetails: { fullName: 'John Doe', email: 'john@example.com', phoneNumber: '123' },
-      address: { country: 'A', state: 'B', city: 'C', street: 'D', postalCode: 'E' },
+      billingDetails: {
+        fullName: 'John Doe',
+        email: 'john@example.com',
+        phoneNumber: '123',
+      },
+      address: {
+        country: 'A',
+        state: 'B',
+        city: 'C',
+        street: 'D',
+        postalCode: 'E',
+      },
       paymentToken: 'fail',
     };
     await expect(service.purchaseTickets('user1', dto)).rejects.toThrow('fail');
@@ -89,8 +147,18 @@ describe('TicketsService', () => {
     const dto = {
       eventId: 'event1',
       ticketQuantity: 1,
-      billingDetails: { fullName: 'John Doe', email: 'john@example.com', phoneNumber: '123' },
-      address: { country: 'A', state: 'B', city: 'C', street: 'D', postalCode: 'E' },
+      billingDetails: {
+        fullName: 'John Doe',
+        email: 'john@example.com',
+        phoneNumber: '123',
+      },
+      address: {
+        country: 'A',
+        state: 'B',
+        city: 'C',
+        street: 'D',
+        postalCode: 'E',
+      },
       paymentToken: 'tok',
     };
     const receipt = await service.purchaseTickets('user1', dto);
@@ -99,6 +167,8 @@ describe('TicketsService', () => {
   });
 
   it('should throw if receipt not found', async () => {
-    await expect(service.getReceipt('invalid', 'user1')).rejects.toThrow(NotFoundException);
+    await expect(service.getReceipt('invalid', 'user1')).rejects.toThrow(
+      NotFoundException,
+    );
   });
-}); 
+});

@@ -1,4 +1,13 @@
-import { Controller, Post, Body, UsePipes, ValidationPipe, Get, Req, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UsePipes,
+  ValidationPipe,
+  Get,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from '../user/dtos/login.dto';
 import { CreateUserDto } from '../user/dtos/create-user.dto';
@@ -69,4 +78,4 @@ export class AuthController {
   async resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto);
   }
-} 
+}

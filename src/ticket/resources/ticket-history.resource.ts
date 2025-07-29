@@ -15,4 +15,4 @@ export class TicketHistoryResource {
   static toArray(histories: TicketHistory[]) {
     return histories.map(TicketHistoryResource.toResponse);
   }
-} 
+}

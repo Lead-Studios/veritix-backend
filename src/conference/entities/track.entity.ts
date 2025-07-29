@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  OneToMany,
+} from 'typeorm';
 import { Conference } from './conference.entity';
 import { Session } from './session.entity';
 
@@ -10,9 +16,9 @@ export class Track {
   @Column()
   name: string;
 
-  @ManyToOne(() => Conference, conference => conference.tracks)
+  @ManyToOne(() => Conference, (conference) => conference.tracks)
   conference: Conference;
 
-  @OneToMany(() => Session, session => session.track)
+  @OneToMany(() => Session, (session) => session.track)
   sessions: Session[];
 }

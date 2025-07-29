@@ -1,11 +1,30 @@
-import { Controller, Post, Get, Put, Delete, Param, Body, UseGuards, UseInterceptors, UploadedFile, ValidationPipe, UsePipes } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Put,
+  Delete,
+  Param,
+  Body,
+  UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  ValidationPipe,
+  UsePipes,
+} from '@nestjs/common';
 import { CollaboratorService } from '../services/collaborator.service';
 import { CreateCollaboratorDto } from '../dtos/create-collaborator.dto';
 import { UpdateCollaboratorDto } from '../dtos/update-collaborator.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiParam, ApiBody } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiBody,
+} from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface';
 import { File as MulterFile } from 'multer';
@@ -87,4 +106,4 @@ export class CollaboratorController {
   async remove(@Param('id') id: string) {
     return this.collaboratorService.remove(id);
   }
-} 
+}

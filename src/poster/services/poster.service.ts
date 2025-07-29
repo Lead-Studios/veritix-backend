@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Poster } from '../entities/poster.entity';
@@ -45,7 +49,9 @@ export class PosterService {
     if (imageUrl && imageUrl.includes(this.bucket)) {
       const key = imageUrl.split(`.amazonaws.com/`)[1];
       if (key) {
-        await this.s3.deleteObject({ Bucket: this.bucket as string, Key: key }).promise();
+        await this.s3
+          .deleteObject({ Bucket: this.bucket as string, Key: key })
+          .promise();
       }
     }
   }
@@ -79,7 +85,9 @@ export class PosterService {
     const poster = await this.posterRepo.findOne({ where: { id } });
     if (!poster) throw new NotFoundException('Poster not found');
     if (dto.eventId) {
-      const event = await this.eventRepo.findOne({ where: { id: dto.eventId } });
+      const event = await this.eventRepo.findOne({
+        where: { id: dto.eventId },
+      });
       if (!event) throw new BadRequestException('Event not found');
       poster.event = event;
     }
@@ -94,4 +102,4 @@ export class PosterService {
     await this.posterRepo.delete(id);
     return { deleted: true };
   }
-} 
+}

@@ -1,5 +1,12 @@
 export class EventDashboardResource {
-  static toResponse({ event, totalTicketsSold, totalRevenue, totalProfit, ticketsAvailable, eventImage }) {
+  static toResponse({
+    event,
+    totalTicketsSold,
+    totalRevenue,
+    totalProfit,
+    ticketsAvailable,
+    eventImage,
+  }) {
     return {
       event: {
         id: event.id,
@@ -19,4 +26,4 @@ export class EventDashboardResource {
       ticketsAvailable,
     };
   }
-} 
+}

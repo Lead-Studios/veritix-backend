@@ -7,9 +7,12 @@ import { SponsorService } from './services/sponsor.service';
 import { SponsorController } from './controllers/sponsor.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Sponsor, Event]), MulterModule.register()],
+  imports: [
+    TypeOrmModule.forFeature([Sponsor, Event]),
+    MulterModule.register(),
+  ],
   providers: [SponsorService],
   controllers: [SponsorController],
   exports: [SponsorService],
 })
-export class SponsorModule {} 
+export class SponsorModule {}

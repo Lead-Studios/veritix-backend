@@ -74,7 +74,11 @@ describe('AuthController', () => {
 
       mockAuthService.refresh.mockResolvedValue(expectedResult);
 
-      const result = await controller.refresh(refreshTokenDto, ipAddress, userAgent);
+      const result = await controller.refresh(
+        refreshTokenDto,
+        ipAddress,
+        userAgent,
+      );
 
       expect(mockAuthService.refresh).toHaveBeenCalledWith(
         'refresh-token',

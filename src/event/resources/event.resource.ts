@@ -5,11 +5,13 @@ export class EventResource {
     return {
       id: event.id,
       name: event.name,
-      images: event.galleryImages ? event.galleryImages.map(img => img.id) : [],
+      images: event.galleryImages
+        ? event.galleryImages.map((img) => img.id)
+        : [],
     };
   }
 
   static toArray(events: Event[]) {
     return events.map(EventResource.toResponse);
   }
-} 
+}

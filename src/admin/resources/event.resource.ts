@@ -14,4 +14,4 @@ export class EventResource {
   static toArray(events: Event[]) {
     return events.map(EventResource.toResponse);
   }
-} 
+}

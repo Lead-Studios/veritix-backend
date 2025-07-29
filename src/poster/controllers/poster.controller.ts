@@ -1,11 +1,29 @@
-import { Controller, Post, Get, Put, Delete, Param, Body, UseGuards, UseInterceptors, UploadedFile, Req } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Put,
+  Delete,
+  Param,
+  Body,
+  UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  Req,
+} from '@nestjs/common';
 import { PosterService } from '../services/poster.service';
 import { CreatePosterDto } from '../dtos/create-poster.dto';
 import { UpdatePosterDto } from '../dtos/update-poster.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiParam, ApiBody } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiBody,
+} from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface';
 import { File as MulterFile } from 'multer';
@@ -79,4 +97,4 @@ export class PosterController {
   async remove(@Param('id') id: string) {
     return this.posterService.remove(id);
   }
-} 
+}

@@ -12,7 +12,9 @@ import { TicketController } from './controllers/ticket.controller';
 import { PdfService } from './pdf/pdf.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Ticket, TicketHistory, Event, User, PromoCode])],
+  imports: [
+    TypeOrmModule.forFeature([Ticket, TicketHistory, Event, User, PromoCode]),
+  ],
   providers: [TicketService, PdfService],
   controllers: [TicketController],
 })

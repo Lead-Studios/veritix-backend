@@ -18,4 +18,4 @@ export class UpdateGalleryImageDto {
   @IsNotEmpty()
   @IsString()
   description: string;
-} 
+}

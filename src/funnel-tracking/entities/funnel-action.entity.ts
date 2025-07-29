@@ -123,4 +123,4 @@ export class FunnelAction {
   @ManyToOne(() => FunnelSession, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'sessionId' })
   session: FunnelSession;
-} 
+}

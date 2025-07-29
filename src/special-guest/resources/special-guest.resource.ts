@@ -5,7 +5,9 @@ export class SpecialGuestResource {
     return {
       id: guest.id,
       image: guest.image,
-      event: guest.event ? { id: guest.event.id, name: guest.event.name } : null,
+      event: guest.event
+        ? { id: guest.event.id, name: guest.event.name }
+        : null,
       name: guest.name,
       facebook: guest.facebook,
       twitter: guest.twitter,
@@ -18,4 +20,4 @@ export class SpecialGuestResource {
   static toArray(guests: SpecialGuest[]) {
     return guests.map(SpecialGuestResource.toResponse);
   }
-} 
+}

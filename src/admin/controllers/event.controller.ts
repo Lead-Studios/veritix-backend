@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Body,
+  Param,
+  UseGuards,
+} from '@nestjs/common';
 import { EventService } from '../services/event.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
@@ -40,4 +48,4 @@ export class EventController {
   delete(@Body() dto: DeleteEventDto) {
     return this.eventService.delete(dto);
   }
-} 
+}

@@ -9,11 +9,19 @@ import {
   Request,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { FunnelTrackingService } from '../services/funnel-tracking.service';
 import { TrackFunnelActionDto } from '../dto/track-funnel-action.dto';
 import { FunnelStatsResponseDto } from '../dto/funnel-stats.dto';
-import { FunnelStage, FunnelActionType } from '../entities/funnel-action.entity';
+import {
+  FunnelStage,
+  FunnelActionType,
+} from '../entities/funnel-action.entity';
 
 @ApiTags('Funnel Tracking')
 @Controller('funnel-tracking')
@@ -110,7 +118,11 @@ export class FunnelTrackingController {
 
   @Get('stats/:eventId')
   @ApiOperation({ summary: 'Get funnel statistics for an event' })
-  @ApiResponse({ status: 200, description: 'Statistics retrieved successfully', type: FunnelStatsResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Statistics retrieved successfully',
+    type: FunnelStatsResponseDto,
+  })
   async getFunnelStats(
     @Param('eventId') eventId: string,
     @Query('startDate') startDate?: string,
@@ -153,9 +165,13 @@ export class FunnelTrackingController {
 
   @Post('track/ticket-selection')
   @ApiOperation({ summary: 'Track ticket selection (convenience endpoint)' })
-  @ApiResponse({ status: 201, description: 'Ticket selection tracked successfully' })
+  @ApiResponse({
+    status: 201,
+    description: 'Ticket selection tracked successfully',
+  })
   async trackTicketSelection(
-    @Body() body: {
+    @Body()
+    body: {
       eventId: string;
       sessionId: string;
       userId?: string;
@@ -190,9 +206,13 @@ export class FunnelTrackingController {
 
   @Post('track/cart-add')
   @ApiOperation({ summary: 'Track cart addition (convenience endpoint)' })
-  @ApiResponse({ status: 201, description: 'Cart addition tracked successfully' })
+  @ApiResponse({
+    status: 201,
+    description: 'Cart addition tracked successfully',
+  })
   async trackCartAdd(
-    @Body() body: {
+    @Body()
+    body: {
       eventId: string;
       sessionId: string;
       userId?: string;
@@ -227,7 +247,10 @@ export class FunnelTrackingController {
 
   @Post('track/checkout-start')
   @ApiOperation({ summary: 'Track checkout start (convenience endpoint)' })
-  @ApiResponse({ status: 201, description: 'Checkout start tracked successfully' })
+  @ApiResponse({
+    status: 201,
+    description: 'Checkout start tracked successfully',
+  })
   async trackCheckoutStart(
     @Body() body: { eventId: string; sessionId: string; userId?: string },
     @Request() req: any,
@@ -254,9 +277,13 @@ export class FunnelTrackingController {
 
   @Post('track/payment-complete')
   @ApiOperation({ summary: 'Track payment completion (convenience endpoint)' })
-  @ApiResponse({ status: 201, description: 'Payment completion tracked successfully' })
+  @ApiResponse({
+    status: 201,
+    description: 'Payment completion tracked successfully',
+  })
   async trackPaymentComplete(
-    @Body() body: {
+    @Body()
+    body: {
       eventId: string;
       sessionId: string;
       userId?: string;
@@ -321,4 +348,4 @@ export class FunnelTrackingController {
 
     return 'direct';
   }
-} 
+}

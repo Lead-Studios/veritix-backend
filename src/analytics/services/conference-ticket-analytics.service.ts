@@ -1,14 +1,18 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, MoreThanOrEqual, LessThanOrEqual } from 'typeorm';
 import { TicketingTicket } from '../../ticketing/entities/ticket.entity';
 import { Conference } from '../../conference/entities/conference.entity';
-import { 
-  TimeFilter, 
+import {
+  TimeFilter,
   ExportFormat,
   ConferenceTicketAnalyticsResponseDto,
   ConferenceTicketTotalResponseDto,
-  TicketAnalyticsDataDto 
+  TicketAnalyticsDataDto,
 } from '../dto/conference-ticket-analytics.dto';
 import * as ExcelJS from 'exceljs';
 import { Response } from 'express';
@@ -25,11 +29,17 @@ export class ConferenceTicketAnalyticsService {
   /**
    * Get total tickets for a conference
    */
-  async getTotalTickets(conferenceId: string): Promise<ConferenceTicketTotalResponseDto> {
+  async getTotalTickets(
+    conferenceId: string,
+  ): Promise<ConferenceTicketTotalResponseDto> {
     // Verify conference exists
-    const conference = await this.conferenceRepo.findOne({ where: { id: parseInt(conferenceId) } });
+    const conference = await this.conferenceRepo.findOne({
+      where: { id: parseInt(conferenceId) },
+    });
     if (!conference) {
-      throw new NotFoundException(`Conference with ID ${conferenceId} not found`);
+      throw new NotFoundException(
+        `Conference with ID ${conferenceId} not found`,
+      );
     }
 
     // Get tickets for this conference (assuming tickets have conferenceId field)
@@ -39,8 +49,12 @@ export class ConferenceTicketAnalyticsService {
     });
 
     const totalTickets = tickets.length;
-    const totalRevenue = tickets.reduce((sum, ticket) => sum + Number(ticket.pricePaid), 0);
-    const averageTicketPrice = totalTickets > 0 ? totalRevenue / totalTickets : 0;
+    const totalRevenue = tickets.reduce(
+      (sum, ticket) => sum + Number(ticket.pricePaid),
+      0,
+    );
+    const averageTicketPrice =
+      totalTickets > 0 ? totalRevenue / totalTickets : 0;
 
     return {
       conferenceId,
@@ -58,13 +72,22 @@ export class ConferenceTicketAnalyticsService {
     filter?: TimeFilter,
   ): Promise<ConferenceTicketAnalyticsResponseDto> {
     // Verify conference exists
-    const conference = await this.conferenceRepo.findOne({ where: { id: parseInt(conferenceId) } });
+    const conference = await this.conferenceRepo.findOne({
+      where: { id: parseInt(conferenceId) },
+    });
     if (!conference) {
-      throw new NotFoundException(`Conference with ID ${conferenceId} not found`);
+      throw new NotFoundException(
+        `Conference with ID ${conferenceId} not found`,
+      );
     }
 
     const { startDate, endDate } = this.getDateRange(filter);
-    const data = await this.getFilteredTicketData(conferenceId, filter, startDate, endDate);
+    const data = await this.getFilteredTicketData(
+      conferenceId,
+      filter,
+      startDate,
+      endDate,
+    );
     const totalTickets = data.reduce((sum, item) => sum + item.ticketCount, 0);
 
     return {
@@ -89,13 +112,22 @@ export class ConferenceTicketAnalyticsService {
     filter?: TimeFilter,
   ): Promise<void> {
     // Verify conference exists
-    const conference = await this.conferenceRepo.findOne({ where: { id: parseInt(conferenceId) } });
+    const conference = await this.conferenceRepo.findOne({
+      where: { id: parseInt(conferenceId) },
+    });
     if (!conference) {
-      throw new NotFoundException(`Conference with ID ${conferenceId} not found`);
+      throw new NotFoundException(
+        `Conference with ID ${conferenceId} not found`,
+      );
     }
 
     const { startDate, endDate } = this.getDateRange(filter);
-    const data = await this.getFilteredTicketData(conferenceId, filter, startDate, endDate);
+    const data = await this.getFilteredTicketData(
+      conferenceId,
+      filter,
+      startDate,
+      endDate,
+    );
 
     if (format === ExportFormat.CSV) {
       await this.exportToCSV(data, conferenceId, res);
@@ -109,7 +141,10 @@ export class ConferenceTicketAnalyticsService {
   /**
    * Get date range based on filter
    */
-  private getDateRange(filter?: TimeFilter): { startDate: Date; endDate: Date } {
+  private getDateRange(filter?: TimeFilter): {
+    startDate: Date;
+    endDate: Date;
+  } {
     const now = new Date();
     let startDate: Date;
 
@@ -152,10 +187,13 @@ export class ConferenceTicketAnalyticsService {
       .where('ticket.conferenceId = :conferenceId', { conferenceId });
 
     if (startDate && endDate) {
-      queryBuilder.andWhere('ticket.purchaseDate BETWEEN :startDate AND :endDate', {
-        startDate,
-        endDate,
-      });
+      queryBuilder.andWhere(
+        'ticket.purchaseDate BETWEEN :startDate AND :endDate',
+        {
+          startDate,
+          endDate,
+        },
+      );
     }
 
     switch (filter) {
@@ -177,17 +215,19 @@ export class ConferenceTicketAnalyticsService {
   /**
    * Get hourly aggregated data
    */
-  private async getHourlyData(queryBuilder: any): Promise<TicketAnalyticsDataDto[]> {
+  private async getHourlyData(
+    queryBuilder: any,
+  ): Promise<TicketAnalyticsDataDto[]> {
     const results = await queryBuilder
       .select([
-        'DATE_TRUNC(\'hour\', ticket.purchaseDate) as timestamp',
+        "DATE_TRUNC('hour', ticket.purchaseDate) as timestamp",
         'COUNT(*) as ticketCount',
       ])
-      .groupBy('DATE_TRUNC(\'hour\', ticket.purchaseDate)')
+      .groupBy("DATE_TRUNC('hour', ticket.purchaseDate)")
       .orderBy('timestamp', 'ASC')
       .getRawMany();
 
-    return results.map(result => ({
+    return results.map((result) => ({
       timestamp: result.timestamp,
       ticketCount: parseInt(result.ticketCount),
       conferenceId: result.conferenceId,
@@ -197,17 +237,19 @@ export class ConferenceTicketAnalyticsService {
   /**
    * Get daily aggregated data
    */
-  private async getDailyData(queryBuilder: any): Promise<TicketAnalyticsDataDto[]> {
+  private async getDailyData(
+    queryBuilder: any,
+  ): Promise<TicketAnalyticsDataDto[]> {
     const results = await queryBuilder
       .select([
-        'DATE_TRUNC(\'day\', ticket.purchaseDate) as timestamp',
+        "DATE_TRUNC('day', ticket.purchaseDate) as timestamp",
         'COUNT(*) as ticketCount',
       ])
-      .groupBy('DATE_TRUNC(\'day\', ticket.purchaseDate)')
+      .groupBy("DATE_TRUNC('day', ticket.purchaseDate)")
       .orderBy('timestamp', 'ASC')
       .getRawMany();
 
-    return results.map(result => ({
+    return results.map((result) => ({
       timestamp: result.timestamp,
       ticketCount: parseInt(result.ticketCount),
       conferenceId: result.conferenceId,
@@ -217,17 +259,19 @@ export class ConferenceTicketAnalyticsService {
   /**
    * Get weekly aggregated data
    */
-  private async getWeeklyData(queryBuilder: any): Promise<TicketAnalyticsDataDto[]> {
+  private async getWeeklyData(
+    queryBuilder: any,
+  ): Promise<TicketAnalyticsDataDto[]> {
     const results = await queryBuilder
       .select([
-        'DATE_TRUNC(\'week\', ticket.purchaseDate) as timestamp',
+        "DATE_TRUNC('week', ticket.purchaseDate) as timestamp",
         'COUNT(*) as ticketCount',
       ])
-      .groupBy('DATE_TRUNC(\'week\', ticket.purchaseDate)')
+      .groupBy("DATE_TRUNC('week', ticket.purchaseDate)")
       .orderBy('timestamp', 'ASC')
       .getRawMany();
 
-    return results.map(result => ({
+    return results.map((result) => ({
       timestamp: result.timestamp,
       ticketCount: parseInt(result.ticketCount),
       conferenceId: result.conferenceId,
@@ -237,17 +281,19 @@ export class ConferenceTicketAnalyticsService {
   /**
    * Get monthly aggregated data
    */
-  private async getMonthlyData(queryBuilder: any): Promise<TicketAnalyticsDataDto[]> {
+  private async getMonthlyData(
+    queryBuilder: any,
+  ): Promise<TicketAnalyticsDataDto[]> {
     const results = await queryBuilder
       .select([
-        'DATE_TRUNC(\'month\', ticket.purchaseDate) as timestamp',
+        "DATE_TRUNC('month', ticket.purchaseDate) as timestamp",
         'COUNT(*) as ticketCount',
       ])
-      .groupBy('DATE_TRUNC(\'month\', ticket.purchaseDate)')
+      .groupBy("DATE_TRUNC('month', ticket.purchaseDate)")
       .orderBy('timestamp', 'ASC')
       .getRawMany();
 
-    return results.map(result => ({
+    return results.map((result) => ({
       timestamp: result.timestamp,
       ticketCount: parseInt(result.ticketCount),
       conferenceId: result.conferenceId,
@@ -257,17 +303,19 @@ export class ConferenceTicketAnalyticsService {
   /**
    * Get yearly aggregated data
    */
-  private async getYearlyData(queryBuilder: any): Promise<TicketAnalyticsDataDto[]> {
+  private async getYearlyData(
+    queryBuilder: any,
+  ): Promise<TicketAnalyticsDataDto[]> {
     const results = await queryBuilder
       .select([
-        'DATE_TRUNC(\'year\', ticket.purchaseDate) as timestamp',
+        "DATE_TRUNC('year', ticket.purchaseDate) as timestamp",
         'COUNT(*) as ticketCount',
       ])
-      .groupBy('DATE_TRUNC(\'year\', ticket.purchaseDate)')
+      .groupBy("DATE_TRUNC('year', ticket.purchaseDate)")
       .orderBy('timestamp', 'ASC')
       .getRawMany();
 
-    return results.map(result => ({
+    return results.map((result) => ({
       timestamp: result.timestamp,
       ticketCount: parseInt(result.ticketCount),
       conferenceId: result.conferenceId,
@@ -277,17 +325,19 @@ export class ConferenceTicketAnalyticsService {
   /**
    * Get all-time aggregated data
    */
-  private async getAllTimeData(queryBuilder: any): Promise<TicketAnalyticsDataDto[]> {
+  private async getAllTimeData(
+    queryBuilder: any,
+  ): Promise<TicketAnalyticsDataDto[]> {
     const results = await queryBuilder
       .select([
-        'DATE_TRUNC(\'day\', ticket.purchaseDate) as timestamp',
+        "DATE_TRUNC('day', ticket.purchaseDate) as timestamp",
         'COUNT(*) as ticketCount',
       ])
-      .groupBy('DATE_TRUNC(\'day\', ticket.purchaseDate)')
+      .groupBy("DATE_TRUNC('day', ticket.purchaseDate)")
       .orderBy('timestamp', 'ASC')
       .getRawMany();
 
-    return results.map(result => ({
+    return results.map((result) => ({
       timestamp: result.timestamp,
       ticketCount: parseInt(result.ticketCount),
       conferenceId: result.conferenceId,
@@ -303,13 +353,18 @@ export class ConferenceTicketAnalyticsService {
     res: Response,
   ): Promise<void> {
     const csvHeader = 'timestamp,ticketCount,conferenceId\n';
-    const csvRows = data.map(item => 
-      `${item.timestamp},${item.ticketCount},${item.conferenceId}`
-    ).join('\n');
+    const csvRows = data
+      .map(
+        (item) => `${item.timestamp},${item.ticketCount},${item.conferenceId}`,
+      )
+      .join('\n');
     const csvContent = csvHeader + csvRows;
 
     res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', `attachment; filename=conference-${conferenceId}-tickets.csv`);
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename=conference-${conferenceId}-tickets.csv`,
+    );
     res.send(csvContent);
   }
 
@@ -332,7 +387,7 @@ export class ConferenceTicketAnalyticsService {
     ];
 
     // Add data
-    data.forEach(item => {
+    data.forEach((item) => {
       worksheet.addRow({
         timestamp: item.timestamp,
         ticketCount: item.ticketCount,
@@ -348,9 +403,15 @@ export class ConferenceTicketAnalyticsService {
       fgColor: { argb: 'FFE0E0E0' },
     };
 
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', `attachment; filename=conference-${conferenceId}-tickets.xlsx`);
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename=conference-${conferenceId}-tickets.xlsx`,
+    );
 
     await workbook.xlsx.write(res);
   }
-} 
+}

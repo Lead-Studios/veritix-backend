@@ -13,7 +13,9 @@ export class EmailService {
 
   async sendPasswordResetEmail(email: string, token: string) {
     // TODO: Implement real email sending
-    this.logger.log(`Send password reset email to ${email} with token: ${token}`);
+    this.logger.log(
+      `Send password reset email to ${email} with token: ${token}`,
+    );
     return true;
   }
-} 
+}

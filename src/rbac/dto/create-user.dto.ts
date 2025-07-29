@@ -1,22 +1,29 @@
-import { IsEmail, IsString, IsArray, IsOptional, MinLength, IsEnum } from "class-validator"
-import { Role } from "../../rbac/enums/role.enum"
+import {
+  IsEmail,
+  IsString,
+  IsArray,
+  IsOptional,
+  MinLength,
+  IsEnum,
+} from 'class-validator';
+import { Role } from '../../rbac/enums/role.enum';
 
 export class CreateUserDto {
   @IsEmail()
-  email: string
+  email: string;
 
   @IsString()
   @MinLength(8)
-  password: string
+  password: string;
 
   @IsString()
-  firstName: string
+  firstName: string;
 
   @IsString()
-  lastName: string
+  lastName: string;
 
   @IsOptional()
   @IsArray()
   @IsEnum(Role, { each: true })
-  roles?: Role[]
+  roles?: Role[];
 }

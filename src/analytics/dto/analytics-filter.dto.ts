@@ -1,32 +1,32 @@
-import { IsOptional, IsUUID, IsDateString, IsString } from "class-validator"
-import { Transform } from "class-transformer"
+import { IsOptional, IsUUID, IsDateString, IsString } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class AnalyticsFilterDto {
   @IsOptional()
   @IsUUID()
-  conferenceId?: string
+  conferenceId?: string;
 
   @IsOptional()
   @IsDateString()
-  startDate?: string
+  startDate?: string;
 
   @IsOptional()
   @IsDateString()
-  endDate?: string
+  endDate?: string;
 
   @IsOptional()
   @IsString()
-  track?: string
+  track?: string;
 
   @IsOptional()
   @IsString()
-  speaker?: string
+  speaker?: string;
 
   @IsOptional()
-  @Transform(({ value }) => value === "true")
-  exportToCsv?: boolean
+  @Transform(({ value }) => value === 'true')
+  exportToCsv?: boolean;
 
   @IsOptional()
-  @Transform(({ value }) => value === "true")
-  exportToPdf?: boolean
+  @Transform(({ value }) => value === 'true')
+  exportToPdf?: boolean;
 }

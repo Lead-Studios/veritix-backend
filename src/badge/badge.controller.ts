@@ -1,9 +1,9 @@
-import { Controller, Get, Param, Res } from "@nestjs/common";
-import { BadgeService } from "./badge.service";
-import { Attendee } from "src/conference/entities/attendee.entity";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-import { Response } from "express";
+import { Controller, Get, Param, Res } from '@nestjs/common';
+import { BadgeService } from './badge.service';
+import { Attendee } from 'src/conference/entities/attendee.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Response } from 'express';
 
 @Controller('badges')
 export class BadgeController {
@@ -11,8 +11,7 @@ export class BadgeController {
     private badgeService: BadgeService,
 
     @InjectRepository(Attendee)
-    private attendeeRepo: Repository<Attendee>
-
+    private attendeeRepo: Repository<Attendee>,
   ) {}
 
   @Get(':id/pdf')

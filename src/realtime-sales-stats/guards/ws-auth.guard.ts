@@ -43,8 +43,9 @@ export class WsAuthGuard {
   }
 
   private extractTokenFromHandshake(client: Socket): string | undefined {
-    const token = client.handshake.auth?.token || 
-                 client.handshake.headers?.authorization?.replace('Bearer ', '');
+    const token =
+      client.handshake.auth?.token ||
+      client.handshake.headers?.authorization?.replace('Bearer ', '');
     return token;
   }
 }

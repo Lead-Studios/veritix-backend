@@ -28,4 +28,4 @@ export class UpdateSponsorDto {
   @IsOptional()
   @IsUUID()
   eventId?: string;
-} 
+}

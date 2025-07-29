@@ -7,28 +7,28 @@ import {
   ManyToMany,
   JoinTable,
   DeleteDateColumn,
-} from "typeorm";
-import { Ticket } from "../../ticket/entities/ticket.entity";
-import { SpecialGuest } from "../../special-guest/entities/special-guest.entity";
-import { Sponsor } from "../../event/entities/sponsor.entity";
-import { Poster } from "../../poster/entities/poster.entity";
-import { Collaborator } from "../../event/entities/collaborator.entity";
+} from 'typeorm';
+import { Ticket } from '../../ticket/entities/ticket.entity';
+import { SpecialGuest } from '../../special-guest/entities/special-guest.entity';
+import { Sponsor } from '../../event/entities/sponsor.entity';
+import { Poster } from '../../poster/entities/poster.entity';
+import { Collaborator } from '../../event/entities/collaborator.entity';
 // import { EventGallery } from "../../event-gallery/entities/event-gallery.entity"; // Not found
 // import { Category } from "../../category/category.entity"; // Not found
 // import { PricingRule } from "../../dynamic-pricing/pricing/entities/pricing-rule.entity"; // Not found
-import { User } from "../../user/entities/user.entity";
+import { User } from '../../user/entities/user.entity';
 // import { EventStatus } from "../../common/enums/event-status.enum"; // Not found
 // import { GalleryItem } from "../../event-gallery/entities/gallery-item.entity"; // Not found
-import { PromoCode } from "../../ticket/entities/promo-code.entity";
-import { EventView } from "../../analytics-event/entities/event-view.entity";
-import { PurchaseLog } from "../../analytics-event/entities/purchase-log.entity";
-import { TicketTier } from "../../ticket-tier/entities/ticket-tier.entity";
-import { GalleryImage } from "../../event/entities/gallery-image.entity";
-import { Notification } from "../../notification/entities/notification.entity";
+import { PromoCode } from '../../ticket/entities/promo-code.entity';
+import { EventView } from '../../analytics-event/entities/event-view.entity';
+import { PurchaseLog } from '../../analytics-event/entities/purchase-log.entity';
+import { TicketTier } from '../../ticket-tier/entities/ticket-tier.entity';
+import { GalleryImage } from '../../event/entities/gallery-image.entity';
+import { Notification } from '../../notification/entities/notification.entity';
 
 @Entity()
 export class Event {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column()
@@ -46,12 +46,12 @@ export class Event {
   @Column()
   localGovernment: string;
 
-  @Column("int")
+  @Column('int')
   ticketQuantity: number;
 
   // @Column({ type: "enum", enum: EventStatus, default: EventStatus.DRAFT })
   // status: EventStatus;
-  @Column({ default: "DRAFT" })
+  @Column({ default: 'DRAFT' })
   status: string;
 
   @OneToMany(() => PromoCode, (promo) => promo.event)
@@ -69,7 +69,9 @@ export class Event {
   @OneToMany(() => Ticket, (ticket) => ticket.event)
   tickets: Ticket[];
 
-  @OneToMany(() => SpecialGuest, (specialGuest) => specialGuest.event, { nullable: true })
+  @OneToMany(() => SpecialGuest, (specialGuest) => specialGuest.event, {
+    nullable: true,
+  })
   specialGuests: SpecialGuest[] | null;
 
   @OneToMany(() => Collaborator, (collaborator) => collaborator.event)

@@ -79,7 +79,9 @@ export class RefreshTokenService {
     if (token) {
       // Find and revoke all tokens in the family
       await this.revokeAllUserTokens(token.userId);
-      this.logger.warn(`Revoked token family for user ${token.userId} due to potential compromise`);
+      this.logger.warn(
+        `Revoked token family for user ${token.userId} due to potential compromise`,
+      );
     }
   }
 
@@ -87,7 +89,7 @@ export class RefreshTokenService {
     const deleted = await this.refreshTokenRepository.delete({
       expiresAt: LessThan(new Date()),
     });
-    
+
     if (deleted.affected && deleted.affected > 0) {
       this.logger.log(`Cleaned up ${deleted.affected} expired refresh tokens`);
     }

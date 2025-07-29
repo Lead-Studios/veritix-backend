@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PurchaseTicketDto } from './dto/purchase-ticket.dto';
 import { ReceiptDto } from './dto/receipt.dto';
 import { TicketPurchase } from './entity/ticket.entity';
@@ -30,17 +34,20 @@ export class TicketsService {
   async applyPromoCode(eventId: string, code: string) {
     // For demo: always 10% off if code is 'PROMO10' and event matches
     if (code === 'PROMO10') {
-      const event = this.events.find(e => e.id === eventId);
+      const event = this.events.find((e) => e.id === eventId);
       if (!event) throw new BadRequestException('Event not found');
       return { valid: true, discount: 0.1 };
     }
     throw new BadRequestException('Invalid promo code');
   }
 
-  async purchaseTickets(userId: string, dto: PurchaseTicketDto): Promise<ReceiptDto> {
-    const user = this.users.find(u => u.id === userId);
+  async purchaseTickets(
+    userId: string,
+    dto: PurchaseTicketDto,
+  ): Promise<ReceiptDto> {
+    const user = this.users.find((u) => u.id === userId);
     if (!user) throw new NotFoundException('User not found');
-    const event = this.events.find(e => e.id === dto.eventId);
+    const event = this.events.find((e) => e.id === dto.eventId);
     if (!event) throw new NotFoundException('Event not found');
     if (dto.ticketQuantity > event.availableTickets) {
       throw new BadRequestException('Not enough tickets available');
@@ -59,7 +66,10 @@ export class TicketsService {
       totalPrice = totalPrice * (1 - discount);
     }
     // Process payment
-    const paymentConfirmationId = await this.paymentService.processPayment(dto.paymentToken, totalPrice);
+    const paymentConfirmationId = await this.paymentService.processPayment(
+      dto.paymentToken,
+      totalPrice,
+    );
     // Update event ticket inventory
     event.availableTickets -= dto.ticketQuantity;
     // Conference/session ticketing logic
@@ -68,7 +78,9 @@ export class TicketsService {
       ticketInfo = { type: 'conference', sessions: 'all' };
     } else if (dto.ticketType === 'session') {
       if (!dto.sessionIds || !dto.sessionIds.length) {
-        throw new BadRequestException('Session IDs required for session ticket');
+        throw new BadRequestException(
+          'Session IDs required for session ticket',
+        );
       }
       ticketInfo = { type: 'session', sessions: dto.sessionIds };
     }
@@ -113,10 +125,12 @@ export class TicketsService {
   }
 
   async getReceipt(orderId: string, userId: string): Promise<ReceiptDto> {
-    const purchase = this.purchases.find(p => p.id === orderId && p.userId === userId);
+    const purchase = this.purchases.find(
+      (p) => p.id === orderId && p.userId === userId,
+    );
     if (!purchase) throw new NotFoundException('Receipt not found');
-    const user = this.users.find(u => u.id === purchase.userId);
-    const event = this.events.find(e => e.id === purchase.eventId);
+    const user = this.users.find((u) => u.id === purchase.userId);
+    const event = this.events.find((e) => e.id === purchase.eventId);
     return {
       receiptId: purchase.id,
       user: {

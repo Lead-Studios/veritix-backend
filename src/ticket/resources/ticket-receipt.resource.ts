@@ -12,4 +12,4 @@ export class TicketReceiptResource {
       user: history.user?.email,
     };
   }
-} 
+}

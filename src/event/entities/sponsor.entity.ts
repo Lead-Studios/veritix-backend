@@ -26,4 +26,4 @@ export class Sponsor {
 
   @ManyToOne(() => Event, (event) => event.sponsors, { onDelete: 'CASCADE' })
   event: Event;
-} 
+}

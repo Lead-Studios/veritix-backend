@@ -84,7 +84,10 @@ describe('AuthService', () => {
       expect(mockUserRepository.findOne).toHaveBeenCalledWith({
         where: { email: 'test@example.com', isActive: true },
       });
-      expect(bcrypt.compare).toHaveBeenCalledWith('password123', 'hashedpassword');
+      expect(bcrypt.compare).toHaveBeenCalledWith(
+        'password123',
+        'hashedpassword',
+      );
       expect(mockTokenService.generateTokenPair).toHaveBeenCalledWith(
         mockUser,
         'TestAgent',
@@ -104,7 +107,9 @@ describe('AuthService', () => {
       mockUserRepository.findOne.mockResolvedValue(mockUser);
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
-      await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
+      await expect(service.login(loginDto)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should throw UnauthorizedException for non-existent user', async () => {
@@ -117,7 +122,9 @@ describe('AuthService', () => {
 
       mockUserRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
+      await expect(service.login(loginDto)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should throw UnauthorizedException for inactive user', async () => {
@@ -131,7 +138,9 @@ describe('AuthService', () => {
 
       mockUserRepository.findOne.mockResolvedValue(null); // Query filters inactive users
 
-      await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
+      await expect(service.login(loginDto)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 
@@ -147,7 +156,11 @@ describe('AuthService', () => {
 
       mockTokenService.refreshTokens.mockResolvedValue(newTokenPair);
 
-      const result = await service.refresh(refreshToken, 'TestAgent', '127.0.0.1');
+      const result = await service.refresh(
+        refreshToken,
+        'TestAgent',
+        '127.0.0.1',
+      );
 
       expect(mockTokenService.refreshTokens).toHaveBeenCalledWith(
         refreshToken,
@@ -160,9 +173,13 @@ describe('AuthService', () => {
     it('should throw UnauthorizedException for invalid refresh token', async () => {
       const invalidToken = 'invalid-token';
 
-      mockTokenService.refreshTokens.mockRejectedValue(new Error('Invalid token'));
+      mockTokenService.refreshTokens.mockRejectedValue(
+        new Error('Invalid token'),
+      );
 
-      await expect(service.refresh(invalidToken)).rejects.toThrow(UnauthorizedException);
+      await expect(service.refresh(invalidToken)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 
@@ -174,7 +191,9 @@ describe('AuthService', () => {
 
       await service.logout(refreshToken);
 
-      expect(mockTokenService.revokeRefreshToken).toHaveBeenCalledWith(refreshToken);
+      expect(mockTokenService.revokeRefreshToken).toHaveBeenCalledWith(
+        refreshToken,
+      );
     });
   });
 

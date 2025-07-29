@@ -74,4 +74,4 @@ export class FunnelStats {
 
   @UpdateDateColumn()
   updatedAt: Date;
-} 
+}

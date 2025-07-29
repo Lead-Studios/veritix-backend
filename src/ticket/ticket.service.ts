@@ -18,31 +18,48 @@ export class TicketService {
   ) {}
 
   async getUserTicketHistory(userId: string) {
-    const histories = await this.ticketHistoryRepo.find({ where: { user: { id: userId } }, relations: ['ticket', 'user'] });
+    const histories = await this.ticketHistoryRepo.find({
+      where: { user: { id: userId } },
+      relations: ['ticket', 'user'],
+    });
     return TicketHistoryResource.toArray(histories);
   }
 
   async getSingleTicketHistory(userId: string, id: string) {
-    const history = await this.ticketHistoryRepo.findOne({ where: { id, user: { id: userId } }, relations: ['ticket', 'user'] });
+    const history = await this.ticketHistoryRepo.findOne({
+      where: { id, user: { id: userId } },
+      relations: ['ticket', 'user'],
+    });
     if (!history) throw new NotFoundException('Ticket history not found');
     return TicketHistoryResource.toResponse(history);
   }
 
   async getTicketDetails(id: string) {
-    const history = await this.ticketHistoryRepo.findOne({ where: { id }, relations: ['ticket', 'user'] });
+    const history = await this.ticketHistoryRepo.findOne({
+      where: { id },
+      relations: ['ticket', 'user'],
+    });
     if (!history) throw new NotFoundException('Ticket history not found');
     return TicketHistoryResource.toResponse(history);
   }
 
   async getTicketReceipt(id: string) {
-    const history = await this.ticketHistoryRepo.findOne({ where: { id }, relations: ['ticket', 'user'] });
+    const history = await this.ticketHistoryRepo.findOne({
+      where: { id },
+      relations: ['ticket', 'user'],
+    });
     if (!history) throw new NotFoundException('Ticket history not found');
     return TicketReceiptResource.toResponse(history);
   }
 
   async downloadTicketReceiptPdf(id: string): Promise<Buffer> {
-    const history = await this.ticketHistoryRepo.findOne({ where: { id }, relations: ['ticket', 'user'] });
+    const history = await this.ticketHistoryRepo.findOne({
+      where: { id },
+      relations: ['ticket', 'user'],
+    });
     if (!history) throw new NotFoundException('Ticket history not found');
-    return this.pdfService.generateReceiptPdf(TicketReceiptResource.toResponse(history));
+    return this.pdfService.generateReceiptPdf(
+      TicketReceiptResource.toResponse(history),
+    );
   }
-} 
+}

@@ -1,6 +1,8 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddDynamicPricingToTicketTiers1751500000000 implements MigrationInterface {
+export class AddDynamicPricingToTicketTiers1751500000000
+  implements MigrationInterface
+{
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Add pricing_strategy enum type
     await queryRunner.query(`
@@ -34,4 +36,4 @@ export class AddDynamicPricingToTicketTiers1751500000000 implements MigrationInt
       DROP TYPE "public"."pricing_strategy_enum"
     `);
   }
-} 
+}

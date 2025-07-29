@@ -6,7 +6,10 @@ import { RefreshTokenPayload } from '../interfaces/jwt-payload.interface';
 import jwtConfig from '../config/jwt.config';
 
 @Injectable()
-export class RefreshJwtStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
+export class RefreshJwtStrategy extends PassportStrategy(
+  Strategy,
+  'jwt-refresh',
+) {
   constructor(
     @Inject(jwtConfig.KEY)
     private jwtConfiguration: ConfigType<typeof jwtConfig>,

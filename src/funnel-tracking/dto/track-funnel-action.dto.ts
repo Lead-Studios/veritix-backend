@@ -1,5 +1,15 @@
-import { IsString, IsEnum, IsOptional, IsUUID, IsNumber, IsObject } from 'class-validator';
-import { FunnelStage, FunnelActionType } from '../entities/funnel-action.entity';
+import {
+  IsString,
+  IsEnum,
+  IsOptional,
+  IsUUID,
+  IsNumber,
+  IsObject,
+} from 'class-validator';
+import {
+  FunnelStage,
+  FunnelActionType,
+} from '../entities/funnel-action.entity';
 
 export class TrackFunnelActionDto {
   @IsUUID()
@@ -89,4 +99,4 @@ export class TrackFunnelActionDto {
   @IsString()
   @IsOptional()
   errorMessage?: string;
-} 
+}

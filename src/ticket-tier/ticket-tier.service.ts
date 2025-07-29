@@ -2,15 +2,15 @@ import {
   Injectable,
   ForbiddenException,
   NotFoundException,
-} from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-import { CreateTicketTierDto } from "./dto/create-ticket-tier.dto";
-import { TicketTierResponseDto } from "./dto/ticket-tier-response.dto";
-import { EventsService } from "../events/events.service";
-import { TicketTier } from "./entities/ticket-tier.entity";
-import { PricingStrategyService } from "./services/pricing-strategy.service";
-import { PricingStrategy } from "./enums/pricing-strategy.enum";
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { CreateTicketTierDto } from './dto/create-ticket-tier.dto';
+import { TicketTierResponseDto } from './dto/ticket-tier-response.dto';
+import { EventsService } from '../events/events.service';
+import { TicketTier } from './entities/ticket-tier.entity';
+import { PricingStrategyService } from './services/pricing-strategy.service';
+import { PricingStrategy } from './enums/pricing-strategy.enum';
 
 @Injectable()
 export class TicketTierService {
@@ -28,17 +28,18 @@ export class TicketTierService {
   ): Promise<TicketTier> {
     const event = await this.eventsService.findOne(eventId);
 
-    if (!event) throw new NotFoundException("Event not found");
+    if (!event) throw new NotFoundException('Event not found');
     if (event.ownerId !== userId)
-      throw new ForbiddenException("You do not own this event");
+      throw new ForbiddenException('You do not own this event');
 
     // Set default pricing strategy if not provided
     const pricingStrategy = dto.pricingStrategy || PricingStrategy.FIXED;
-    
+
     // Merge with default config if pricing config is not provided
     let pricingConfig = dto.pricingConfig;
     if (!pricingConfig && pricingStrategy !== PricingStrategy.FIXED) {
-      const defaultConfig = this.pricingStrategyService.getDefaultConfig(pricingStrategy);
+      const defaultConfig =
+        this.pricingStrategyService.getDefaultConfig(pricingStrategy);
       pricingConfig = {
         maxPrice: defaultConfig.maxPrice,
         minPrice: defaultConfig.minPrice,
@@ -47,19 +48,19 @@ export class TicketTierService {
       };
     }
 
-    const tier = this.ticketTierRepo.create({ 
-      ...dto, 
+    const tier = this.ticketTierRepo.create({
+      ...dto,
       eventId,
       pricingStrategy,
       pricingConfig,
     });
-    
+
     return await this.ticketTierRepo.save(tier);
   }
 
   async findByEvent(eventId: string): Promise<TicketTierResponseDto[]> {
     const tiers = await this.ticketTierRepo.find({ where: { eventId } });
-    
+
     const responsePromises = tiers.map(async (tier) => {
       return await this.enrichWithDynamicPricing(tier);
     });
@@ -69,15 +70,17 @@ export class TicketTierService {
 
   async findOne(id: string): Promise<TicketTierResponseDto> {
     const tier = await this.ticketTierRepo.findOne({ where: { id } });
-    if (!tier) throw new NotFoundException("Ticket tier not found");
-    
+    if (!tier) throw new NotFoundException('Ticket tier not found');
+
     return await this.enrichWithDynamicPricing(tier);
   }
 
   /**
    * Enrich ticket tier with dynamic pricing information
    */
-  private async enrichWithDynamicPricing(tier: TicketTier): Promise<TicketTierResponseDto> {
+  private async enrichWithDynamicPricing(
+    tier: TicketTier,
+  ): Promise<TicketTierResponseDto> {
     const config = {
       strategy: tier.pricingStrategy,
       basePrice: tier.price,
@@ -87,7 +90,8 @@ export class TicketTierService {
       thresholds: tier.pricingConfig?.thresholds,
     };
 
-    const dynamicPrice = await this.pricingStrategyService.calculateDynamicPrice(tier, config);
+    const dynamicPrice =
+      await this.pricingStrategyService.calculateDynamicPrice(tier, config);
 
     return {
       id: tier.id,
@@ -110,7 +114,7 @@ export class TicketTierService {
    */
   async getCurrentPrice(tierId: string): Promise<number> {
     const tier = await this.ticketTierRepo.findOne({ where: { id: tierId } });
-    if (!tier) throw new NotFoundException("Ticket tier not found");
+    if (!tier) throw new NotFoundException('Ticket tier not found');
 
     const config = {
       strategy: tier.pricingStrategy,
@@ -121,7 +125,8 @@ export class TicketTierService {
       thresholds: tier.pricingConfig?.thresholds,
     };
 
-    const dynamicPrice = await this.pricingStrategyService.calculateDynamicPrice(tier, config);
+    const dynamicPrice =
+      await this.pricingStrategyService.calculateDynamicPrice(tier, config);
     return dynamicPrice.currentPrice;
   }
 }

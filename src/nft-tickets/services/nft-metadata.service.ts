@@ -53,34 +53,38 @@ export class NftMetadataService {
    * Generate metadata template for an event
    */
   generateMetadataTemplate(event: TicketingEvent): string {
-    return JSON.stringify({
-      name: `{{eventName}} - Ticket #{{tokenId}}`,
-      description: `{{eventDescription}}`,
-      image: `{{eventImage}}`,
-      attributes: [
-        {
-          trait_type: 'Event',
-          value: '{{eventName}}',
-        },
-        {
-          trait_type: 'Date',
-          value: '{{eventDate}}',
-        },
-        {
-          trait_type: 'Location',
-          value: '{{eventLocation}}',
-        },
-        {
-          trait_type: 'Ticket Type',
-          value: '{{ticketType}}',
-        },
-        {
-          trait_type: 'Price',
-          value: '{{pricePaid}}',
-        },
-      ],
-      external_url: '{{eventUrl}}',
-    }, null, 2);
+    return JSON.stringify(
+      {
+        name: `{{eventName}} - Ticket #{{tokenId}}`,
+        description: `{{eventDescription}}`,
+        image: `{{eventImage}}`,
+        attributes: [
+          {
+            trait_type: 'Event',
+            value: '{{eventName}}',
+          },
+          {
+            trait_type: 'Date',
+            value: '{{eventDate}}',
+          },
+          {
+            trait_type: 'Location',
+            value: '{{eventLocation}}',
+          },
+          {
+            trait_type: 'Ticket Type',
+            value: '{{ticketType}}',
+          },
+          {
+            trait_type: 'Price',
+            value: '{{pricePaid}}',
+          },
+        ],
+        external_url: '{{eventUrl}}',
+      },
+      null,
+      2,
+    );
   }
 
   /**
@@ -168,7 +172,10 @@ export class NftMetadataService {
   /**
    * Generate ticket image (placeholder or event-specific)
    */
-  private generateTicketImage(event: TicketingEvent, ticket: NftTicket): string {
+  private generateTicketImage(
+    event: TicketingEvent,
+    ticket: NftTicket,
+  ): string {
     // In a real implementation, you would:
     // 1. Generate a custom ticket image with event details
     // 2. Upload it to IPFS or similar
@@ -193,7 +200,7 @@ export class NftMetadataService {
     // - Location
 
     const eventName = event.name.toLowerCase();
-    
+
     if (eventName.includes('concert') || eventName.includes('music')) {
       return '#ff6b6b'; // Red for music events
     } else if (eventName.includes('conference') || eventName.includes('tech')) {
@@ -258,8 +265,8 @@ export class NftMetadataService {
     tickets: NftTicket[],
     config: NftMintingConfig,
   ): NftMetadata[] {
-    return tickets.map(ticket => 
-      this.generateTicketMetadata(event, ticket, config)
+    return tickets.map((ticket) =>
+      this.generateTicketMetadata(event, ticket, config),
     );
   }
 
@@ -279,4 +286,4 @@ export class NftMetadataService {
       ],
     };
   }
-} 
+}

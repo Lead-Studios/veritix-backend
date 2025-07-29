@@ -15,6 +15,8 @@ export class Collaborator {
   @Column()
   email: string;
 
-  @ManyToOne(() => Event, (event) => event.collaborators, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Event, (event) => event.collaborators, {
+    onDelete: 'CASCADE',
+  })
   event: Event;
-} 
+}

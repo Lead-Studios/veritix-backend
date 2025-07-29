@@ -1,6 +1,8 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddConferenceIdToTickets1751501000000 implements MigrationInterface {
+export class AddConferenceIdToTickets1751501000000
+  implements MigrationInterface
+{
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Add conferenceId column to tickets table
     await queryRunner.query(`
@@ -34,4 +36,4 @@ export class AddConferenceIdToTickets1751501000000 implements MigrationInterface
       ALTER TABLE "tickets" DROP COLUMN "conferenceId"
     `);
   }
-} 
+}

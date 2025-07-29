@@ -17,4 +17,4 @@ export class SponsorResource {
   static toArray(sponsors: Sponsor[]) {
     return sponsors.map(this.toResponse);
   }
-} 
+}

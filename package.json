@@ -31,6 +31,7 @@
     "@nestjs/swagger": "^11.2.0",
     "@nestjs/throttler": "^6.4.0",
     "@nestjs/typeorm": "^11.0.0",
+    "@simplewebauthn/server": "^13.1.2",
     "@types/bcrypt": "^5.0.2",
     "@types/passport-jwt": "^4.0.1",
     "@types/stripe": "^8.0.416",

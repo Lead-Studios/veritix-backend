@@ -1,5 +1,9 @@
 import { validate } from 'class-validator';
-import { PurchaseTicketDto, BillingDetailsDto, AddressDto } from './purchase-ticket.dto';
+import {
+  PurchaseTicketDto,
+  BillingDetailsDto,
+  AddressDto,
+} from './purchase-ticket.dto';
 
 describe('PurchaseTicketDto', () => {
   function makeValidDto(): PurchaseTicketDto {
@@ -33,21 +37,21 @@ describe('PurchaseTicketDto', () => {
     const dto = makeValidDto();
     dto.eventId = '';
     const errors = await validate(dto);
-    expect(errors.some(e => e.property === 'eventId')).toBe(true);
+    expect(errors.some((e) => e.property === 'eventId')).toBe(true);
   });
 
   it('should require ticketQuantity >= 1', async () => {
     const dto = makeValidDto();
     dto.ticketQuantity = 0;
     const errors = await validate(dto);
-    expect(errors.some(e => e.property === 'ticketQuantity')).toBe(true);
+    expect(errors.some((e) => e.property === 'ticketQuantity')).toBe(true);
   });
 
   it('should require paymentToken', async () => {
     const dto = makeValidDto();
     dto.paymentToken = '';
     const errors = await validate(dto);
-    expect(errors.some(e => e.property === 'paymentToken')).toBe(true);
+    expect(errors.some((e) => e.property === 'paymentToken')).toBe(true);
   });
 
   it('should allow optional promoCode', async () => {
@@ -64,7 +68,7 @@ describe('PurchaseTicketDto', () => {
     const dto = makeValidDto();
     dto.ticketType = '' as any;
     const errors = await validate(dto);
-    expect(errors.some(e => e.property === 'ticketType')).toBe(true);
+    expect(errors.some((e) => e.property === 'ticketType')).toBe(true);
   });
 
   it('should allow sessionIds only if ticketType is session', async () => {
@@ -81,6 +85,6 @@ describe('PurchaseTicketDto', () => {
     dto.sessionIds = [];
     const errors = await validate(dto);
     // sessionIds is optional, but if present, should not be empty
-    expect(errors.some(e => e.property === 'sessionIds')).toBe(false); // Only type/required, not array length
+    expect(errors.some((e) => e.property === 'sessionIds')).toBe(false); // Only type/required, not array length
   });
 });

@@ -10,7 +10,7 @@ export class BadgeService {
     const doc = new PDFDocument();
     const bufferChunks: Buffer[] = [];
 
-    doc.on('data', chunk => bufferChunks.push(chunk));
+    doc.on('data', (chunk) => bufferChunks.push(chunk));
     doc.on('end', () => console.log('PDF created'));
 
     // Attendee info
@@ -20,12 +20,15 @@ export class BadgeService {
 
     // QR Code content (base64 string)
     const qrData = await QRCode.toDataURL(
-      JSON.stringify({ attendeeId: attendee.id, ticketType: attendee.ticketType })
+      JSON.stringify({
+        attendeeId: attendee.id,
+        ticketType: attendee.ticketType,
+      }),
     );
 
     doc.image(qrData, {
       fit: [150, 150],
-      align: 'center'
+      align: 'center',
     });
 
     // Styling (role-based)
@@ -35,8 +38,8 @@ export class BadgeService {
 
     doc.end();
 
-    return new Promise(resolve =>
-      doc.on('end', () => resolve(Buffer.concat(bufferChunks)))
+    return new Promise((resolve) =>
+      doc.on('end', () => resolve(Buffer.concat(bufferChunks))),
     );
   }
 }

@@ -7,7 +7,10 @@ import { ConferenceTicketAnalyticsController } from '../../controllers/conferenc
 import { ConferenceTicketAnalyticsService } from '../../services/conference-ticket-analytics.service';
 import { Ticket } from '../../../ticketing/entities/ticket.entity';
 import { Conference } from '../../../conference/entities/conference.entity';
-import { TimeFilter, ExportFormat } from '../../dto/conference-ticket-analytics.dto';
+import {
+  TimeFilter,
+  ExportFormat,
+} from '../../dto/conference-ticket-analytics.dto';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { Response } from 'express';
@@ -127,10 +130,16 @@ describe('Conference Ticket Analytics Integration', () => {
     app = module.createNestApplication();
     await app.init();
 
-    controller = module.get<ConferenceTicketAnalyticsController>(ConferenceTicketAnalyticsController);
-    service = module.get<ConferenceTicketAnalyticsService>(ConferenceTicketAnalyticsService);
+    controller = module.get<ConferenceTicketAnalyticsController>(
+      ConferenceTicketAnalyticsController,
+    );
+    service = module.get<ConferenceTicketAnalyticsService>(
+      ConferenceTicketAnalyticsService,
+    );
     ticketRepo = module.get<Repository<Ticket>>(getRepositoryToken(Ticket));
-    conferenceRepo = module.get<Repository<Conference>>(getRepositoryToken(Conference));
+    conferenceRepo = module.get<Repository<Conference>>(
+      getRepositoryToken(Conference),
+    );
 
     // Seed test data
     await conferenceRepo.save(mockConference);
@@ -159,8 +168,10 @@ describe('Conference Ticket Analytics Integration', () => {
     it('should filter tickets by conference ID', async () => {
       const tickets = await ticketRepo.find({ where: { conferenceId: '1' } });
       expect(tickets).toHaveLength(3);
-      
-      const otherTickets = await ticketRepo.find({ where: { conferenceId: '999' } });
+
+      const otherTickets = await ticketRepo.find({
+        where: { conferenceId: '999' },
+      });
       expect(otherTickets).toHaveLength(0);
     });
   });
@@ -233,7 +244,9 @@ describe('Conference Ticket Analytics Integration', () => {
     });
 
     it('should throw NotFoundException for non-existent conference', async () => {
-      await expect(service.getTotalTickets('999')).rejects.toThrow('Conference with ID 999 not found');
+      await expect(service.getTotalTickets('999')).rejects.toThrow(
+        'Conference with ID 999 not found',
+      );
     });
   });
 
@@ -250,7 +263,11 @@ describe('Conference Ticket Analytics Integration', () => {
     });
 
     it('should get analytics data through controller without filter', async () => {
-      const result = await controller.getTicketAnalytics('1', undefined, mockRequest);
+      const result = await controller.getTicketAnalytics(
+        '1',
+        undefined,
+        mockRequest,
+      );
 
       expect(result.conferenceId).toBe('1');
       expect(result.totalTickets).toBe(3);
@@ -260,7 +277,11 @@ describe('Conference Ticket Analytics Integration', () => {
     });
 
     it('should get analytics data through controller with daily filter', async () => {
-      const result = await controller.getTicketAnalytics('1', TimeFilter.DAILY, mockRequest);
+      const result = await controller.getTicketAnalytics(
+        '1',
+        TimeFilter.DAILY,
+        mockRequest,
+      );
 
       expect(result.conferenceId).toBe('1');
       expect(result.filter).toBe(TimeFilter.DAILY);
@@ -269,33 +290,57 @@ describe('Conference Ticket Analytics Integration', () => {
     });
 
     it('should export data to CSV through controller', async () => {
-      await controller.exportTicketAnalytics('1', ExportFormat.CSV, undefined, mockResponse, mockRequest);
+      await controller.exportTicketAnalytics(
+        '1',
+        ExportFormat.CSV,
+        undefined,
+        mockResponse,
+        mockRequest,
+      );
 
-      expect(mockResponse.setHeader).toHaveBeenCalledWith('Content-Type', 'text/csv');
+      expect(mockResponse.setHeader).toHaveBeenCalledWith(
+        'Content-Type',
+        'text/csv',
+      );
       expect(mockResponse.setHeader).toHaveBeenCalledWith(
         'Content-Disposition',
-        'attachment; filename=conference-1-tickets.csv'
+        'attachment; filename=conference-1-tickets.csv',
       );
       expect(mockResponse.send).toHaveBeenCalled();
     });
 
     it('should export data to XLS through controller', async () => {
-      await controller.exportTicketAnalytics('1', ExportFormat.XLS, undefined, mockResponse, mockRequest);
+      await controller.exportTicketAnalytics(
+        '1',
+        ExportFormat.XLS,
+        undefined,
+        mockResponse,
+        mockRequest,
+      );
 
       expect(mockResponse.setHeader).toHaveBeenCalledWith(
         'Content-Type',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       );
       expect(mockResponse.setHeader).toHaveBeenCalledWith(
         'Content-Disposition',
-        'attachment; filename=conference-1-tickets.xlsx'
+        'attachment; filename=conference-1-tickets.xlsx',
       );
     });
 
     it('should export filtered data through controller', async () => {
-      await controller.exportTicketAnalytics('1', ExportFormat.CSV, TimeFilter.DAILY, mockResponse, mockRequest);
+      await controller.exportTicketAnalytics(
+        '1',
+        ExportFormat.CSV,
+        TimeFilter.DAILY,
+        mockResponse,
+        mockRequest,
+      );
 
-      expect(mockResponse.setHeader).toHaveBeenCalledWith('Content-Type', 'text/csv');
+      expect(mockResponse.setHeader).toHaveBeenCalledWith(
+        'Content-Type',
+        'text/csv',
+      );
       expect(mockResponse.send).toHaveBeenCalled();
     });
   });
@@ -336,7 +381,11 @@ describe('Conference Ticket Analytics Integration', () => {
         },
       };
 
-      await expect(controller.getTotalTickets('1', regularUserRequest)).rejects.toThrow('Insufficient permissions to access conference analytics');
+      await expect(
+        controller.getTotalTickets('1', regularUserRequest),
+      ).rejects.toThrow(
+        'Insufficient permissions to access conference analytics',
+      );
     });
   });
 
@@ -369,9 +418,18 @@ describe('Conference Ticket Analytics Integration', () => {
 
   describe('Time Filtering Integration', () => {
     it('should filter data by time ranges correctly', async () => {
-      const dailyResult = await service.getTicketAnalytics('1', TimeFilter.DAILY);
-      const weeklyResult = await service.getTicketAnalytics('1', TimeFilter.WEEKLY);
-      const monthlyResult = await service.getTicketAnalytics('1', TimeFilter.MONTHLY);
+      const dailyResult = await service.getTicketAnalytics(
+        '1',
+        TimeFilter.DAILY,
+      );
+      const weeklyResult = await service.getTicketAnalytics(
+        '1',
+        TimeFilter.WEEKLY,
+      );
+      const monthlyResult = await service.getTicketAnalytics(
+        '1',
+        TimeFilter.MONTHLY,
+      );
 
       expect(dailyResult.filter).toBe(TimeFilter.DAILY);
       expect(weeklyResult.filter).toBe(TimeFilter.WEEKLY);
@@ -384,8 +442,14 @@ describe('Conference Ticket Analytics Integration', () => {
     });
 
     it('should return different date ranges for different filters', async () => {
-      const dailyResult = await service.getTicketAnalytics('1', TimeFilter.DAILY);
-      const weeklyResult = await service.getTicketAnalytics('1', TimeFilter.WEEKLY);
+      const dailyResult = await service.getTicketAnalytics(
+        '1',
+        TimeFilter.DAILY,
+      );
+      const weeklyResult = await service.getTicketAnalytics(
+        '1',
+        TimeFilter.WEEKLY,
+      );
 
       const dailyStart = new Date(dailyResult.period.start);
       const dailyEnd = new Date(dailyResult.period.end);
@@ -394,46 +458,74 @@ describe('Conference Ticket Analytics Integration', () => {
 
       // Weekly range should be longer than daily range
       expect(weeklyEnd.getTime() - weeklyStart.getTime()).toBeGreaterThan(
-        dailyEnd.getTime() - dailyStart.getTime()
+        dailyEnd.getTime() - dailyStart.getTime(),
       );
     });
   });
 
   describe('Export Integration', () => {
     it('should export CSV with correct format', async () => {
-      await service.exportTicketAnalytics('1', ExportFormat.CSV, undefined, mockResponse);
+      await service.exportTicketAnalytics(
+        '1',
+        ExportFormat.CSV,
+        undefined,
+        mockResponse,
+      );
 
-      expect(mockResponse.setHeader).toHaveBeenCalledWith('Content-Type', 'text/csv');
+      expect(mockResponse.setHeader).toHaveBeenCalledWith(
+        'Content-Type',
+        'text/csv',
+      );
       expect(mockResponse.send).toHaveBeenCalledWith(
-        expect.stringContaining('timestamp,ticketCount,conferenceId')
+        expect.stringContaining('timestamp,ticketCount,conferenceId'),
       );
     });
 
     it('should export XLS with correct format', async () => {
-      await service.exportTicketAnalytics('1', ExportFormat.XLS, undefined, mockResponse);
+      await service.exportTicketAnalytics(
+        '1',
+        ExportFormat.XLS,
+        undefined,
+        mockResponse,
+      );
 
       expect(mockResponse.setHeader).toHaveBeenCalledWith(
         'Content-Type',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       );
     });
 
     it('should include filtered data in exports', async () => {
-      await service.exportTicketAnalytics('1', ExportFormat.CSV, TimeFilter.DAILY, mockResponse);
+      await service.exportTicketAnalytics(
+        '1',
+        ExportFormat.CSV,
+        TimeFilter.DAILY,
+        mockResponse,
+      );
 
-      expect(mockResponse.setHeader).toHaveBeenCalledWith('Content-Type', 'text/csv');
+      expect(mockResponse.setHeader).toHaveBeenCalledWith(
+        'Content-Type',
+        'text/csv',
+      );
       expect(mockResponse.send).toHaveBeenCalled();
     });
   });
 
   describe('Error Handling Integration', () => {
     it('should handle non-existent conference gracefully', async () => {
-      await expect(service.getTotalTickets('999')).rejects.toThrow('Conference with ID 999 not found');
+      await expect(service.getTotalTickets('999')).rejects.toThrow(
+        'Conference with ID 999 not found',
+      );
     });
 
     it('should handle invalid export format gracefully', async () => {
       await expect(
-        service.exportTicketAnalytics('1', 'invalid' as ExportFormat, undefined, mockResponse)
+        service.exportTicketAnalytics(
+          '1',
+          'invalid' as ExportFormat,
+          undefined,
+          mockResponse,
+        ),
       ).rejects.toThrow('Unsupported export format: invalid');
     });
 
@@ -461,9 +553,15 @@ describe('Conference Ticket Analytics Integration', () => {
         secureHash: `hash-${i + 4}`,
         status: TicketStatus.ACTIVE,
         pricePaid: 100 + i,
-        purchaseDate: new Date(`2024-01-01T${String(i % 24).padStart(2, '0')}:00:00Z`),
-        createdAt: new Date(`2024-01-01T${String(i % 24).padStart(2, '0')}:00:00Z`),
-        updatedAt: new Date(`2024-01-01T${String(i % 24).padStart(2, '0')}:00:00Z`),
+        purchaseDate: new Date(
+          `2024-01-01T${String(i % 24).padStart(2, '0')}:00:00Z`,
+        ),
+        createdAt: new Date(
+          `2024-01-01T${String(i % 24).padStart(2, '0')}:00:00Z`,
+        ),
+        updatedAt: new Date(
+          `2024-01-01T${String(i % 24).padStart(2, '0')}:00:00Z`,
+        ),
       }));
 
       await ticketRepo.save(additionalTickets);
@@ -473,14 +571,16 @@ describe('Conference Ticket Analytics Integration', () => {
     });
 
     it('should handle concurrent requests efficiently', async () => {
-      const promises = Array.from({ length: 10 }, () => service.getTotalTickets('1'));
+      const promises = Array.from({ length: 10 }, () =>
+        service.getTotalTickets('1'),
+      );
       const results = await Promise.all(promises);
 
       expect(results).toHaveLength(10);
-      results.forEach(result => {
+      results.forEach((result) => {
         expect(result.totalTickets).toBe(3);
         expect(result.conferenceId).toBe('1');
       });
     });
   });
-}); 
+});

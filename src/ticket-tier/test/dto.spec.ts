@@ -1,5 +1,9 @@
 import { validate } from 'class-validator';
-import { CreateTicketTierDto, PricingConfigDto, PriceThresholdDto } from '../dto/create-ticket-tier.dto';
+import {
+  CreateTicketTierDto,
+  PricingConfigDto,
+  PriceThresholdDto,
+} from '../dto/create-ticket-tier.dto';
 import { PricingStrategy } from '../enums/pricing-strategy.enum';
 
 describe('CreateTicketTierDto', () => {
@@ -22,8 +26,8 @@ describe('CreateTicketTierDto', () => {
 
       const errors = await validate(dto);
       expect(errors.length).toBeGreaterThan(0);
-      expect(errors.some(e => e.property === 'price')).toBe(true);
-      expect(errors.some(e => e.property === 'quantity')).toBe(true);
+      expect(errors.some((e) => e.property === 'price')).toBe(true);
+      expect(errors.some((e) => e.property === 'quantity')).toBe(true);
     });
 
     it('should fail validation with negative price', async () => {
@@ -33,7 +37,7 @@ describe('CreateTicketTierDto', () => {
       dto.quantity = 100;
 
       const errors = await validate(dto);
-      expect(errors.some(e => e.property === 'price')).toBe(true);
+      expect(errors.some((e) => e.property === 'price')).toBe(true);
     });
 
     it('should fail validation with zero quantity', async () => {
@@ -43,7 +47,7 @@ describe('CreateTicketTierDto', () => {
       dto.quantity = 0;
 
       const errors = await validate(dto);
-      expect(errors.some(e => e.property === 'quantity')).toBe(true);
+      expect(errors.some((e) => e.property === 'quantity')).toBe(true);
     });
   });
 
@@ -67,7 +71,7 @@ describe('CreateTicketTierDto', () => {
       dto.pricingStrategy = 'INVALID_STRATEGY' as PricingStrategy;
 
       const errors = await validate(dto);
-      expect(errors.some(e => e.property === 'pricingStrategy')).toBe(true);
+      expect(errors.some((e) => e.property === 'pricingStrategy')).toBe(true);
     });
 
     it('should pass validation with all pricing strategies', async () => {
@@ -118,7 +122,7 @@ describe('CreateTicketTierDto', () => {
       };
 
       const errors = await validate(dto);
-      expect(errors.some(e => e.property === 'pricingConfig')).toBe(true);
+      expect(errors.some((e) => e.property === 'pricingConfig')).toBe(true);
     });
 
     it('should fail validation with negative minPrice', async () => {
@@ -131,7 +135,7 @@ describe('CreateTicketTierDto', () => {
       };
 
       const errors = await validate(dto);
-      expect(errors.some(e => e.property === 'pricingConfig')).toBe(true);
+      expect(errors.some((e) => e.property === 'pricingConfig')).toBe(true);
     });
 
     it('should fail validation with demandMultiplier less than 1', async () => {
@@ -144,7 +148,7 @@ describe('CreateTicketTierDto', () => {
       };
 
       const errors = await validate(dto);
-      expect(errors.some(e => e.property === 'pricingConfig')).toBe(true);
+      expect(errors.some((e) => e.property === 'pricingConfig')).toBe(true);
     });
   });
 
@@ -173,13 +177,11 @@ describe('CreateTicketTierDto', () => {
       dto.price = 100;
       dto.quantity = 100;
       dto.pricingConfig = {
-        thresholds: [
-          { soldPercentage: -10, priceMultiplier: 1.1 },
-        ],
+        thresholds: [{ soldPercentage: -10, priceMultiplier: 1.1 }],
       };
 
       const errors = await validate(dto);
-      expect(errors.some(e => e.property === 'pricingConfig')).toBe(true);
+      expect(errors.some((e) => e.property === 'pricingConfig')).toBe(true);
     });
 
     it('should fail validation with invalid threshold priceMultiplier', async () => {
@@ -188,13 +190,11 @@ describe('CreateTicketTierDto', () => {
       dto.price = 100;
       dto.quantity = 100;
       dto.pricingConfig = {
-        thresholds: [
-          { soldPercentage: 25, priceMultiplier: 0.5 },
-        ],
+        thresholds: [{ soldPercentage: 25, priceMultiplier: 0.5 }],
       };
 
       const errors = await validate(dto);
-      expect(errors.some(e => e.property === 'pricingConfig')).toBe(true);
+      expect(errors.some((e) => e.property === 'pricingConfig')).toBe(true);
     });
   });
 });
@@ -239,7 +239,7 @@ describe('PriceThresholdDto', () => {
     dto.priceMultiplier = 1.1;
 
     const errors = await validate(dto);
-    expect(errors.some(e => e.property === 'soldPercentage')).toBe(true);
+    expect(errors.some((e) => e.property === 'soldPercentage')).toBe(true);
   });
 
   it('should fail validation with priceMultiplier less than 1', async () => {
@@ -248,6 +248,6 @@ describe('PriceThresholdDto', () => {
     dto.priceMultiplier = 0.5;
 
     const errors = await validate(dto);
-    expect(errors.some(e => e.property === 'priceMultiplier')).toBe(true);
+    expect(errors.some((e) => e.property === 'priceMultiplier')).toBe(true);
   });
-}); 
+});

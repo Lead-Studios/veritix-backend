@@ -1,4 +1,10 @@
-import { IsString, IsNotEmpty, IsUrl, IsOptional, IsUUID } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsUrl,
+  IsOptional,
+  IsUUID,
+} from 'class-validator';
 
 export class CreateSponsorDto {
   @IsNotEmpty()
@@ -28,4 +34,4 @@ export class CreateSponsorDto {
   @IsNotEmpty()
   @IsUUID()
   eventId: string;
-} 
+}

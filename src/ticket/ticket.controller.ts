@@ -1,4 +1,12 @@
-import { Controller, Get, Param, Req, UseGuards, Res, Post } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Req,
+  UseGuards,
+  Res,
+  Post,
+} from '@nestjs/common';
 import { TicketService } from './ticket.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
@@ -45,4 +53,4 @@ export class TicketController {
     });
     res.send(pdfBuffer);
   }
-} 
+}

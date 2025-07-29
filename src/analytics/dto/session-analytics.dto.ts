@@ -285,4 +285,4 @@ export class SessionAnalyticsSummaryDto {
     name: string;
     score: number;
   };
-} 
+}

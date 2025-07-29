@@ -10,4 +10,4 @@ import { SpecialGuestController } from './controllers/special-guest.controller';
   providers: [SpecialGuestService],
   controllers: [SpecialGuestController],
 })
-export class SpecialGuestModule {} 
+export class SpecialGuestModule {}

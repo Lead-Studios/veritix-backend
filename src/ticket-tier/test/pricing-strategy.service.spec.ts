@@ -45,7 +45,9 @@ describe('PricingStrategyService', () => {
     }).compile();
 
     service = module.get<PricingStrategyService>(PricingStrategyService);
-    ticketHistoryRepo = module.get<Repository<TicketHistory>>(getRepositoryToken(TicketHistory));
+    ticketHistoryRepo = module.get<Repository<TicketHistory>>(
+      getRepositoryToken(TicketHistory),
+    );
   });
 
   afterEach(() => {
@@ -54,7 +56,9 @@ describe('PricingStrategyService', () => {
 
   describe('calculateDynamicPrice', () => {
     beforeEach(() => {
-      mockTicketHistoryRepo.createQueryBuilder.mockReturnValue(mockQueryBuilder);
+      mockTicketHistoryRepo.createQueryBuilder.mockReturnValue(
+        mockQueryBuilder,
+      );
     });
 
     describe('FIXED strategy', () => {
@@ -66,7 +70,10 @@ describe('PricingStrategyService', () => {
           basePrice: 100,
         };
 
-        const result = await service.calculateDynamicPrice(mockTicketTier, config);
+        const result = await service.calculateDynamicPrice(
+          mockTicketTier,
+          config,
+        );
 
         expect(result.currentPrice).toBe(100);
         expect(result.originalPrice).toBe(100);
@@ -83,7 +90,10 @@ describe('PricingStrategyService', () => {
           basePrice: 100,
         };
 
-        const result = await service.calculateDynamicPrice(mockTicketTier, config);
+        const result = await service.calculateDynamicPrice(
+          mockTicketTier,
+          config,
+        );
 
         expect(result.currentPrice).toBe(100);
         expect(result.soldCount).toBe(50);
@@ -101,7 +111,10 @@ describe('PricingStrategyService', () => {
           demandMultiplier: 1.5,
         };
 
-        const result = await service.calculateDynamicPrice(mockTicketTier, config);
+        const result = await service.calculateDynamicPrice(
+          mockTicketTier,
+          config,
+        );
 
         // Expected: 100 * (1 + (25/100) * (1.5 - 1)) = 100 * 1.125 = 112.5
         expect(result.currentPrice).toBe(112.5);
@@ -116,7 +129,10 @@ describe('PricingStrategyService', () => {
           basePrice: 100,
         };
 
-        const result = await service.calculateDynamicPrice(mockTicketTier, config);
+        const result = await service.calculateDynamicPrice(
+          mockTicketTier,
+          config,
+        );
 
         // Expected: 100 * (1 + (50/100) * (1.5 - 1)) = 100 * 1.25 = 125
         expect(result.currentPrice).toBe(125);
@@ -132,7 +148,10 @@ describe('PricingStrategyService', () => {
           maxPrice: 150,
         };
 
-        const result = await service.calculateDynamicPrice(mockTicketTier, config);
+        const result = await service.calculateDynamicPrice(
+          mockTicketTier,
+          config,
+        );
 
         // Without max constraint: 100 * (1 + (80/100) * (2 - 1)) = 180
         // With max constraint: 150
@@ -149,7 +168,10 @@ describe('PricingStrategyService', () => {
           minPrice: 90,
         };
 
-        const result = await service.calculateDynamicPrice(mockTicketTier, config);
+        const result = await service.calculateDynamicPrice(
+          mockTicketTier,
+          config,
+        );
 
         // Without min constraint: 100 * (1 + (0/100) * (0.5 - 1)) = 100
         // With min constraint: 90 (but only if calculated price < 90)
@@ -171,7 +193,10 @@ describe('PricingStrategyService', () => {
           ],
         };
 
-        const result = await service.calculateDynamicPrice(mockTicketTier, config);
+        const result = await service.calculateDynamicPrice(
+          mockTicketTier,
+          config,
+        );
 
         // 60% sold should trigger the 50% threshold: 100 * 1.25 = 125
         expect(result.currentPrice).toBe(125);
@@ -189,7 +214,10 @@ describe('PricingStrategyService', () => {
           ],
         };
 
-        const result = await service.calculateDynamicPrice(mockTicketTier, config);
+        const result = await service.calculateDynamicPrice(
+          mockTicketTier,
+          config,
+        );
 
         expect(result.currentPrice).toBe(100);
       });
@@ -203,7 +231,10 @@ describe('PricingStrategyService', () => {
           thresholds: [],
         };
 
-        const result = await service.calculateDynamicPrice(mockTicketTier, config);
+        const result = await service.calculateDynamicPrice(
+          mockTicketTier,
+          config,
+        );
 
         expect(result.currentPrice).toBe(100);
       });
@@ -222,7 +253,10 @@ describe('PricingStrategyService', () => {
           ],
         };
 
-        const result = await service.calculateDynamicPrice(mockTicketTier, config);
+        const result = await service.calculateDynamicPrice(
+          mockTicketTier,
+          config,
+        );
 
         // 80% sold should trigger the 75% threshold: 100 * 1.5 = 150
         expect(result.currentPrice).toBe(150);
@@ -239,7 +273,10 @@ describe('PricingStrategyService', () => {
           demandMultiplier: 2,
         };
 
-        const result = await service.calculateDynamicPrice(mockTicketTier, config);
+        const result = await service.calculateDynamicPrice(
+          mockTicketTier,
+          config,
+        );
 
         // Expected: 100 * 2^(50/100) = 100 * 2^0.5 = 100 * 1.414 = 141.42
         expect(result.currentPrice).toBe(141.42);
@@ -253,7 +290,10 @@ describe('PricingStrategyService', () => {
           basePrice: 100,
         };
 
-        const result = await service.calculateDynamicPrice(mockTicketTier, config);
+        const result = await service.calculateDynamicPrice(
+          mockTicketTier,
+          config,
+        );
 
         // Expected: 100 * 2^(25/100) = 100 * 2^0.25 = 100 * 1.189 = 118.92
         expect(result.currentPrice).toBe(118.92);
@@ -270,7 +310,10 @@ describe('PricingStrategyService', () => {
           basePrice: 100,
         };
 
-        const result = await service.calculateDynamicPrice(zeroQuantityTier, config);
+        const result = await service.calculateDynamicPrice(
+          zeroQuantityTier,
+          config,
+        );
 
         expect(result.soldPercentage).toBe(0);
         expect(result.currentPrice).toBe(100);
@@ -285,7 +328,10 @@ describe('PricingStrategyService', () => {
           demandMultiplier: 1.333333,
         };
 
-        const result = await service.calculateDynamicPrice(mockTicketTier, config);
+        const result = await service.calculateDynamicPrice(
+          mockTicketTier,
+          config,
+        );
 
         // Should be rounded to 2 decimal places
         expect(result.currentPrice).toBe(111);
@@ -299,7 +345,10 @@ describe('PricingStrategyService', () => {
           basePrice: 100,
         };
 
-        const result = await service.calculateDynamicPrice(mockTicketTier, config);
+        const result = await service.calculateDynamicPrice(
+          mockTicketTier,
+          config,
+        );
 
         expect(result.currentPrice).toBe(100);
       });
@@ -321,8 +370,14 @@ describe('PricingStrategyService', () => {
 
       expect(config.strategy).toBe(PricingStrategy.THRESHOLD);
       expect(config.thresholds).toHaveLength(4);
-      expect(config.thresholds![0]).toEqual({ soldPercentage: 25, priceMultiplier: 1.1 });
-      expect(config.thresholds![3]).toEqual({ soldPercentage: 90, priceMultiplier: 2.0 });
+      expect(config.thresholds![0]).toEqual({
+        soldPercentage: 25,
+        priceMultiplier: 1.1,
+      });
+      expect(config.thresholds![3]).toEqual({
+        soldPercentage: 90,
+        priceMultiplier: 2.0,
+      });
     });
 
     it('should return correct config for EXPONENTIAL strategy', () => {
@@ -347,10 +402,22 @@ describe('PricingStrategyService', () => {
       const result = await service['getSoldCount'](mockTicketTier);
 
       expect(mockTicketHistoryRepo.createQueryBuilder).toHaveBeenCalled();
-      expect(mockQueryBuilder.leftJoin).toHaveBeenCalledWith('th.ticket', 'ticket');
-      expect(mockQueryBuilder.where).toHaveBeenCalledWith('ticket.eventId = :eventId', { eventId: 'event-1' });
-      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith('th.amount >= :minPrice', { minPrice: 95 });
-      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith('th.amount <= :maxPrice', { maxPrice: 105 });
+      expect(mockQueryBuilder.leftJoin).toHaveBeenCalledWith(
+        'th.ticket',
+        'ticket',
+      );
+      expect(mockQueryBuilder.where).toHaveBeenCalledWith(
+        'ticket.eventId = :eventId',
+        { eventId: 'event-1' },
+      );
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'th.amount >= :minPrice',
+        { minPrice: 95 },
+      );
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'th.amount <= :maxPrice',
+        { maxPrice: 105 },
+      );
       expect(result).toBe(25);
     });
 
@@ -361,8 +428,14 @@ describe('PricingStrategyService', () => {
       await service['getSoldCount'](tierWithDifferentPrice);
 
       // 5% tolerance: 200 * 0.95 = 190, 200 * 1.05 = 210
-      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith('th.amount >= :minPrice', { minPrice: 190 });
-      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith('th.amount <= :maxPrice', { maxPrice: 210 });
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'th.amount >= :minPrice',
+        { minPrice: 190 },
+      );
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'th.amount <= :maxPrice',
+        { maxPrice: 210 },
+      );
     });
   });
-}); 
+});

@@ -19,33 +19,33 @@ import { ExportService } from './services/export.service';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
-      TicketHistory, 
-      TicketingTicket, 
+      TicketHistory,
+      TicketingTicket,
       Conference,
       Session,
       Attendance,
-      Feedback
-    ])
+      Feedback,
+    ]),
   ],
   providers: [
     EventAnalyticsService,
     ConferenceTicketAnalyticsService,
     SessionAnalyticsService,
     AnalyticsService,
-    ExportService
+    ExportService,
   ],
   controllers: [
     EventAnalyticsController,
     ConferenceTicketAnalyticsController,
     SessionAnalyticsController,
-    AnalyticsController
+    AnalyticsController,
   ],
   exports: [
     EventAnalyticsService,
     ConferenceTicketAnalyticsService,
     SessionAnalyticsService,
     AnalyticsService,
-    ExportService
+    ExportService,
   ],
 })
-export class AnalyticsModule {} 
+export class AnalyticsModule {}

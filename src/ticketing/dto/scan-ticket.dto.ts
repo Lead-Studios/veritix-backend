@@ -1,15 +1,15 @@
-import { IsString, IsNotEmpty, IsUUID, IsOptional } from "class-validator"
+import { IsString, IsNotEmpty, IsUUID, IsOptional } from 'class-validator';
 
 export class ScanTicketDto {
   @IsString()
   @IsNotEmpty()
-  qrCodeData: string
+  qrCodeData: string;
 
   @IsUUID()
   @IsNotEmpty()
-  scannedBy: string
+  scannedBy: string;
 
   @IsOptional()
   @IsUUID()
-  eventId?: string
+  eventId?: string;
 }

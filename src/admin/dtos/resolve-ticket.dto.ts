@@ -6,4 +6,4 @@ export class ResolveTicketDto {
 
   @IsString()
   resolution: string;
-} 
+}

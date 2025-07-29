@@ -1,4 +1,11 @@
-import { IsString, IsEnum, IsOptional, IsUUID, IsNumber, IsBoolean } from 'class-validator';
+import {
+  IsString,
+  IsEnum,
+  IsOptional,
+  IsUUID,
+  IsNumber,
+  IsBoolean,
+} from 'class-validator';
 import { NftPlatform } from '../entities/nft-ticket.entity';
 
 export class MintNftTicketDto {
@@ -73,4 +80,4 @@ export class NftMintingConfigDto {
   autoMint: boolean;
   maxRetries: number;
   retryDelay: number;
-} 
+}

@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { TicketStatsGateway } from './ticket-stats.gateway';
-import { 
-  TicketStatsDto, 
-  TicketSaleUpdateDto, 
-  TicketPurchaseDto 
+import {
+  TicketStatsDto,
+  TicketSaleUpdateDto,
+  TicketPurchaseDto,
 } from './dto/ticket-stats.dto';
 
 @Injectable()
@@ -85,7 +85,7 @@ export class TicketStatsService {
       // Update velocity and timestamp
       stats.salesVelocity = await this.calculateSalesVelocity(eventId);
       stats.lastUpdated = new Date();
-      
+
       this.ticketStatsGateway.broadcastStatsUpdate(stats);
     }
   }

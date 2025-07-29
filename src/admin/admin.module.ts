@@ -33,30 +33,36 @@ import { GalleryImage } from '../event/entities/gallery-image.entity';
       secret: 'your_jwt_secret',
       signOptions: { expiresIn: '1h' },
     }),
-    TypeOrmModule.forFeature([CampaignEmail, Event, User, TicketHistory, Ticket, GalleryImage])
+    TypeOrmModule.forFeature([
+      CampaignEmail,
+      Event,
+      User,
+      TicketHistory,
+      Ticket,
+      GalleryImage,
+    ]),
   ],
   controllers: [
     AdminController,
-    DashboardController, 
-    TicketController, 
-    CampaignEmailController, 
-    EventController, 
-    ReportController, 
-    UserController, 
-    UserReportController
+    DashboardController,
+    TicketController,
+    CampaignEmailController,
+    EventController,
+    ReportController,
+    UserController,
+    UserReportController,
   ],
   providers: [
     AdminService,
     JwtStrategy,
     { provide: APP_GUARD, useClass: RolesGuard },
-    DashboardService, 
-    TicketService, 
-    CampaignEmailService, 
-    EventService, 
-    ReportService, 
-    UserService, 
-    UserReportService
+    DashboardService,
+    TicketService,
+    CampaignEmailService,
+    EventService,
+    ReportService,
+    UserService,
+    UserReportService,
   ],
 })
-export class AdminModule {} 
-
+export class AdminModule {}

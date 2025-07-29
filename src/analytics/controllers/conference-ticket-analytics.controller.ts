@@ -9,10 +9,16 @@ import {
   ParseEnumPipe,
   BadRequestException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { Response } from 'express';
 import { ConferenceTicketAnalyticsService } from '../services/conference-ticket-analytics.service';
-import { 
+import {
   ConferenceTicketAnalyticsFilterDto,
   ConferenceTicketExportDto,
   TimeFilter,
@@ -34,27 +40,28 @@ export class ConferenceTicketAnalyticsController {
 
   @Get(':conferenceId/tickets')
   @Roles('admin', 'organizer')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Get total tickets for a conference',
-    description: 'Retrieve the total number of tickets ordered for a specific conference'
+    description:
+      'Retrieve the total number of tickets ordered for a specific conference',
   })
-  @ApiParam({ 
-    name: 'conferenceId', 
+  @ApiParam({
+    name: 'conferenceId',
     description: 'Conference ID',
-    type: 'string'
+    type: 'string',
   })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'Total tickets retrieved successfully',
-    type: ConferenceTicketTotalResponseDto
+    type: ConferenceTicketTotalResponseDto,
   })
-  @ApiResponse({ 
-    status: 404, 
-    description: 'Conference not found'
+  @ApiResponse({
+    status: 404,
+    description: 'Conference not found',
   })
-  @ApiResponse({ 
-    status: 403, 
-    description: 'Access denied - insufficient permissions'
+  @ApiResponse({
+    status: 403,
+    description: 'Access denied - insufficient permissions',
   })
   async getTotalTickets(
     @Param('conferenceId') conferenceId: string,
@@ -62,39 +69,41 @@ export class ConferenceTicketAnalyticsController {
   ): Promise<ConferenceTicketTotalResponseDto> {
     // Check if user has access to this conference
     await this.checkConferenceAccess(conferenceId, req.user);
-    
+
     return this.conferenceTicketAnalyticsService.getTotalTickets(conferenceId);
   }
 
   @Get(':conferenceId/tickets/analytics')
   @Roles('admin', 'organizer')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Get filtered ticket analytics for a conference',
-    description: 'Retrieve time-filtered ticket analytics data for a specific conference'
+    description:
+      'Retrieve time-filtered ticket analytics data for a specific conference',
   })
-  @ApiParam({ 
-    name: 'conferenceId', 
+  @ApiParam({
+    name: 'conferenceId',
     description: 'Conference ID',
-    type: 'string'
+    type: 'string',
   })
-  @ApiQuery({ 
-    name: 'filter', 
+  @ApiQuery({
+    name: 'filter',
     enum: TimeFilter,
     required: false,
-    description: 'Time interval filter (hourly, daily, weekly, monthly, yearly)'
+    description:
+      'Time interval filter (hourly, daily, weekly, monthly, yearly)',
   })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'Analytics data retrieved successfully',
-    type: ConferenceTicketAnalyticsResponseDto
+    type: ConferenceTicketAnalyticsResponseDto,
   })
-  @ApiResponse({ 
-    status: 404, 
-    description: 'Conference not found'
+  @ApiResponse({
+    status: 404,
+    description: 'Conference not found',
   })
-  @ApiResponse({ 
-    status: 403, 
-    description: 'Access denied - insufficient permissions'
+  @ApiResponse({
+    status: 403,
+    description: 'Access denied - insufficient permissions',
   })
   async getTicketAnalytics(
     @Param('conferenceId') conferenceId: string,
@@ -103,48 +112,52 @@ export class ConferenceTicketAnalyticsController {
   ): Promise<ConferenceTicketAnalyticsResponseDto> {
     // Check if user has access to this conference
     await this.checkConferenceAccess(conferenceId, req.user);
-    
-    return this.conferenceTicketAnalyticsService.getTicketAnalytics(conferenceId, filter);
+
+    return this.conferenceTicketAnalyticsService.getTicketAnalytics(
+      conferenceId,
+      filter,
+    );
   }
 
   @Get(':conferenceId/tickets/export')
   @Roles('admin', 'organizer')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Export ticket analytics data',
-    description: 'Export ticket analytics data in XLS or CSV format'
+    description: 'Export ticket analytics data in XLS or CSV format',
   })
-  @ApiParam({ 
-    name: 'conferenceId', 
+  @ApiParam({
+    name: 'conferenceId',
     description: 'Conference ID',
-    type: 'string'
+    type: 'string',
   })
-  @ApiQuery({ 
-    name: 'format', 
+  @ApiQuery({
+    name: 'format',
     enum: ExportFormat,
     required: true,
-    description: 'Export format (xls or csv)'
+    description: 'Export format (xls or csv)',
   })
-  @ApiQuery({ 
-    name: 'filter', 
+  @ApiQuery({
+    name: 'filter',
     enum: TimeFilter,
     required: false,
-    description: 'Time interval filter (hourly, daily, weekly, monthly, yearly)'
+    description:
+      'Time interval filter (hourly, daily, weekly, monthly, yearly)',
   })
-  @ApiResponse({ 
-    status: 200, 
-    description: 'File exported successfully'
+  @ApiResponse({
+    status: 200,
+    description: 'File exported successfully',
   })
-  @ApiResponse({ 
-    status: 400, 
-    description: 'Invalid export format'
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid export format',
   })
-  @ApiResponse({ 
-    status: 404, 
-    description: 'Conference not found'
+  @ApiResponse({
+    status: 404,
+    description: 'Conference not found',
   })
-  @ApiResponse({ 
-    status: 403, 
-    description: 'Access denied - insufficient permissions'
+  @ApiResponse({
+    status: 403,
+    description: 'Access denied - insufficient permissions',
   })
   async exportTicketAnalytics(
     @Param('conferenceId') conferenceId: string,
@@ -155,7 +168,7 @@ export class ConferenceTicketAnalyticsController {
   ): Promise<void> {
     // Check if user has access to this conference
     await this.checkConferenceAccess(conferenceId, req.user);
-    
+
     await this.conferenceTicketAnalyticsService.exportTicketAnalytics(
       conferenceId,
       format,
@@ -168,18 +181,23 @@ export class ConferenceTicketAnalyticsController {
    * Check if user has access to the conference
    * This is a placeholder - implement based on your authorization logic
    */
-  private async checkConferenceAccess(conferenceId: string, user: any): Promise<void> {
+  private async checkConferenceAccess(
+    conferenceId: string,
+    user: any,
+  ): Promise<void> {
     // TODO: Implement proper conference access control
     // This should check if the user is an admin or the conference organizer
     // For now, we'll allow access for admin and organizer roles
-    
+
     if (!user.roles.includes('admin') && !user.roles.includes('organizer')) {
-      throw new BadRequestException('Insufficient permissions to access conference analytics');
+      throw new BadRequestException(
+        'Insufficient permissions to access conference analytics',
+      );
     }
-    
+
     // Additional checks can be added here:
     // - Check if user is the conference organizer
     // - Check if user has been granted access to this specific conference
     // - Check conference-specific permissions
   }
-} 
+}

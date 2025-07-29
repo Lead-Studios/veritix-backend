@@ -2,7 +2,10 @@ import { Injectable, Inject } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigType } from '@nestjs/config';
 import { User } from '../entities/user.entity';
-import { JwtPayload, RefreshTokenPayload } from '../interfaces/jwt-payload.interface';
+import {
+  JwtPayload,
+  RefreshTokenPayload,
+} from '../interfaces/jwt-payload.interface';
 import { RefreshTokenService } from './refresh-token.service';
 import { AuthResponseDto } from '../dto/auth.dto';
 import jwtConfig from '../config/jwt.config';
@@ -23,7 +26,7 @@ export class TokenService {
     ipAddress?: string,
   ): Promise<AuthResponseDto> {
     const tokenId = uuidv4();
-    
+
     // Generate access token
     const accessTokenPayload: JwtPayload = {
       sub: user.id,
@@ -66,7 +69,9 @@ export class TokenService {
     return {
       accessToken,
       refreshToken,
-      expiresIn: this.parseExpiresIn(this.jwtConfiguration.accessTokenExpiresIn),
+      expiresIn: this.parseExpiresIn(
+        this.jwtConfiguration.accessTokenExpiresIn,
+      ),
       tokenType: 'Bearer',
     };
   }
@@ -88,9 +93,14 @@ export class TokenService {
 
     // Find token in database
     const tokenHash = this.refreshTokenService['hashToken'](payload.tokenId);
-    const storedToken = await this.refreshTokenService.findByTokenHash(tokenHash);
+    const storedToken =
+      await this.refreshTokenService.findByTokenHash(tokenHash);
 
-    if (!storedToken || storedToken.isRevoked || storedToken.expiresAt < new Date()) {
+    if (
+      !storedToken ||
+      storedToken.isRevoked ||
+      storedToken.expiresAt < new Date()
+    ) {
       // Token is invalid or expired, revoke entire family
       await this.refreshTokenService.revokeTokenFamily(payload.tokenId);
       throw new Error('Invalid refresh token');
@@ -132,13 +142,18 @@ export class TokenService {
   private parseExpiresIn(expiresIn: string): number {
     const unit = expiresIn.slice(-1);
     const value = parseInt(expiresIn.slice(0, -1));
-    
+
     switch (unit) {
-      case 's': return value;
-      case 'm': return value * 60;
-      case 'h': return value * 60 * 60;
-      case 'd': return value * 60 * 60 * 24;
-      default: return 900; // 15 minutes default
+      case 's':
+        return value;
+      case 'm':
+        return value * 60;
+      case 'h':
+        return value * 60 * 60;
+      case 'd':
+        return value * 60 * 60 * 24;
+      default:
+        return 900; // 15 minutes default
     }
   }
 }

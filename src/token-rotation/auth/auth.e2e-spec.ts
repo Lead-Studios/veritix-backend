@@ -200,9 +200,7 @@ describe('AuthController (e2e)', () => {
     });
 
     it('should return 401 without token', () => {
-      return request(app.getHttpServer())
-        .get('/auth/me')
-        .expect(401);
+      return request(app.getHttpServer()).get('/auth/me').expect(401);
     });
 
     it('should return 401 with invalid token', () => {

@@ -1,14 +1,14 @@
-import { Test, type TestingModule } from "@nestjs/testing"
-import { TicketingController } from "../controllers/ticketing.controller"
-import { TicketingService } from "../services/ticketing.service"
-import { PurchaseTicketDto } from "../dto/purchase-ticket.dto"
-import { ScanTicketDto } from "../dto/scan-ticket.dto"
-import { TicketStatus } from "../entities/ticket.entity"
-import { jest } from "@jest/globals"
+import { Test, type TestingModule } from '@nestjs/testing';
+import { TicketingController } from '../controllers/ticketing.controller';
+import { TicketingService } from '../services/ticketing.service';
+import { PurchaseTicketDto } from '../dto/purchase-ticket.dto';
+import { ScanTicketDto } from '../dto/scan-ticket.dto';
+import { TicketStatus } from '../entities/ticket.entity';
+import { jest } from '@jest/globals';
 
-describe("TicketingController", () => {
-  let controller: TicketingController
-  let ticketingService: TicketingService
+describe('TicketingController', () => {
+  let controller: TicketingController;
+  let ticketingService: TicketingService;
 
   const mockTicketingService = {
     purchaseTickets: jest.fn(),
@@ -18,7 +18,7 @@ describe("TicketingController", () => {
     getTicketsByEvent: jest.fn(),
     getEventStats: jest.fn(),
     cancelTicket: jest.fn(),
-  }
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -29,148 +29,155 @@ describe("TicketingController", () => {
           useValue: mockTicketingService,
         },
       ],
-    }).compile()
+    }).compile();
 
-    controller = module.get<TicketingController>(TicketingController)
-    ticketingService = module.get<TicketingService>(TicketingService)
-  })
+    controller = module.get<TicketingController>(TicketingController);
+    ticketingService = module.get<TicketingService>(TicketingService);
+  });
 
   afterEach(() => {
-    jest.clearAllMocks()
-  })
+    jest.clearAllMocks();
+  });
 
-  it("should be defined", () => {
-    expect(controller).toBeDefined()
-  })
+  it('should be defined', () => {
+    expect(controller).toBeDefined();
+  });
 
-  describe("purchaseTickets", () => {
-    it("should purchase tickets successfully", async () => {
+  describe('purchaseTickets', () => {
+    it('should purchase tickets successfully', async () => {
       const purchaseData: PurchaseTicketDto = {
-        eventId: "event-1",
-        purchaserId: "user-1",
-        purchaserName: "John Doe",
-        purchaserEmail: "john@example.com",
+        eventId: 'event-1',
+        purchaserId: 'user-1',
+        purchaserName: 'John Doe',
+        purchaserEmail: 'john@example.com',
         quantity: 2,
-      }
+      };
 
       const mockResponse = {
         success: true,
-        message: "Successfully purchased 2 ticket(s)",
+        message: 'Successfully purchased 2 ticket(s)',
         tickets: [],
         totalAmount: 200,
-      }
+      };
 
-      mockTicketingService.purchaseTickets.mockResolvedValue(mockResponse)
+      mockTicketingService.purchaseTickets.mockResolvedValue(mockResponse);
 
-      const result = await controller.purchaseTickets(purchaseData)
+      const result = await controller.purchaseTickets(purchaseData);
 
-      expect(result).toEqual(mockResponse)
-      expect(mockTicketingService.purchaseTickets).toHaveBeenCalledWith(purchaseData)
-    })
-  })
+      expect(result).toEqual(mockResponse);
+      expect(mockTicketingService.purchaseTickets).toHaveBeenCalledWith(
+        purchaseData,
+      );
+    });
+  });
 
-  describe("scanTicket", () => {
-    it("should scan ticket successfully", async () => {
+  describe('scanTicket', () => {
+    it('should scan ticket successfully', async () => {
       const scanData: ScanTicketDto = {
-        qrCodeData: "qr-data",
-        scannedBy: "scanner-1",
-        eventId: "event-1",
-      }
+        qrCodeData: 'qr-data',
+        scannedBy: 'scanner-1',
+        eventId: 'event-1',
+      };
 
       const mockResponse = {
         success: true,
-        message: "Ticket successfully validated",
+        message: 'Ticket successfully validated',
         ticket: {
-          id: "ticket-1",
-          ticketNumber: "TICKET-123",
-          eventName: "Test Event",
-          purchaserName: "John Doe",
+          id: 'ticket-1',
+          ticketNumber: 'TICKET-123',
+          eventName: 'Test Event',
+          purchaserName: 'John Doe',
           status: TicketStatus.USED,
           usedAt: new Date(),
         },
-      }
+      };
 
-      mockTicketingService.scanTicket.mockResolvedValue(mockResponse)
+      mockTicketingService.scanTicket.mockResolvedValue(mockResponse);
 
-      const result = await controller.scanTicket(scanData)
+      const result = await controller.scanTicket(scanData);
 
-      expect(result).toEqual(mockResponse)
-      expect(mockTicketingService.scanTicket).toHaveBeenCalledWith(scanData)
-    })
-  })
+      expect(result).toEqual(mockResponse);
+      expect(mockTicketingService.scanTicket).toHaveBeenCalledWith(scanData);
+    });
+  });
 
-  describe("getTicket", () => {
-    it("should get ticket details", async () => {
-      const ticketId = "ticket-1"
+  describe('getTicket', () => {
+    it('should get ticket details', async () => {
+      const ticketId = 'ticket-1';
       const mockTicket = {
         id: ticketId,
-        ticketNumber: "TICKET-123",
-        eventId: "event-1",
-        eventName: "Test Event",
-        purchaserName: "John Doe",
-        purchaserEmail: "john@example.com",
-        qrCodeImage: "qr-image",
+        ticketNumber: 'TICKET-123',
+        eventId: 'event-1',
+        eventName: 'Test Event',
+        purchaserName: 'John Doe',
+        purchaserEmail: 'john@example.com',
+        qrCodeImage: 'qr-image',
         status: TicketStatus.ACTIVE,
         pricePaid: 100,
         purchaseDate: new Date(),
-      }
+      };
 
-      mockTicketingService.getTicket.mockResolvedValue(mockTicket)
+      mockTicketingService.getTicket.mockResolvedValue(mockTicket);
 
-      const result = await controller.getTicket(ticketId)
+      const result = await controller.getTicket(ticketId);
 
-      expect(result).toEqual(mockTicket)
-      expect(mockTicketingService.getTicket).toHaveBeenCalledWith(ticketId)
-    })
-  })
+      expect(result).toEqual(mockTicket);
+      expect(mockTicketingService.getTicket).toHaveBeenCalledWith(ticketId);
+    });
+  });
 
-  describe("getTicketsByPurchaser", () => {
-    it("should get tickets by purchaser", async () => {
-      const purchaserId = "user-1"
+  describe('getTicketsByPurchaser', () => {
+    it('should get tickets by purchaser', async () => {
+      const purchaserId = 'user-1';
       const mockTickets = [
         {
-          id: "ticket-1",
-          ticketNumber: "TICKET-123",
-          eventName: "Test Event",
+          id: 'ticket-1',
+          ticketNumber: 'TICKET-123',
+          eventName: 'Test Event',
           status: TicketStatus.ACTIVE,
         },
-      ]
+      ];
 
-      mockTicketingService.getTicketsByPurchaser.mockResolvedValue(mockTickets)
+      mockTicketingService.getTicketsByPurchaser.mockResolvedValue(mockTickets);
 
-      const result = await controller.getTicketsByPurchaser(purchaserId)
+      const result = await controller.getTicketsByPurchaser(purchaserId);
 
-      expect(result).toEqual(mockTickets)
-      expect(mockTicketingService.getTicketsByPurchaser).toHaveBeenCalledWith(purchaserId)
-    })
-  })
+      expect(result).toEqual(mockTickets);
+      expect(mockTicketingService.getTicketsByPurchaser).toHaveBeenCalledWith(
+        purchaserId,
+      );
+    });
+  });
 
-  describe("getTicketsByEvent", () => {
-    it("should get tickets by event", async () => {
-      const eventId = "event-1"
-      const organizerId = "organizer-1"
+  describe('getTicketsByEvent', () => {
+    it('should get tickets by event', async () => {
+      const eventId = 'event-1';
+      const organizerId = 'organizer-1';
       const mockTickets = [
         {
-          id: "ticket-1",
-          ticketNumber: "TICKET-123",
-          eventName: "Test Event",
+          id: 'ticket-1',
+          ticketNumber: 'TICKET-123',
+          eventName: 'Test Event',
           status: TicketStatus.ACTIVE,
         },
-      ]
+      ];
 
-      mockTicketingService.getTicketsByEvent.mockResolvedValue(mockTickets)
+      mockTicketingService.getTicketsByEvent.mockResolvedValue(mockTickets);
 
-      const result = await controller.getTicketsByEvent(eventId, organizerId)
+      const result = await controller.getTicketsByEvent(eventId, organizerId);
 
-      expect(result).toEqual(mockTickets)
-      expect(mockTicketingService.getTicketsByEvent).toHaveBeenCalledWith(eventId, organizerId)
-    })
-  })
+      expect(result).toEqual(mockTickets);
+      expect(mockTicketingService.getTicketsByEvent).toHaveBeenCalledWith(
+        eventId,
+        organizerId,
+      );
+    });
+  });
 
-  describe("getEventStats", () => {
-    it("should get event statistics", async () => {
-      const eventId = "event-1"
-      const organizerId = "organizer-1"
+  describe('getEventStats', () => {
+    it('should get event statistics', async () => {
+      const eventId = 'event-1';
+      const organizerId = 'organizer-1';
       const mockStats = {
         totalTickets: 10,
         soldTickets: 8,
@@ -178,32 +185,38 @@ describe("TicketingController", () => {
         cancelledTickets: 2,
         revenue: 800,
         availableCapacity: 92,
-      }
+      };
 
-      mockTicketingService.getEventStats.mockResolvedValue(mockStats)
+      mockTicketingService.getEventStats.mockResolvedValue(mockStats);
 
-      const result = await controller.getEventStats(eventId, organizerId)
+      const result = await controller.getEventStats(eventId, organizerId);
 
-      expect(result).toEqual(mockStats)
-      expect(mockTicketingService.getEventStats).toHaveBeenCalledWith(eventId, organizerId)
-    })
-  })
+      expect(result).toEqual(mockStats);
+      expect(mockTicketingService.getEventStats).toHaveBeenCalledWith(
+        eventId,
+        organizerId,
+      );
+    });
+  });
 
-  describe("cancelTicket", () => {
-    it("should cancel ticket successfully", async () => {
-      const ticketId = "ticket-1"
-      const requesterId = "user-1"
+  describe('cancelTicket', () => {
+    it('should cancel ticket successfully', async () => {
+      const ticketId = 'ticket-1';
+      const requesterId = 'user-1';
       const mockResponse = {
         success: true,
-        message: "Ticket successfully cancelled",
-      }
+        message: 'Ticket successfully cancelled',
+      };
 
-      mockTicketingService.cancelTicket.mockResolvedValue(mockResponse)
+      mockTicketingService.cancelTicket.mockResolvedValue(mockResponse);
 
-      const result = await controller.cancelTicket(ticketId, requesterId)
+      const result = await controller.cancelTicket(ticketId, requesterId);
 
-      expect(result).toEqual(mockResponse)
-      expect(mockTicketingService.cancelTicket).toHaveBeenCalledWith(ticketId, requesterId)
-    })
-  })
-})
+      expect(result).toEqual(mockResponse);
+      expect(mockTicketingService.cancelTicket).toHaveBeenCalledWith(
+        ticketId,
+        requesterId,
+      );
+    });
+  });
+});

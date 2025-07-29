@@ -6,4 +6,4 @@ export class VerifyEmailDto {
 
   @IsString()
   token: string;
-} 
+}

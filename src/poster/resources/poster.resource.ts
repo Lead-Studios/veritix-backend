@@ -6,7 +6,9 @@ export class PosterResource {
       id: poster.id,
       image: poster.image,
       description: poster.description,
-      event: poster.event ? { id: poster.event.id, name: poster.event.name } : null,
+      event: poster.event
+        ? { id: poster.event.id, name: poster.event.name }
+        : null,
       createdAt: poster.createdAt,
       updatedAt: poster.updatedAt,
     };
@@ -15,4 +17,4 @@ export class PosterResource {
   static toArray(posters: Poster[]) {
     return posters.map(PosterResource.toResponse);
   }
-} 
+}

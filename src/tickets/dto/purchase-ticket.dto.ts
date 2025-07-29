@@ -1,4 +1,11 @@
-import { IsString, IsInt, IsEmail, IsNotEmpty, Min, ValidateNested } from 'class-validator';
+import {
+  IsString,
+  IsInt,
+  IsEmail,
+  IsNotEmpty,
+  Min,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { Address } from '../interfaces/address.interface';
 import { BillingDetails } from '../interfaces/billing-details.interface';
