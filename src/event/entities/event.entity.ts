@@ -41,4 +41,13 @@ export class Event {
 
   @Column('int')
   ticketQuantity: number;
-} 
+
+  @Column()
+  capacity: number;
+
+  @Column({ default: true }) // only free events support RSVP
+  isFree: boolean;
+
+  @Column({ default: 0 })
+  currentRSVPs: number;
+}
