@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, Index } from 'typeorm';
-import { Event } from '../../event/entities/event.entity';
-import { User } from 'src/user/entities/user.entity';
+import { Event } from '../../events/entities/event.entity';
+import { User } from '../../user/entities/user.entity';
 
 export enum NotificationStatus {
   Unread = 'Unread',

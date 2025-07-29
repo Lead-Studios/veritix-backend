@@ -33,6 +33,7 @@ let Event = class Event {
     facebook;
     twitter;
     instagram;
+    ownerId;
 };
 exports.Event = Event;
 __decorate([
@@ -119,6 +120,10 @@ __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)
 ], Event.prototype, "instagram", void 0);
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", String)
+], Event.prototype, "ownerId", void 0);
 exports.Event = Event = __decorate([
     (0, typeorm_1.Entity)()
 ], Event);

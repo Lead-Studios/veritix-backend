@@ -1,4 +1,4 @@
-import { Event } from '../../event/entities/event.entity';
+import { Event } from '../../events/entities/event.entity';
 
 export class EventResource {
   static toResponse(event: Event) {

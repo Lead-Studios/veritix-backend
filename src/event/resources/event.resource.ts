@@ -1,11 +1,11 @@
-import { Event } from '../entities/event.entity';
+import { Event } from '../../events/entities/event.entity';
 
 export class EventResource {
   static toResponse(event: Event) {
     return {
       id: event.id,
       name: event.name,
-      images: event.images ? event.images.map(img => img.id) : [],
+      images: event.galleryImages ? event.galleryImages.map(img => img.id) : [],
     };
   }
 

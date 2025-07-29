@@ -64,4 +64,7 @@ export class Event {
 
   @Column({ nullable: true })
   instagram: string;
+
+  @Column()
+  ownerId: string;
 }

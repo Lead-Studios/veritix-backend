@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { GalleryImage } from '../entities/gallery-image.entity';
 import { CreateGalleryImageDto, UpdateGalleryImageDto } from '../dtos/gallery.dto';
-import { Event } from '../entities/event.entity';
+import { Event } from '../../events/entities/event.entity';
 import { GalleryResource } from '../resources/gallery.resource';
 
 @Injectable()
@@ -16,9 +16,9 @@ export class GalleryService {
   ) {}
 
   async create(dto: CreateGalleryImageDto) {
-    const event = await this.eventRepo.findOne({ where: { id: dto.eventId }, relations: ['images'] });
+    const event = await this.eventRepo.findOne({ where: { id: dto.eventId }, relations: ['galleryImages'] });
     if (!event) throw new NotFoundException('Event not found');
-    if (event.images.length >= 10) throw new BadRequestException('Maximum 10 images per event');
+    if (event.galleryImages.length >= 10) throw new BadRequestException('Maximum 10 images per event');
     const image = this.galleryRepo.create({
       imageUrl: dto.imageUrl,
       description: dto.description,
@@ -40,9 +40,9 @@ export class GalleryService {
   }
 
   async findByEvent(eventId: string) {
-    const event = await this.eventRepo.findOne({ where: { id: eventId }, relations: ['images'] });
+    const event = await this.eventRepo.findOne({ where: { id: eventId }, relations: ['galleryImages'] });
     if (!event) throw new NotFoundException('Event not found');
-    return GalleryResource.toArray(event.images);
+    return GalleryResource.toArray(event.galleryImages);
   }
 
   async update(id: string, dto: UpdateGalleryImageDto) {

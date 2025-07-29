@@ -5,23 +5,27 @@ import {
   OneToMany,
   ManyToOne,
   ManyToMany,
+  JoinTable,
   DeleteDateColumn,
 } from "typeorm";
-import { Ticket } from "../../tickets/entities/ticket.entity";
-import { SpecialGuest } from "../../special-guests/entities/special-guest.entity";
-import { Sponsor } from "../../sponsors/sponsor.entity";
-import { Poster } from "../../posters/entities/poster.entity";
-import { Collaborator } from "../../collaborator/entities/collaborator.entity";
-import { EventGallery } from "../../event-gallery/entities/event-gallery.entity";
-import { Category } from "../../category/category.entity";
-import { PricingRule } from "../../dynamic-pricing/pricing/entities/pricing-rule.entity";
-import { User } from "../../users/entities/user.entity";
-import { EventStatus } from "../../common/enums/event-status.enum";
-import { GalleryItem } from "../../event-gallery/entities/gallery-item.entity";
-import { PromoCode } from "src/promo-code/promoCode.entity";
-import { EventView } from "./event-view.entity";
-import { PurchaseLog } from "./purchase-log.entity";
-import { TicketTier } from "src/ticket-tier/entities/ticket-tier.entity";
+import { Ticket } from "../../ticket/entities/ticket.entity";
+import { SpecialGuest } from "../../special-guest/entities/special-guest.entity";
+import { Sponsor } from "../../event/entities/sponsor.entity";
+import { Poster } from "../../poster/entities/poster.entity";
+import { Collaborator } from "../../event/entities/collaborator.entity";
+// import { EventGallery } from "../../event-gallery/entities/event-gallery.entity"; // Not found
+// import { Category } from "../../category/category.entity"; // Not found
+// import { PricingRule } from "../../dynamic-pricing/pricing/entities/pricing-rule.entity"; // Not found
+import { User } from "../../user/entities/user.entity";
+// import { EventStatus } from "../../common/enums/event-status.enum"; // Not found
+// import { GalleryItem } from "../../event-gallery/entities/gallery-item.entity"; // Not found
+import { PromoCode } from "../../ticket/entities/promo-code.entity";
+import { EventView } from "../../analytics-event/entities/event-view.entity";
+import { PurchaseLog } from "../../analytics-event/entities/purchase-log.entity";
+import { TicketTier } from "../../ticket-tier/entities/ticket-tier.entity";
+import { GalleryImage } from "../../event/entities/gallery-image.entity";
+import { Notification } from "../../notification/entities/notification.entity";
+import { Announcement } from "../../announcement/entities/announcement.entity";
 
 @Entity()
 export class Event {
@@ -29,34 +33,27 @@ export class Event {
   id: string;
 
   @Column()
-  title: string;
+  name: string;
 
   @Column()
-  eventName: string;
-
-  @Column({ type: "timestamp" })
-  eventDate: Date;
-
-  @Column({ type: "timestamp" })
-  eventClosingDate: Date;
-
-  @Column({ type: "text" })
-  eventDescription: string;
+  country: string;
 
   @Column()
-  venue: string;
-
-  @Column()
-  address: string;
+  state: string;
 
   @Column()
   street: string;
 
   @Column()
-  capacity: number;
+  localGovernment: string;
 
-  @Column({ type: "enum", enum: EventStatus, default: EventStatus.DRAFT })
-  status: EventStatus;
+  @Column("int")
+  ticketQuantity: number;
+
+  // @Column({ type: "enum", enum: EventStatus, default: EventStatus.DRAFT })
+  // status: EventStatus;
+  @Column({ default: "DRAFT" })
+  status: string;
 
   @OneToMany(() => PromoCode, (promo) => promo.event)
   promoCodes: PromoCode[];
@@ -64,37 +61,7 @@ export class Event {
   @Column({ nullable: true })
   cancellationReason: string;
 
-  @Column({ nullable: true })
-  eventImage: string;
-
-  @Column({ default: false })
-  hideEventLocation: boolean;
-
-  @Column({ default: false })
-  eventComingSoon: boolean;
-
-  @Column({ default: false })
-  transactionCharge: boolean;
-
-  @Column({ nullable: true })
-  bankName: string;
-
-  @Column({ nullable: true })
-  bankAccountNumber: string;
-
-  @Column({ nullable: true })
-  accountName: string;
-
-  @Column({ nullable: true })
-  facebook: string;
-
-  @Column({ nullable: true })
-  twitter: string;
-
-  @Column({ nullable: true })
-  instagram: string;
-
-  @ManyToOne(() => User, (user) => user.events)
+  @ManyToOne(() => User)
   organizer: User;
 
   @ManyToMany(() => Sponsor, (sponsor) => sponsor.event)
@@ -103,16 +70,14 @@ export class Event {
   @OneToMany(() => Ticket, (ticket) => ticket.event)
   tickets: Ticket[];
 
-  @OneToMany(() => SpecialGuest, (specialGuest) => specialGuest.event, {
-    nullable: true,
-  })
+  @OneToMany(() => SpecialGuest, (specialGuest) => specialGuest.event, { nullable: true })
   specialGuests: SpecialGuest[] | null;
 
   @OneToMany(() => Collaborator, (collaborator) => collaborator.event)
   collaborators: Collaborator[];
 
-  @OneToMany(() => PricingRule, (pricingRule) => pricingRule.event)
-  pricingRules: PricingRule[];
+  // @OneToMany(() => PricingRule, (pricingRule) => pricingRule.event)
+  // pricingRules: PricingRule[];
 
   @Column({ default: false })
   isArchived: boolean;
@@ -123,11 +88,11 @@ export class Event {
   @OneToMany(() => Poster, (poster) => poster.event)
   posters: Poster[];
 
-  @OneToMany(() => EventGallery, (eventGallery) => eventGallery.event)
-  eventGallery: EventGallery[];
+  // @OneToMany(() => EventGallery, (eventGallery) => eventGallery.event)
+  // eventGallery: EventGallery[];
 
-  @ManyToOne(() => Category, (category) => category.events)
-  category: Category;
+  // @ManyToOne(() => Category, (category) => category.events)
+  // category: Category;
 
   @OneToMany(() => EventView, (view) => view.event)
   views: EventView[];
@@ -137,4 +102,16 @@ export class Event {
 
   @OneToMany(() => TicketTier, (tier) => tier.event)
   ticketTiers: TicketTier[];
+
+  @OneToMany(() => GalleryImage, (image) => image.event)
+  galleryImages: GalleryImage[];
+
+  @OneToMany(() => Notification, (notification) => notification.event)
+  notifications: Notification[];
+
+  @OneToMany(() => Announcement, (announcement) => announcement.event)
+  announcements: Announcement[];
+
+  @Column({ nullable: true })
+  ownerId: string;
 }

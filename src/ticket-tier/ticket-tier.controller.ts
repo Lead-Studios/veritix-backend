@@ -5,28 +5,39 @@ import {
   Param,
   Body,
   UseGuards,
-  Req,
+  Request,
 } from '@nestjs/common';
 import { CreateTicketTierDto } from './dto/create-ticket-tier.dto';
-import { JwtAuthGuard } from 'security/guards/jwt-auth.guard';
-import { TicketTierService } from './ticket-tier.module';
+import { TicketTierResponseDto } from './dto/ticket-tier-response.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { TicketTierService } from './ticket-tier.service';
 
-@Controller('events/:eventId/ticket-tiers')
+@Controller('ticket-tiers')
 @UseGuards(JwtAuthGuard)
 export class TicketTierController {
   constructor(private readonly ticketTierService: TicketTierService) {}
 
-  @Post()
-  async create(
+  @Post(':eventId')
+  create(
     @Param('eventId') eventId: string,
     @Body() dto: CreateTicketTierDto,
-    @Req() req,
+    @Request() req,
   ) {
     return this.ticketTierService.create(eventId, dto, req.user.id);
   }
 
-  @Get()
-  async findAll(@Param('eventId') eventId: string) {
+  @Get(':eventId')
+  findByEvent(@Param('eventId') eventId: string): Promise<TicketTierResponseDto[]> {
     return this.ticketTierService.findByEvent(eventId);
+  }
+
+  @Get('tier/:id')
+  findOne(@Param('id') id: string): Promise<TicketTierResponseDto> {
+    return this.ticketTierService.findOne(id);
+  }
+
+  @Get('tier/:id/price')
+  getCurrentPrice(@Param('id') id: string): Promise<{ currentPrice: number }> {
+    return this.ticketTierService.getCurrentPrice(id).then(price => ({ currentPrice: price }));
   }
 }

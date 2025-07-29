@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateEventDto } from '../dtos/event.dto';
-import { Event } from '../entities/event.entity';
+import { Event } from '../../events/entities/event.entity';
 import { EventResource } from '../resources/event.resource';
 import { PaginatedResult } from '../interfaces/paginated-result.interface';
 import { Like, ILike } from 'typeorm';

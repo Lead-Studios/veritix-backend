@@ -20,4 +20,5 @@ export declare class Event {
     facebook: string;
     twitter: string;
     instagram: string;
+    ownerId: string;
 }
