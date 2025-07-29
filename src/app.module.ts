@@ -31,6 +31,7 @@ import { WaitlistEntryModule } from './waitlist-entry/waitlist-entry.module';
 import { ConferenceSearchModule } from './conference-search/conference-search.module';
 import { FunnelTrackingModule } from './funnel-tracking/funnel-tracking.module';
 import { NftTicketsModule } from './nft-tickets/nft-tickets.module';
+import { AnnouncementModule } from './announcement/announcement.module';
 
 import { TicketingModule } from './ticketing/ticketing.module';
 
@@ -60,7 +61,8 @@ import { TicketingModule } from './ticketing/ticketing.module';
     ConferenceSearchModule,
     FunnelTrackingModule,
     NftTicketsModule,
-    TicketingModule
+    TicketingModule,
+    AnnouncementModule
   ],
   controllers: [AppController, GalleryController, EventController],
   providers: [AppService, GalleryService, EventService],

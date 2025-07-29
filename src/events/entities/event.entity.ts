@@ -25,6 +25,7 @@ import { PurchaseLog } from "../../analytics-event/entities/purchase-log.entity"
 import { TicketTier } from "../../ticket-tier/entities/ticket-tier.entity";
 import { GalleryImage } from "../../event/entities/gallery-image.entity";
 import { Notification } from "../../notification/entities/notification.entity";
+import { Announcement } from "../../announcement/entities/announcement.entity";
 
 @Entity()
 export class Event {
@@ -107,6 +108,9 @@ export class Event {
 
   @OneToMany(() => Notification, (notification) => notification.event)
   notifications: Notification[];
+
+  @OneToMany(() => Announcement, (announcement) => announcement.event)
+  announcements: Announcement[];
 
   @Column({ nullable: true })
   ownerId: string;
