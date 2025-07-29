@@ -1,173 +1,52 @@
-import {
-  Controller,
-  Post,
-  Get,
-  Put,
-  Delete,
-  Param,
-  Body,
-  UseGuards,
-  Query,
-  Res,
-  NotFoundException,
-  Req,
-} from "@nestjs/common";
-import { TicketService } from "./tickets.service";
-import { CreateTicketDto } from "./dto/create-ticket.dto";
-import { JwtAuthGuard } from "../../security/guards/jwt-auth.guard";
-import { RolesGuard } from "../../security/guards/rolesGuard/roles.guard";
-import { Ticket } from "./entities/ticket.entity";
-// import { Roles } from '../../security/decorators/roles.decorator';
+import { Controller, Post, Body, Get, Param, UsePipes, ValidationPipe, HttpException, HttpStatus } from '@nestjs/common';
+import { TicketsService } from './tickets.service';
+import { PurchaseTicketDto } from './dto/purchase-ticket.dto';
+import { ReceiptDto } from './dto/receipt.dto';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam } from '@nestjs/swagger';
 
-import { Response, Request } from "express";
-import * as fs from "fs";
-import { User } from "src/users/entities/user.entity";
-import { Roles } from "security/decorators/roles.decorator";
-import { UserRole } from "src/common/enums/users-roles.enum";
-import { TicketPurchaseDto } from "./dto/ticket-purchase.dto";
-import { ReceiptDto } from "./dto/receipt.dto";
-import { RequestWithUser } from "src/common/interfaces/request.interface";
-import { PromoCodeService } from "src/promo-code/providers/promo-code.service";
-import { ApplyPromoDto } from "src/promo-code/dtos/promoCodeDto";
+@ApiTags('Tickets')
+@Controller('tickets')
+export class TicketsController {
+  constructor(private readonly ticketsService: TicketsService) {}
 
-@Controller("user/tickets")
-@UseGuards(JwtAuthGuard, RolesGuard)
-export class TicketController {
-  constructor(
-    private readonly ticketService: TicketService,
-    private readonly promoService: PromoCodeService,
-  ) {}
-
-   @Post('apply-code')
-  async applyPromoCode(@Body() dto: ApplyPromoDto) {
-    const promo = await this.promoService.validatePromoCode(dto.code, dto.eventId);
-    return { discount: promo.discount };
+  // In a real app, userId would come from the authenticated user
+  private getMockUserId(): string {
+    return 'user1';
   }
 
-  @Post()
-  @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.ORGANIZER) //only admins and organizers can create ticket
-  // @Roles('admin') // Only admin can create tickets
-  async createTicket(@Body() dto: CreateTicketDto, @Query("user") user: User) {
-    return this.ticketService.createTicket(dto, user);
-  }
-
-  @Get()
-  @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.ORGANIZER, UserRole.GUEST)
-  async getAllTickets() {
-    return this.ticketService.getAllTickets();
-  }
-
-  @Get(":id")
-  @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.ORGANIZER, UserRole.GUEST)
-  async getTicketById(@Param("id") id: string) {
-    return this.ticketService.getTicketById(id);
-  }
-
-  @Get("/event/:eventId/tickets")
-  @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.ORGANIZER, UserRole.GUEST)
-  async getTicketsByEvent(@Param("eventId") eventId: string) {
-    return this.ticketService.getTicketsByEvent(eventId);
-  }
-
-  @Put(":id")
-  @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.ORGANIZER)
-  async updateTicket(
-    @Param("id") id: string,
-    @Body() dto: Partial<CreateTicketDto>,
-    @Query("user") user: User,
-  ) {
-    return this.ticketService.updateTicket(id, dto, user);
-  }
-
-  @Delete(":id")
-  @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.ORGANIZER)
-  delete(@Param("id") id: string, @Query("user") user: User) {
-    return this.ticketService.deleteTicket(id, user);
-  }
-
-  // route to get all user ticket history
-  @Get("history")
-  async getUserTicketHistory(
-    @Query("userId") userId: string,
-  ): Promise<Ticket[]> {
-    if (!userId) {
-      throw new NotFoundException("User ID is required");
-    }
-    return this.ticketService.getUserTicketHistory(userId);
-  }
-
-  // route to get a single ticket history by ID
-  @Get("history/:id")
-  async getUserTicketById(
-    @Param("id") id: string,
-    @Query("userId") userId: string,
-  ): Promise<Ticket> {
-    if (!userId) {
-      throw new NotFoundException("User ID is required");
-    }
-    return this.ticketService.getUserTicketById(userId, id);
-  }
-
-  // route to get ticket details
-  @Get("details/:id")
-  async getTicketDetails(@Param("id") id: string): Promise<Ticket> {
-    return this.ticketService.getTicketDetails(id);
-  }
-
-  @Get("receipt/:id")
-  async getTicketReceipt(@Param("id") id: string, @Res() res: Response) {
+  @Post('purchase')
+  @ApiOperation({ summary: 'Purchase one or more tickets for an event' })
+  @ApiBody({ type: PurchaseTicketDto })
+  @ApiResponse({ status: 201, description: 'Ticket(s) purchased successfully', type: ReceiptDto })
+  @ApiResponse({ status: 400, description: 'Validation or business error' })
+  @ApiResponse({ status: 404, description: 'User or event not found' })
+  @UsePipes(new ValidationPipe({ whitelist: true }))
+  async purchaseTickets(@Body() dto: PurchaseTicketDto): Promise<ReceiptDto> {
+    const userId = this.getMockUserId();
     try {
-      const filePath = await this.ticketService.generateTicketReceipt(id);
-
-      // Stream the file to the client
-      const fileStream = fs.createReadStream(filePath);
-      res.set({
-        "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename=${filePath}`,
-      });
-      fileStream.pipe(res);
+      return await this.ticketsService.purchaseTickets(userId, dto);
     } catch (error) {
-      throw new NotFoundException("Receipt generation failed");
+      if (error.status && error.response) {
+        throw error;
+      }
+      throw new HttpException(error.message || 'Internal server error', HttpStatus.BAD_REQUEST);
     }
   }
 
-  @Post("purchase")
-  @UseGuards(JwtAuthGuard)
-  async purchaseTickets(
-    @Req() req: RequestWithUser,
-    @Body() purchaseDto: TicketPurchaseDto,
-  ): Promise<ReceiptDto> {
-    return this.ticketService.purchaseTickets(req.user.userId, purchaseDto);
+  @Get('receipt/:orderId')
+  @ApiOperation({ summary: 'Retrieve the receipt for a confirmed ticket purchase' })
+  @ApiParam({ name: 'orderId', required: true })
+  @ApiResponse({ status: 200, description: 'Receipt retrieved successfully', type: ReceiptDto })
+  @ApiResponse({ status: 404, description: 'Receipt not found' })
+  async getReceipt(@Param('orderId') orderId: string): Promise<ReceiptDto> {
+    const userId = this.getMockUserId();
+    try {
+      return await this.ticketsService.getReceipt(orderId, userId);
+    } catch (error) {
+      if (error.status && error.response) {
+        throw error;
+      }
+      throw new HttpException(error.message || 'Internal server error', HttpStatus.NOT_FOUND);
+    }
   }
-
-  @Get("receipt/:receiptId")
-  @UseGuards(JwtAuthGuard)
-  async getReceipt(
-    @Req() req: RequestWithUser,
-    @Param("receiptId") receiptId: string,
-  ): Promise<ReceiptDto> {
-    return this.ticketService.getReceipt(receiptId, req.user.userId);
-  }
-
-  @Get(':id/calendar.ics')
-async downloadICal(
-  @Param('id', ParseUUIDPipe) id: string,
-  @Query('token') token: string,
-  @Res() res: Response,
-) {
-  const icsFile = await this.ticketService.generateICalFile(id, token);
-
-  res.set({
-    'Content-Type': 'text/calendar',
-    'Content-Disposition': `attachment; filename="ticket-${id}.ics"`,
-  });
-
-  res.send(icsFile);
-}
-}
+} 

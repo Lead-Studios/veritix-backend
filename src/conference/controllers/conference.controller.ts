@@ -1,192 +1,82 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  Put,
-  Delete,
-  UseGuards,
-  ParseUUIDPipe,
-  Query,
-  Req,
-  UnauthorizedException,
-} from "@nestjs/common";
-import { ApiTags, ApiOperation, ApiQuery, ApiResponse } from "@nestjs/swagger";
-import { ConferenceService } from "../providers/conference.service";
-import {
-  CreateConferenceDto,
-  UpdateConferenceDto,
-  ConferenceFilterDto,
-} from "../dto";
-import {
-  Conference,
-  ConferenceVisibility,
-} from "../entities/conference.entity";
-import { JwtAuthGuard } from "../../../security/guards/jwt-auth.guard";
-import { RolesGuard } from "../../../security/guards/rolesGuard/roles.guard";
-import { UserRole } from "../../common/enums/users-roles.enum";
-import { Roles } from "../../../security/decorators/roles.decorator";
-import { Request } from "express";
-import { User } from "../..//users/entities/user.entity";
-import { SearchConferencesDto } from '../dto/search-conferences.dto';
+import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { ConferenceService } from '../services/conference.service';
+import { SessionFeedbackDto } from '../dtos/session-feedback.dto';
+import { IssueCertificateDto } from '../dtos/issue-certificate.dto';
 
-@Controller("conference")
-@UseGuards(JwtAuthGuard, RolesGuard)
+@Controller('conferences')
 export class ConferenceController {
   constructor(private readonly conferenceService: ConferenceService) {}
 
-  @Get("conferences")
-  @ApiOperation({ summary: "Get conferences with filtering and pagination" })
-  @ApiQuery({
-    name: "name",
-    required: false,
-    description: "Filter by conference name (partial match)",
-  })
-  @ApiQuery({
-    name: "category",
-    required: false,
-    description: "Filter by conference category",
-  })
-  @ApiQuery({
-    name: "location",
-    required: false,
-    description:
-      "Filter by any location field (country, state, street, LGA - partial match)",
-  })
-  @ApiQuery({
-    name: "visibility",
-    required: false,
-    description: "Filter by visibility (public/private/draft)",
-  })
-  @ApiQuery({
-    name: "page",
-    required: false,
-    description: "Page number (default: 1)",
-  })
-  @ApiQuery({
-    name: "limit",
-    required: false,
-    description: "Items per page (default: 10)",
-  })
-  @ApiResponse({
-    status: 200,
-    description: "Returns a paginated list of conferences with metadata",
-    schema: {
-      properties: {
-        data: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: {
-              id: { type: "string" },
-              name: { type: "string" },
-              category: { type: "string" },
-              date: { type: "string", format: "date-time" },
-              location: {
-                type: "object",
-                properties: {
-                  country: { type: "string" },
-                  state: { type: "string" },
-                  street: { type: "string" },
-                  lga: { type: "string" },
-                },
-              },
-              image: { type: "string" },
-            },
-          },
-        },
-        meta: {
-          type: "object",
-          properties: {
-            page: { type: "number" },
-            limit: { type: "number" },
-            totalCount: { type: "number" },
-            totalPages: { type: "number" },
-          },
-        },
-      },
-    },
-  })
-  async getConferences(
-    @Query() filter: ConferenceFilterDto,
-    @Req() req: Request,
-  ) {
-    // If requesting non-public conferences, ensure user is authenticated
-    if (
-      filter.visibility &&
-      filter.visibility !== ConferenceVisibility.PUBLIC
-    ) {
-      if (!req.user) {
-        throw new UnauthorizedException(
-          "Authentication required to view non-public conferences",
-        );
-      }
-    }
-
-    return this.conferenceService.findAllWithFilters(filter, req.user as User);
-  }
-
   @Post()
-  @ApiOperation({ summary: "Create a new conference" })
-  @ApiResponse({
-    status: 201,
-    description: "The conference has been successfully created.",
-  })
-  @ApiResponse({ status: 400, description: "Bad request." })
-  create(
-    @Body() createConferenceDto: CreateConferenceDto,
-    @Req() req: Request,
-  ): Promise<Conference> {
-    const user = req.user as User;
-    return this.conferenceService.create(createConferenceDto, user);
+  createConference(@Body() data: any) {
+    return this.conferenceService.createConference(data);
   }
 
   @Get()
-  findAll(): Promise<Conference[]> {
-    return this.conferenceService.findAll();
+  getAllConferences() {
+    return this.conferenceService.findAllConferences();
   }
 
-  @Get(":id")
-  findOne(@Param("id", ParseUUIDPipe) id: string): Promise<Conference> {
-    return this.conferenceService.findOne(id);
+  @Get(':id')
+  getConference(@Param('id') id: number) {
+    return this.conferenceService.findConferenceById(id);
   }
 
-  @Put(":id")
-  @Roles(UserRole.ADMIN, UserRole.ORGANIZER)
-  update(
-    @Param("id", ParseUUIDPipe) id: string,
-    @Body() updateConferenceDto: UpdateConferenceDto,
-  ): Promise<Conference> {
-    return this.conferenceService.update(id, updateConferenceDto);
+  @Patch(':id')
+  updateConference(@Param('id') id: number, @Body() data: any) {
+    return this.conferenceService.updateConference(id, data);
   }
 
-  @Delete(":id")
-  @Roles(UserRole.ADMIN)
-  remove(@Param("id", ParseUUIDPipe) id: string): Promise<void> {
-    return this.conferenceService.remove(id);
+  @Post(':id/sessions')
+  createSession(@Param('id') conferenceId: number, @Body() data: any) {
+    return this.conferenceService.createSession({ ...data, conference: { id: conferenceId } });
   }
-   @Get('search')
-  async searchConferences(@Query() query: SearchConferencesDto) {
-    const { query: searchTerm, category, location, page, limit } = query;
 
-    const offset = (page - 1) * limit;
+  @Patch('sessions/:id')
+  updateSession(@Param('id') sessionId: number, @Body() data: any) {
+    return this.conferenceService.updateSession(sessionId, data);
+  }
 
-    const results = await this. conferenceService.fuzzySearch(
-      searchTerm,
-      category,
-      location,
-      limit,
-      offset,
-    );
+  @Post('sessions/:id/speakers')
+  assignSpeakers(@Param('id') sessionId: number, @Body('speakerIds') speakerIds: number[]) {
+    return this.conferenceService.assignSpeakersToSession(sessionId, speakerIds);
+  }
 
-    return {
-      data: results,
-      pagination: {
-        page,
-        limit,
-        count: results.length,
-      },
-    };
+  @Post('speakers')
+  createSpeaker(@Body() data: any) {
+    return this.conferenceService.createSpeaker(data);
+  }
+
+  @Post('tracks')
+  createTrack(@Body() data: any) {
+    return this.conferenceService.createTrack(data);
+  }
+
+  @Post('sessions/:id/select')
+  selectSession(@Param('id') sessionId: number, @Body('attendeeId') attendeeId: string) {
+    return this.conferenceService.selectSession(attendeeId, sessionId);
+  }
+
+  @Get('my-agenda/:attendeeId')
+  getMyAgenda(@Param('attendeeId') attendeeId: string) {
+    return this.conferenceService.getMyAgenda(attendeeId);
+  }
+
+  @Post('sessions/:id/feedback')
+  submitSessionFeedback(
+    @Param('id') sessionId: number,
+    @Body() dto: SessionFeedbackDto & { attendeeId: string }
+  ) {
+    return this.conferenceService.submitSessionFeedback(dto.attendeeId, { sessionId, rating: dto.rating, comment: dto.comment });
+  }
+
+  @Post('certificates/issue')
+  issueCertificate(@Body() dto: IssueCertificateDto) {
+    return this.conferenceService.issueCertificate(dto.conferenceId, dto.attendeeId, dto.fileUrl);
+  }
+
+  @Get(':id/analytics')
+  getConferenceAnalytics(@Param('id') id: number) {
+    return this.conferenceService.getConferenceAnalytics(id);
   }
 }

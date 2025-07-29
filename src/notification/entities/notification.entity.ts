@@ -1,29 +1,31 @@
-import { Entity, Column, PrimaryGeneratedColumn, Index } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, Index } from 'typeorm';
+import { Event } from '../../events/entities/event.entity';
+import { User } from '../../user/entities/user.entity';
 
-export enum NotificationSatus {
-  UNREAD = "Unread",
-  READ = "Read",
+export enum NotificationStatus {
+  Unread = 'Unread',
+  Read = 'Read',
 }
 
 @Entity()
 export class Notification {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column("uuid")
+  @ManyToOne(() => User, (user) => user.notifications, { onDelete: 'CASCADE' })
   @Index()
-  userId: string;
+  user: User;
 
-  @Column("uuid")
+  @ManyToOne(() => Event, (event) => event.notifications, { onDelete: 'CASCADE' })
   @Index()
-  eventId: string;
+  event: Event;
 
-  @Column()
+  @Column('text')
   message: string;
 
-  @Column({ default: NotificationSatus.UNREAD })
-  status?: string;
+  @Column({ type: 'enum', enum: NotificationStatus, default: NotificationStatus.Unread })
+  status: NotificationStatus;
 
-  @Column()
+  @CreateDateColumn()
   timestamp: Date;
-}
+} 
