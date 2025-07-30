@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './database.module';
@@ -26,21 +26,20 @@ import { ConferenceModule } from './conference/conference.module';
 import { TicketTierModule } from './ticket-tier/ticket-tier.module';
 import { BadgeModule } from './badge/badge.module';
 // import { MailerModule } from './mailer/mailer.module';
-import { AnalyticsEventModule } from './analytics-event/analytics-event.module';
+import { AnalyticsEventModule }n from './analytics-event/analytics-event.module';
 import { WaitlistEntryModule } from './waitlist-entry/waitlist-entry.module';
 import { ConferenceSearchModule } from './conference-search/conference-search.module';
 import { FunnelTrackingModule } from './funnel-tracking/funnel-tracking.module';
 import { NftTicketsModule } from './nft-tickets/nft-tickets.module';
 import { AnnouncementModule } from './announcement/announcement.module';
-
 import { TicketingModule } from './ticketing/ticketing.module';
-
+import { TenantMiddleware } from './common/middleware/tenant.middleware';
 
 @Module({
   imports: [
     DatabaseModule,
     AdminModule,
-    TypeOrmModule.forFeature([Event, GalleryImage]),
+    TenantRepositoryModule.forFeature([Event, GalleryImage]),
     AuthModule,
     UserModule,
     TicketModule,
@@ -67,4 +66,8 @@ import { TicketingModule } from './ticketing/ticketing.module';
   controllers: [AppController, GalleryController, EventController],
   providers: [AppService, GalleryService, EventService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(TenantMiddleware).forRoutes('*');
+  }
+}
