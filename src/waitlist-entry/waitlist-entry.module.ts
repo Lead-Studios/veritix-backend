@@ -2,15 +2,15 @@ import { Module } from '@nestjs/common';
 import { WaitlistService } from './waitlist-entry.service';
 import { WaitlistController } from './waitlist-entry.controller';
 import { BullModule } from '@nestjs/bull';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { NotificationService } from 'src/notification/services/notification.service';
 import { User } from 'src/user/entities/user.entity';
 import { WaitlistEntry } from './entities/waitlist-entry.entity';
 import { WaitlistNotificationProcessor } from './processors/waitlist-notification.processor';
+import { TenantRepositoryModule } from '../../common/database/tenant-repository.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([WaitlistEntry, User, Event]),
+    TenantRepositoryModule.forFeature([WaitlistEntry, User, Event]),
     BullModule.registerQueue({
       name: 'waitlist-notifications',
       redis: {

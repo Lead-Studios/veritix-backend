@@ -1,7 +1,6 @@
-import 'reflect-metadata';
-import { DataSource } from 'typeorm';
+import { DataSource, DataSourceOptions } from 'typeorm';
 import * as dotenv from 'dotenv';
-import { getTenantId } from './common/context/tenant.context';
+import { getTenantId } from '../../common/context/tenant.context';
 
 dotenv.config();
 
@@ -43,4 +42,4 @@ export const getTenantDataSource = (): DataSource => {
 export const AppDataSource = new DataSource({
   ...baseDataSourceOptions,
   schema: 'public', // Default schema for global entities
-}); 
+});
