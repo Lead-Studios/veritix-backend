@@ -30,6 +30,39 @@ import { NftPlatform } from '../entities/nft-ticket.entity';
 export class NftTicketsController {
   constructor(private readonly nftTicketsService: NftTicketsService) {}
 
+  @Get(':nftTicketId/metadata.json')
+  @ApiOperation({ summary: 'Get ERC-721 metadata for an NFT ticket' })
+  @ApiParam({ name: 'nftTicketId', description: 'NFT ticket ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'ERC-721 metadata retrieved successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        description: { type: 'string' },
+        image: { type: 'string' },
+        attributes: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              trait_type: { type: 'string' },
+              value: { type: 'string' },
+            },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'NFT ticket not found',
+  })
+  async getErc721Metadata(@Param('nftTicketId') nftTicketId: string): Promise<Erc721Metadata> {
+    return this.nftTicketsService.getErc721Metadata(nftTicketId);
+  }
+
   @Post('transfer')
   @ApiOperation({ summary: 'Transfer NFT ticket to another wallet' })
   @ApiBody({ type: TransferNftTicketDto })

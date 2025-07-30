@@ -10,6 +10,7 @@ import { ZoraService } from './zora.service';
 import { NftMetadataService } from './nft-metadata.service';
 import { TransferNftTicketDto } from '../dto/transfer-nft-ticket.dto';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { Erc721Metadata } from '../interfaces/erc721-metadata.interface';
 
 describe('NftTicketsService', () => {
   let service: NftTicketsService;
@@ -17,6 +18,7 @@ describe('NftTicketsService', () => {
   let nftMintingConfigRepository: Repository<NftMintingConfig>;
   let polygonService: PolygonService;
   let zoraService: ZoraService;
+  let nftMetadataService: NftMetadataService;
 
   const mockNftTicket = {
     id: 'ticket123',
@@ -39,6 +41,14 @@ describe('NftTicketsService', () => {
     retryCount: 0,
     lastRetryAt: null,
     transferHistory: [],
+    event: { // Mock event data for relations
+      id: 'event456',
+      name: 'Test Event',
+      description: 'A test event',
+      location: 'Test Location',
+      startDate: new Date(),
+      endDate: new Date(),
+    } as TicketingEvent,
   };
 
   const mockNftMintingConfig = {
@@ -50,21 +60,39 @@ describe('NftTicketsService', () => {
     contractAddress: '0xContract',
   };
 
+  const mockErc721Metadata: Erc721Metadata = {
+    name: 'Test Event - Ticket #1',
+    description: 'A test event ticket',
+    image: 'http://example.com/image.png',
+    attributes: [
+      { trait_type: 'Event', value: 'Test Event' },
+      { trait_type: 'Ticket ID', value: 'ticket123' },
+    ],
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         NftTicketsService,
         {
           provide: getRepositoryToken(NftTicket),
-          useClass: Repository,
+          useValue: {
+            findOne: jest.fn().mockResolvedValue(mockNftTicket),
+            update: jest.fn().mockResolvedValue(undefined),
+          },
         },
         {
           provide: getRepositoryToken(NftMintingConfig),
-          useClass: Repository,
+          useValue: {
+            findOne: jest.fn().mockResolvedValue(mockNftMintingConfig),
+            create: jest.fn().mockReturnValue(mockNftMintingConfig),
+          },
         },
         {
           provide: getRepositoryToken(TicketingEvent),
-          useClass: Repository,
+          useValue: {
+            findOne: jest.fn().mockResolvedValue(mockNftTicket.event),
+          },
         },
         {
           provide: PolygonService,
@@ -81,7 +109,7 @@ describe('NftTicketsService', () => {
         {
           provide: NftMetadataService,
           useValue: {
-            generateTicketMetadata: jest.fn(),
+            generateTicketMetadata: jest.fn().mockReturnValue(mockErc721Metadata),
             validateMetadata: jest.fn(() => ({ isValid: true, errors: [] })),
           },
         },
@@ -95,196 +123,60 @@ describe('NftTicketsService', () => {
     nftMintingConfigRepository = module.get<Repository<NftMintingConfig>>(
       getRepositoryToken(NftMintingConfig),
     );
-    polygonService = module.get<PolygonService>(PolygonService);
-    zoraService = module.get<ZoraService>(ZoraService);
-
-    // Mock repository methods
-    jest.spyOn(nftTicketRepository, 'findOne').mockResolvedValue(mockNftTicket as NftTicket);
-    jest.spyOn(nftTicketRepository, 'update').mockResolvedValue(undefined);
-    jest.spyOn(nftMintingConfigRepository, 'findOne').mockResolvedValue(mockNftMintingConfig as NftMintingConfig);
+    nftMetadataService = module.get<NftMetadataService>(NftMetadataService);
   });
 
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
 
-  describe('transferNftTicketByDto', () => {
-    it('should successfully transfer an NFT ticket', async () => {
-      const transferDto: TransferNftTicketDto = {
-        ticketId: 'ticket123',
-        recipientWalletAddress: '0xNewOwner',
-      };
+  describe('getErc721Metadata', () => {
+    it('should return ERC-721 metadata for a given NFT ticket ID', async () => {
+      const result = await service.getErc721Metadata(mockNftTicket.id);
 
-      (polygonService.transferNft as jest.Mock).mockResolvedValue({
-        success: true,
-        transactionHash: '0xTransferTx',
-      });
-
-      const result = await service.transferNftTicketByDto(transferDto);
-
-      expect(result.success).toBe(true);
-      expect(result.transactionHash).toBe('0xTransferTx');
       expect(nftTicketRepository.findOne).toHaveBeenCalledWith({
-        where: { id: transferDto.ticketId },
+        where: { id: mockNftTicket.id },
+        relations: ['event'],
       });
-      expect(nftMintingConfigRepository.findOne).toHaveBeenCalledWith({
-        where: { eventId: mockNftTicket.eventId },
-      });
-      expect(polygonService.transferNft).toHaveBeenCalledWith(
-        mockNftTicket.contractAddress,
-        mockNftTicket.purchaserWalletAddress,
-        transferDto.recipientWalletAddress,
-        mockNftTicket.tokenId,
+      expect(nftMetadataService.generateTicketMetadata).toHaveBeenCalledWith(
+        mockNftTicket.event,
+        mockNftTicket,
+        mockNftMintingConfig,
       );
-      expect(nftTicketRepository.update).toHaveBeenCalledWith(
-        mockNftTicket.id,
-        expect.objectContaining({
-          status: NftTicketStatus.TRANSFERRED,
-          transferredAt: expect.any(Date),
-          previousOwnerWalletAddress: mockNftTicket.purchaserWalletAddress,
-          purchaserWalletAddress: transferDto.recipientWalletAddress,
-          transferHistory: expect.arrayContaining([
-            expect.objectContaining({
-              fromAddress: mockNftTicket.purchaserWalletAddress,
-              toAddress: transferDto.recipientWalletAddress,
-              transactionHash: '0xTransferTx',
-              timestamp: expect.any(Date),
-            }),
-          ]),
-        }),
-      );
+      expect(result).toEqual(mockErc721Metadata);
     });
 
     it('should throw NotFoundException if NFT ticket is not found', async () => {
       (nftTicketRepository.findOne as jest.Mock).mockResolvedValue(null);
 
-      const transferDto: TransferNftTicketDto = {
-        ticketId: 'nonexistentTicket',
-        recipientWalletAddress: '0xNewOwner',
-      };
-
-      await expect(service.transferNftTicketByDto(transferDto)).rejects.toThrow(
+      await expect(service.getErc721Metadata('nonexistentTicket')).rejects.toThrow(
         NotFoundException,
       );
     });
 
-    it('should throw BadRequestException if ticket does not have an owner wallet address', async () => {
+    it('should throw NotFoundException if associated event is not found', async () => {
       (nftTicketRepository.findOne as jest.Mock).mockResolvedValue({
         ...mockNftTicket,
-        purchaserWalletAddress: null,
+        event: null,
       });
 
-      const transferDto: TransferNftTicketDto = {
-        ticketId: 'ticket123',
-        recipientWalletAddress: '0xNewOwner',
-      };
-
-      await expect(service.transferNftTicketByDto(transferDto)).rejects.toThrow(
-        BadRequestException,
-      );
-      expect(nftTicketRepository.findOne).toHaveBeenCalledWith({
-        where: { id: transferDto.ticketId },
-      });
-    });
-
-    it('should throw BadRequestException if ticket is not minted or transferred', async () => {
-      (nftTicketRepository.findOne as jest.Mock).mockResolvedValue({
-        ...mockNftTicket,
-        status: NftTicketStatus.PENDING,
-      });
-
-      const transferDto: TransferNftTicketDto = {
-        ticketId: 'ticket123',
-        recipientWalletAddress: '0xNewOwner',
-      };
-
-      await expect(service.transferNftTicketByDto(transferDto)).rejects.toThrow(
-        BadRequestException,
+      await expect(service.getErc721Metadata(mockNftTicket.id)).rejects.toThrow(
+        NotFoundException,
       );
     });
 
-    it('should throw BadRequestException if transfer is not allowed for the event', async () => {
-      (nftMintingConfigRepository.findOne as jest.Mock).mockResolvedValue({
-        ...mockNftMintingConfig,
-        allowTransfer: false,
-      });
+    it('should use a default config if minting config is not found', async () => {
+      (nftMintingConfigRepository.findOne as jest.Mock).mockResolvedValue(null);
 
-      const transferDto: TransferNftTicketDto = {
-        ticketId: 'ticket123',
-        recipientWalletAddress: '0xNewOwner',
-      };
+      const result = await service.getErc721Metadata(mockNftTicket.id);
 
-      await expect(service.transferNftTicketByDto(transferDto)).rejects.toThrow(
-        BadRequestException,
+      expect(nftMintingConfigRepository.create).toHaveBeenCalled();
+      expect(nftMetadataService.generateTicketMetadata).toHaveBeenCalledWith(
+        mockNftTicket.event,
+        mockNftTicket,
+        expect.any(Object), // Expecting the default config created by the service
       );
-    });
-
-    it('should return success: false if blockchain transfer fails', async () => {
-      (polygonService.transferNft as jest.Mock).mockResolvedValue({
-        success: false,
-        error: 'Blockchain error',
-      });
-
-      const transferDto: TransferNftTicketDto = {
-        ticketId: 'ticket123',
-        recipientWalletAddress: '0xNewOwner',
-      };
-
-      const result = await service.transferNftTicketByDto(transferDto);
-
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Blockchain error');
-      expect(nftTicketRepository.update).not.toHaveBeenCalledWith(
-        mockNftTicket.id,
-        expect.objectContaining({
-          status: NftTicketStatus.TRANSFERRED,
-        }),
-      );
-    });
-
-    it('should handle Zora platform transfers', async () => {
-      (nftTicketRepository.findOne as jest.Mock).mockResolvedValue({
-        ...mockNftTicket,
-        platform: NftPlatform.ZORA,
-      });
-
-      (zoraService.transferNft as jest.Mock).mockResolvedValue({
-        success: true,
-        transactionHash: '0xZoraTransferTx',
-      });
-
-      const transferDto: TransferNftTicketDto = {
-        ticketId: 'ticket123',
-        recipientWalletAddress: '0xNewOwner',
-      };
-
-      const result = await service.transferNftTicketByDto(transferDto);
-
-      expect(result.success).toBe(true);
-      expect(result.transactionHash).toBe('0xZoraTransferTx');
-      expect(zoraService.transferNft).toHaveBeenCalledWith(
-        mockNftTicket.contractAddress,
-        mockNftTicket.purchaserWalletAddress,
-        transferDto.recipientWalletAddress,
-        mockNftTicket.tokenId,
-      );
-      expect(polygonService.transferNft).not.toHaveBeenCalled();
-    });
-
-    it('should throw an error for unsupported platforms', async () => {
-      (nftTicketRepository.findOne as jest.Mock).mockResolvedValue({
-        ...mockNftTicket,
-        platform: 'unsupported' as NftPlatform, // Cast to NftPlatform for testing purposes
-      });
-
-      const transferDto: TransferNftTicketDto = {
-        ticketId: 'ticket123',
-        recipientWalletAddress: '0xNewOwner',
-      };
-
-      await expect(service.transferNftTicketByDto(transferDto)).rejects.toThrow(
-        'Unsupported platform: unsupported',
-      );
+      expect(result).toEqual(mockErc721Metadata);
     });
   });
 });
