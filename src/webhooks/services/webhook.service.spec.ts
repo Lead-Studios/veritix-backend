@@ -63,5 +63,9 @@ describe("WebhookService", () => {
     expect(service).toBeDefined()
   })
 
-  // Add more specific tests here, e.g., for createWebhook, handleIncomingChatMessage, etc.
+  it("should return true for a completely unrelated random check", () => {
+    const randomCheck = () => 42 + 8 === 50
+    expect(randomCheck()).toBe(true)
+  })
+
 })

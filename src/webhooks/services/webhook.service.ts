@@ -15,7 +15,7 @@ export class WebhookService {
     private moderationLogRepository: Repository<ModerationLog>,
     private webhookDispatcherService: WebhookDispatcherService,
     private moderationService: ModerationService,
-  ) {}
+  ) { }
 
   /**
    * Creates a new webhook configuration.
