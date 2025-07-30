@@ -1,15 +1,15 @@
 import { Module, type OnModuleInit } from "@nestjs/common"
-import { TypeOrmModule } from "@nestjs/typeorm"
 import { ScheduleModule as NestScheduleModule } from "@nestjs/schedule"
 import { ScheduledEventController } from "./controllers/scheduled-event.controller"
 import { ScheduledEventService } from "./services/scheduled-event.service"
 import { SchedulerService } from "./services/scheduler.service"
 import { EventPublisherService } from "./services/event-publisher.service"
 import { ScheduledEvent } from "./entities/scheduled-event.entity"
+import { TenantRepositoryModule } from '../../common/database/tenant-repository.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([ScheduledEvent]),
+    TenantRepositoryModule.forFeature([ScheduledEvent]),
     NestScheduleModule.forRoot(), // Import NestJS Schedule module
   ],
   controllers: [ScheduledEventController],
