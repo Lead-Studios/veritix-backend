@@ -106,6 +106,9 @@ export class PurchaseTicketDto {
 
   @ApiProperty({ description: 'Required if ticketType is session', type: [String], required: false })
   @IsString({ each: true })
+  @IsNotEmpty({ each: true })
+  sessionIds?: string[]; // Required if ticketType is 'session'
+}
   @IsOptional()
   sessionIds?: string[];
 

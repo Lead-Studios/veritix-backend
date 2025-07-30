@@ -1,5 +1,5 @@
-import { Injectable } from "@nestjs/common";
-import { WeeklyReportData } from "./weekly-report.service";
+import { Injectable } from '@nestjs/common';
+import { WeeklyReportData } from './weekly-report.service';
 
 @Injectable()
 export class ReportGeneratorService {
@@ -9,14 +9,14 @@ export class ReportGeneratorService {
     // Fetch data from your database
     const ticketSalesData = await this.getTicketSalesData(
       organizerId,
-      weekPeriod
+      weekPeriod,
     );
     const viewsData = await this.getEventViewsData(organizerId, weekPeriod);
     const organizerInfo = await this.getOrganizerInfo(organizerId);
 
     const performanceMetrics = this.calculatePerformanceMetrics(
       ticketSalesData,
-      viewsData
+      viewsData,
     );
 
     return {
@@ -44,7 +44,7 @@ export class ReportGeneratorService {
 
   private async getTicketSalesData(
     organizerId: string,
-    period: { startDate: Date; endDate: Date }
+    period: { startDate: Date; endDate: Date },
   ) {
     // Replace with actual database queries
     // Example implementation:
@@ -53,14 +53,14 @@ export class ReportGeneratorService {
       totalRevenue: 7500,
       salesByEvent: [
         {
-          eventId: "event1",
-          eventName: "Summer Music Festival",
+          eventId: 'event1',
+          eventName: 'Summer Music Festival',
           ticketsSold: 100,
           revenue: 5000,
         },
         {
-          eventId: "event2",
-          eventName: "Tech Conference 2024",
+          eventId: 'event2',
+          eventName: 'Tech Conference 2024',
           ticketsSold: 50,
           revenue: 2500,
         },
@@ -70,20 +70,20 @@ export class ReportGeneratorService {
 
   private async getEventViewsData(
     organizerId: string,
-    period: { startDate: Date; endDate: Date }
+    period: { startDate: Date; endDate: Date },
   ) {
     // Replace with actual database queries
     return {
       totalViews: 2500,
       viewsByEvent: [
         {
-          eventId: "event1",
-          eventName: "Summer Music Festival",
+          eventId: 'event1',
+          eventName: 'Summer Music Festival',
           views: 1800,
         },
         {
-          eventId: "event2",
-          eventName: "Tech Conference 2024",
+          eventId: 'event2',
+          eventName: 'Tech Conference 2024',
           views: 700,
         },
       ],
@@ -93,8 +93,8 @@ export class ReportGeneratorService {
   private async getOrganizerInfo(organizerId: string) {
     // Replace with actual database query
     return {
-      name: "John Doe",
-      email: "john@example.com",
+      name: 'John Doe',
+      email: 'john@example.com',
     };
   }
 
@@ -103,7 +103,7 @@ export class ReportGeneratorService {
     const averageTicketPrice = ticketSales.totalRevenue / ticketSales.totalSold;
     const topPerformingEvent =
       ticketSales.salesByEvent.sort((a, b) => b.revenue - a.revenue)[0]
-        ?.eventName || "N/A";
+        ?.eventName || 'N/A';
 
     return {
       conversionRate: Math.round(conversionRate * 100) / 100,

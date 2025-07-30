@@ -40,7 +40,7 @@ describe('TicketsController (e2e)', () => {
           street: '123 Main St',
           postalCode: '12345',
         },
-        paymentToken: 'pm_card_visa', 
+        paymentToken: 'pm_card_visa',
       })
       .expect(201);
     expect(res.body).toHaveProperty('receiptId');
@@ -68,9 +68,9 @@ describe('TicketsController (e2e)', () => {
           street: '456 Main St',
           postalCode: '54321',
         },
-        paymentToken: 'pm_card_chargeDeclined', 
+        paymentToken: 'pm_card_chargeDeclined',
       })
-      .expect(500); 
+      .expect(500);
   });
 
   it('POST /tickets/purchase - validation error', async () => {
@@ -95,4 +95,4 @@ describe('TicketsController (e2e)', () => {
       .get('/tickets/receipt/invalid-order-id')
       .expect(404);
   });
-}); 
+});

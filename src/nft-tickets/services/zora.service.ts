@@ -32,9 +32,10 @@ export class ZoraService {
   constructor(private configService: ConfigService) {
     this.apiKey = this.configService.get<string>('ZORA_API_KEY') || '';
     this.network = this.configService.get<string>('ZORA_NETWORK') || 'mainnet';
-    this.baseUrl = this.network === 'testnet' 
-      ? 'https://testnet.zora.co/api'
-      : 'https://api.zora.co';
+    this.baseUrl =
+      this.network === 'testnet'
+        ? 'https://testnet.zora.co/api'
+        : 'https://api.zora.co';
   }
 
   /**
@@ -56,7 +57,12 @@ export class ZoraService {
       // 4. Return the transaction hash and token ID
 
       // For now, we'll simulate the minting process
-      const result = await this.simulateMinting(contractAddress, toAddress, metadata, tokenUri);
+      const result = await this.simulateMinting(
+        contractAddress,
+        toAddress,
+        metadata,
+        tokenUri,
+      );
 
       this.logger.log(`NFT minted successfully on Zora: ${result.tokenId}`);
       return result;
@@ -103,7 +109,9 @@ export class ZoraService {
         transactionHash,
       };
     } catch (error) {
-      this.logger.error(`Failed to create NFT collection on Zora: ${error.message}`);
+      this.logger.error(
+        `Failed to create NFT collection on Zora: ${error.message}`,
+      );
       return {
         success: false,
         error: error.message,
@@ -122,7 +130,9 @@ export class ZoraService {
       }
       return await response.json();
     } catch (error) {
-      this.logger.error(`Failed to get NFT metadata from Zora: ${error.message}`);
+      this.logger.error(
+        `Failed to get NFT metadata from Zora: ${error.message}`,
+      );
       return null;
     }
   }
@@ -139,13 +149,15 @@ export class ZoraService {
       const url = `${this.baseUrl}/v1/transactions/${transactionHash}`;
       const response = await fetch(url, {
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
+          Authorization: `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json',
         },
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to get transaction status: ${response.statusText}`);
+        throw new Error(
+          `Failed to get transaction status: ${response.statusText}`,
+        );
       }
 
       const data = await response.json();
@@ -162,7 +174,9 @@ export class ZoraService {
         error: data.error || 'Transaction pending',
       };
     } catch (error) {
-      this.logger.error(`Failed to get transaction status from Zora: ${error.message}`);
+      this.logger.error(
+        `Failed to get transaction status from Zora: ${error.message}`,
+      );
       return {
         confirmed: false,
         error: error.message,
@@ -184,7 +198,9 @@ export class ZoraService {
     error?: string;
   }> {
     try {
-      this.logger.log(`Transferring NFT ${tokenId} on Zora from ${fromAddress} to ${toAddress}`);
+      this.logger.log(
+        `Transferring NFT ${tokenId} on Zora from ${fromAddress} to ${toAddress}`,
+      );
 
       // In a real implementation, you would:
       // 1. Call Zora's transfer API
@@ -192,7 +208,9 @@ export class ZoraService {
 
       const transactionHash = this.generateTransactionHash();
 
-      this.logger.log(`NFT transferred successfully on Zora: ${transactionHash}`);
+      this.logger.log(
+        `NFT transferred successfully on Zora: ${transactionHash}`,
+      );
       return {
         success: true,
         transactionHash,
@@ -219,7 +237,9 @@ export class ZoraService {
     error?: string;
   }> {
     try {
-      this.logger.log(`Burning NFT ${tokenId} on Zora owned by ${ownerAddress}`);
+      this.logger.log(
+        `Burning NFT ${tokenId} on Zora owned by ${ownerAddress}`,
+      );
 
       // In a real implementation, you would:
       // 1. Call Zora's burn API
@@ -307,7 +327,7 @@ export class ZoraService {
     tokenUri?: string,
   ): Promise<ZoraMintResult> {
     // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
 
     const tokenId = Math.floor(Math.random() * 1000000).toString();
     const transactionHash = this.generateTransactionHash();
@@ -333,4 +353,4 @@ export class ZoraService {
   private generateIpfsHash(): string {
     return `Qm${Math.random().toString(16).substr(2, 44)}`;
   }
-} 
+}

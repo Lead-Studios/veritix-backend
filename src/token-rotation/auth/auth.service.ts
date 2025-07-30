@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
@@ -25,7 +29,11 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    return await this.tokenService.generateTokenPair(user, userAgent, ipAddress);
+    return await this.tokenService.generateTokenPair(
+      user,
+      userAgent,
+      ipAddress,
+    );
   }
 
   async refresh(
@@ -34,7 +42,11 @@ export class AuthService {
     ipAddress?: string,
   ): Promise<AuthResponseDto> {
     try {
-      return await this.tokenService.refreshTokens(refreshToken, userAgent, ipAddress);
+      return await this.tokenService.refreshTokens(
+        refreshToken,
+        userAgent,
+        ipAddress,
+      );
     } catch (error) {
       throw new UnauthorizedException('Invalid refresh token');
     }

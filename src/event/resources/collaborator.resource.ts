@@ -14,4 +14,4 @@ export class CollaboratorResource {
   static toArray(collaborators: Collaborator[]) {
     return collaborators.map(this.toResponse);
   }
-} 
+}

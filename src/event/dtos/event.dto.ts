@@ -4,4 +4,4 @@ export class CreateEventDto {
   @IsNotEmpty()
   @IsString()
   name: string;
-} 
+}

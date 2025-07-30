@@ -1,7 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConferenceTicketAnalyticsController } from '../controllers/conference-ticket-analytics.controller';
 import { ConferenceTicketAnalyticsService } from '../services/conference-ticket-analytics.service';
-import { TimeFilter, ExportFormat } from '../dto/conference-ticket-analytics.dto';
+import {
+  TimeFilter,
+  ExportFormat,
+} from '../dto/conference-ticket-analytics.dto';
 import { Response } from 'express';
 import { BadRequestException } from '@nestjs/common';
 
@@ -39,8 +42,12 @@ describe('ConferenceTicketAnalyticsController', () => {
       ],
     }).compile();
 
-    controller = module.get<ConferenceTicketAnalyticsController>(ConferenceTicketAnalyticsController);
-    service = module.get<ConferenceTicketAnalyticsService>(ConferenceTicketAnalyticsService);
+    controller = module.get<ConferenceTicketAnalyticsController>(
+      ConferenceTicketAnalyticsController,
+    );
+    service = module.get<ConferenceTicketAnalyticsService>(
+      ConferenceTicketAnalyticsService,
+    );
   });
 
   afterEach(() => {
@@ -59,7 +66,10 @@ describe('ConferenceTicketAnalyticsController', () => {
 
       mockService.getTotalTickets.mockResolvedValue(expectedResult);
 
-      const result = await controller.getTotalTickets(conferenceId, mockRequest);
+      const result = await controller.getTotalTickets(
+        conferenceId,
+        mockRequest,
+      );
 
       expect(service.getTotalTickets).toHaveBeenCalledWith(conferenceId);
       expect(result).toEqual(expectedResult);
@@ -71,7 +81,9 @@ describe('ConferenceTicketAnalyticsController', () => {
 
       mockService.getTotalTickets.mockRejectedValue(error);
 
-      await expect(controller.getTotalTickets(conferenceId, mockRequest)).rejects.toThrow(error);
+      await expect(
+        controller.getTotalTickets(conferenceId, mockRequest),
+      ).rejects.toThrow(error);
       expect(service.getTotalTickets).toHaveBeenCalledWith(conferenceId);
     });
   });
@@ -95,9 +107,16 @@ describe('ConferenceTicketAnalyticsController', () => {
 
       mockService.getTicketAnalytics.mockResolvedValue(expectedResult);
 
-      const result = await controller.getTicketAnalytics(conferenceId, undefined, mockRequest);
+      const result = await controller.getTicketAnalytics(
+        conferenceId,
+        undefined,
+        mockRequest,
+      );
 
-      expect(service.getTicketAnalytics).toHaveBeenCalledWith(conferenceId, undefined);
+      expect(service.getTicketAnalytics).toHaveBeenCalledWith(
+        conferenceId,
+        undefined,
+      );
       expect(result).toEqual(expectedResult);
     });
 
@@ -108,9 +127,7 @@ describe('ConferenceTicketAnalyticsController', () => {
         conferenceId: '1',
         totalTickets: 5,
         filter: TimeFilter.DAILY,
-        data: [
-          { timestamp: '2024-01-01', ticketCount: 5, conferenceId: '1' },
-        ],
+        data: [{ timestamp: '2024-01-01', ticketCount: 5, conferenceId: '1' }],
         period: {
           start: '2024-01-01T00:00:00.000Z',
           end: '2024-01-02T00:00:00.000Z',
@@ -119,9 +136,16 @@ describe('ConferenceTicketAnalyticsController', () => {
 
       mockService.getTicketAnalytics.mockResolvedValue(expectedResult);
 
-      const result = await controller.getTicketAnalytics(conferenceId, filter, mockRequest);
+      const result = await controller.getTicketAnalytics(
+        conferenceId,
+        filter,
+        mockRequest,
+      );
 
-      expect(service.getTicketAnalytics).toHaveBeenCalledWith(conferenceId, filter);
+      expect(service.getTicketAnalytics).toHaveBeenCalledWith(
+        conferenceId,
+        filter,
+      );
       expect(result).toEqual(expectedResult);
     });
 
@@ -133,8 +157,16 @@ describe('ConferenceTicketAnalyticsController', () => {
         totalTickets: 3,
         filter: TimeFilter.HOURLY,
         data: [
-          { timestamp: '2024-01-01T10:00:00', ticketCount: 2, conferenceId: '1' },
-          { timestamp: '2024-01-01T11:00:00', ticketCount: 1, conferenceId: '1' },
+          {
+            timestamp: '2024-01-01T10:00:00',
+            ticketCount: 2,
+            conferenceId: '1',
+          },
+          {
+            timestamp: '2024-01-01T11:00:00',
+            ticketCount: 1,
+            conferenceId: '1',
+          },
         ],
         period: {
           start: '2024-01-01T00:00:00.000Z',
@@ -144,9 +176,16 @@ describe('ConferenceTicketAnalyticsController', () => {
 
       mockService.getTicketAnalytics.mockResolvedValue(expectedResult);
 
-      const result = await controller.getTicketAnalytics(conferenceId, filter, mockRequest);
+      const result = await controller.getTicketAnalytics(
+        conferenceId,
+        filter,
+        mockRequest,
+      );
 
-      expect(service.getTicketAnalytics).toHaveBeenCalledWith(conferenceId, filter);
+      expect(service.getTicketAnalytics).toHaveBeenCalledWith(
+        conferenceId,
+        filter,
+      );
       expect(result).toEqual(expectedResult);
     });
 
@@ -169,9 +208,16 @@ describe('ConferenceTicketAnalyticsController', () => {
 
       mockService.getTicketAnalytics.mockResolvedValue(expectedResult);
 
-      const result = await controller.getTicketAnalytics(conferenceId, filter, mockRequest);
+      const result = await controller.getTicketAnalytics(
+        conferenceId,
+        filter,
+        mockRequest,
+      );
 
-      expect(service.getTicketAnalytics).toHaveBeenCalledWith(conferenceId, filter);
+      expect(service.getTicketAnalytics).toHaveBeenCalledWith(
+        conferenceId,
+        filter,
+      );
       expect(result).toEqual(expectedResult);
     });
 
@@ -194,9 +240,16 @@ describe('ConferenceTicketAnalyticsController', () => {
 
       mockService.getTicketAnalytics.mockResolvedValue(expectedResult);
 
-      const result = await controller.getTicketAnalytics(conferenceId, filter, mockRequest);
+      const result = await controller.getTicketAnalytics(
+        conferenceId,
+        filter,
+        mockRequest,
+      );
 
-      expect(service.getTicketAnalytics).toHaveBeenCalledWith(conferenceId, filter);
+      expect(service.getTicketAnalytics).toHaveBeenCalledWith(
+        conferenceId,
+        filter,
+      );
       expect(result).toEqual(expectedResult);
     });
 
@@ -219,9 +272,16 @@ describe('ConferenceTicketAnalyticsController', () => {
 
       mockService.getTicketAnalytics.mockResolvedValue(expectedResult);
 
-      const result = await controller.getTicketAnalytics(conferenceId, filter, mockRequest);
+      const result = await controller.getTicketAnalytics(
+        conferenceId,
+        filter,
+        mockRequest,
+      );
 
-      expect(service.getTicketAnalytics).toHaveBeenCalledWith(conferenceId, filter);
+      expect(service.getTicketAnalytics).toHaveBeenCalledWith(
+        conferenceId,
+        filter,
+      );
       expect(result).toEqual(expectedResult);
     });
 
@@ -231,8 +291,13 @@ describe('ConferenceTicketAnalyticsController', () => {
 
       mockService.getTicketAnalytics.mockRejectedValue(error);
 
-      await expect(controller.getTicketAnalytics(conferenceId, undefined, mockRequest)).rejects.toThrow(error);
-      expect(service.getTicketAnalytics).toHaveBeenCalledWith(conferenceId, undefined);
+      await expect(
+        controller.getTicketAnalytics(conferenceId, undefined, mockRequest),
+      ).rejects.toThrow(error);
+      expect(service.getTicketAnalytics).toHaveBeenCalledWith(
+        conferenceId,
+        undefined,
+      );
     });
   });
 
@@ -244,9 +309,20 @@ describe('ConferenceTicketAnalyticsController', () => {
 
       mockService.exportTicketAnalytics.mockResolvedValue(undefined);
 
-      await controller.exportTicketAnalytics(conferenceId, format, filter, mockResponse, mockRequest);
+      await controller.exportTicketAnalytics(
+        conferenceId,
+        format,
+        filter,
+        mockResponse,
+        mockRequest,
+      );
 
-      expect(service.exportTicketAnalytics).toHaveBeenCalledWith(conferenceId, format, filter, mockResponse);
+      expect(service.exportTicketAnalytics).toHaveBeenCalledWith(
+        conferenceId,
+        format,
+        filter,
+        mockResponse,
+      );
     });
 
     it('should export data to XLS format', async () => {
@@ -256,9 +332,20 @@ describe('ConferenceTicketAnalyticsController', () => {
 
       mockService.exportTicketAnalytics.mockResolvedValue(undefined);
 
-      await controller.exportTicketAnalytics(conferenceId, format, filter, mockResponse, mockRequest);
+      await controller.exportTicketAnalytics(
+        conferenceId,
+        format,
+        filter,
+        mockResponse,
+        mockRequest,
+      );
 
-      expect(service.exportTicketAnalytics).toHaveBeenCalledWith(conferenceId, format, filter, mockResponse);
+      expect(service.exportTicketAnalytics).toHaveBeenCalledWith(
+        conferenceId,
+        format,
+        filter,
+        mockResponse,
+      );
     });
 
     it('should export data without filter', async () => {
@@ -267,9 +354,20 @@ describe('ConferenceTicketAnalyticsController', () => {
 
       mockService.exportTicketAnalytics.mockResolvedValue(undefined);
 
-      await controller.exportTicketAnalytics(conferenceId, format, undefined, mockResponse, mockRequest);
+      await controller.exportTicketAnalytics(
+        conferenceId,
+        format,
+        undefined,
+        mockResponse,
+        mockRequest,
+      );
 
-      expect(service.exportTicketAnalytics).toHaveBeenCalledWith(conferenceId, format, undefined, mockResponse);
+      expect(service.exportTicketAnalytics).toHaveBeenCalledWith(
+        conferenceId,
+        format,
+        undefined,
+        mockResponse,
+      );
     });
 
     it('should handle service errors', async () => {
@@ -280,9 +378,20 @@ describe('ConferenceTicketAnalyticsController', () => {
       mockService.exportTicketAnalytics.mockRejectedValue(error);
 
       await expect(
-        controller.exportTicketAnalytics(conferenceId, format, undefined, mockResponse, mockRequest)
+        controller.exportTicketAnalytics(
+          conferenceId,
+          format,
+          undefined,
+          mockResponse,
+          mockRequest,
+        ),
       ).rejects.toThrow(error);
-      expect(service.exportTicketAnalytics).toHaveBeenCalledWith(conferenceId, format, undefined, mockResponse);
+      expect(service.exportTicketAnalytics).toHaveBeenCalledWith(
+        conferenceId,
+        format,
+        undefined,
+        mockResponse,
+      );
     });
   });
 
@@ -298,7 +407,9 @@ describe('ConferenceTicketAnalyticsController', () => {
       const request = { user: adminUser };
 
       // This should not throw an error
-      await expect(controller.getTotalTickets(conferenceId, request)).resolves.toBeDefined();
+      await expect(
+        controller.getTotalTickets(conferenceId, request),
+      ).resolves.toBeDefined();
     });
 
     it('should allow access for organizer user', async () => {
@@ -319,7 +430,9 @@ describe('ConferenceTicketAnalyticsController', () => {
       });
 
       // This should not throw an error
-      await expect(controller.getTotalTickets(conferenceId, request)).resolves.toBeDefined();
+      await expect(
+        controller.getTotalTickets(conferenceId, request),
+      ).resolves.toBeDefined();
     });
 
     it('should deny access for user without proper roles', async () => {
@@ -333,7 +446,9 @@ describe('ConferenceTicketAnalyticsController', () => {
       const request = { user: regularUser };
 
       // This should throw a BadRequestException
-      await expect(controller.getTotalTickets(conferenceId, request)).rejects.toThrow(BadRequestException);
+      await expect(
+        controller.getTotalTickets(conferenceId, request),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should deny access for user with no roles', async () => {
@@ -347,7 +462,9 @@ describe('ConferenceTicketAnalyticsController', () => {
       const request = { user: userWithoutRoles };
 
       // This should throw a BadRequestException
-      await expect(controller.getTotalTickets(conferenceId, request)).rejects.toThrow(BadRequestException);
+      await expect(
+        controller.getTotalTickets(conferenceId, request),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 
@@ -358,7 +475,9 @@ describe('ConferenceTicketAnalyticsController', () => {
 
       mockService.getTotalTickets.mockRejectedValue(error);
 
-      await expect(controller.getTotalTickets(invalidConferenceId, mockRequest)).rejects.toThrow(error);
+      await expect(
+        controller.getTotalTickets(invalidConferenceId, mockRequest),
+      ).rejects.toThrow(error);
     });
 
     it('should handle empty conference ID', async () => {
@@ -367,7 +486,9 @@ describe('ConferenceTicketAnalyticsController', () => {
 
       mockService.getTotalTickets.mockRejectedValue(error);
 
-      await expect(controller.getTotalTickets(emptyConferenceId, mockRequest)).rejects.toThrow(error);
+      await expect(
+        controller.getTotalTickets(emptyConferenceId, mockRequest),
+      ).rejects.toThrow(error);
     });
 
     it('should handle null filter parameter', async () => {
@@ -382,9 +503,16 @@ describe('ConferenceTicketAnalyticsController', () => {
         period: { start: '', end: '' },
       });
 
-      const result = await controller.getTicketAnalytics(conferenceId, undefined, mockRequest);
+      const result = await controller.getTicketAnalytics(
+        conferenceId,
+        undefined,
+        mockRequest,
+      );
 
-      expect(service.getTicketAnalytics).toHaveBeenCalledWith(conferenceId, undefined);
+      expect(service.getTicketAnalytics).toHaveBeenCalledWith(
+        conferenceId,
+        undefined,
+      );
       expect(result.filter).toBeUndefined();
     });
   });
@@ -395,13 +523,16 @@ describe('ConferenceTicketAnalyticsController', () => {
       const expectedResult = {
         conferenceId: '1',
         totalTickets: 10,
-        totalRevenue: 1500.50,
+        totalRevenue: 1500.5,
         averageTicketPrice: 150.05,
       };
 
       mockService.getTotalTickets.mockResolvedValue(expectedResult);
 
-      const result = await controller.getTotalTickets(conferenceId, mockRequest);
+      const result = await controller.getTotalTickets(
+        conferenceId,
+        mockRequest,
+      );
 
       expect(result).toHaveProperty('conferenceId');
       expect(result).toHaveProperty('totalTickets');
@@ -431,7 +562,11 @@ describe('ConferenceTicketAnalyticsController', () => {
 
       mockService.getTicketAnalytics.mockResolvedValue(expectedResult);
 
-      const result = await controller.getTicketAnalytics(conferenceId, filter, mockRequest);
+      const result = await controller.getTicketAnalytics(
+        conferenceId,
+        filter,
+        mockRequest,
+      );
 
       expect(result).toHaveProperty('conferenceId');
       expect(result).toHaveProperty('totalTickets');
@@ -443,4 +578,4 @@ describe('ConferenceTicketAnalyticsController', () => {
       expect(result.period).toHaveProperty('end');
     });
   });
-}); 
+});

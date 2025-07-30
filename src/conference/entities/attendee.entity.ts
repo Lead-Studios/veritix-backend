@@ -1,5 +1,5 @@
-import { Entity, Column, OneToMany, PrimaryGeneratedColumn } from "typeorm";
-import { SessionCheckIn } from "./session-check-in.entity";
+import { Entity, Column, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { SessionCheckIn } from './session-check-in.entity';
 
 @Entity()
 export class Attendee {

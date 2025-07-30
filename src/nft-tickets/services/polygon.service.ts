@@ -31,10 +31,12 @@ export class PolygonService {
 
   constructor(private configService: ConfigService) {
     this.apiKey = this.configService.get<string>('POLYGON_API_KEY') || '';
-    this.network = this.configService.get<string>('POLYGON_NETWORK') || 'mainnet';
-    this.baseUrl = this.network === 'testnet' 
-      ? 'https://api-testnet.polygonscan.com/api'
-      : 'https://api.polygonscan.com/api';
+    this.network =
+      this.configService.get<string>('POLYGON_NETWORK') || 'mainnet';
+    this.baseUrl =
+      this.network === 'testnet'
+        ? 'https://api-testnet.polygonscan.com/api'
+        : 'https://api.polygonscan.com/api';
   }
 
   /**
@@ -56,7 +58,12 @@ export class PolygonService {
       // 4. Return the transaction hash and token ID
 
       // For now, we'll simulate the minting process
-      const result = await this.simulateMinting(contractAddress, toAddress, metadata, tokenUri);
+      const result = await this.simulateMinting(
+        contractAddress,
+        toAddress,
+        metadata,
+        tokenUri,
+      );
 
       this.logger.log(`NFT minted successfully: ${result.tokenId}`);
       return result;
@@ -181,7 +188,9 @@ export class PolygonService {
     error?: string;
   }> {
     try {
-      this.logger.log(`Transferring NFT ${tokenId} from ${fromAddress} to ${toAddress}`);
+      this.logger.log(
+        `Transferring NFT ${tokenId} from ${fromAddress} to ${toAddress}`,
+      );
 
       // In a real implementation, you would:
       // 1. Call the transfer function on the NFT contract
@@ -273,11 +282,12 @@ export class PolygonService {
     tokenUri?: string,
   ): Promise<PolygonMintResult> {
     // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     const tokenId = Math.floor(Math.random() * 1000000).toString();
     const transactionHash = this.generateTransactionHash();
-    const finalTokenUri = tokenUri || `https://api.example.com/metadata/${tokenId}`;
+    const finalTokenUri =
+      tokenUri || `https://api.example.com/metadata/${tokenId}`;
 
     return {
       success: true,
@@ -295,4 +305,4 @@ export class PolygonService {
   private generateTransactionHash(): string {
     return `0x${Math.random().toString(16).substr(2, 64)}`;
   }
-} 
+}

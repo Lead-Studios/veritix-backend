@@ -4,4 +4,4 @@ export class ReportFilterDto {
   @IsOptional()
   @IsString()
   period?: 'week' | 'month' | 'year';
-} 
+}

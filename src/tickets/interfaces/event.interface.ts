@@ -5,4 +5,4 @@ export interface Event {
   location: string;
   availableTickets: number;
   pricePerTicket: number;
-} 
+}

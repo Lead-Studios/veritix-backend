@@ -124,4 +124,4 @@ export class NftTicket {
 
   @UpdateDateColumn()
   updatedAt: Date;
-} 
+}

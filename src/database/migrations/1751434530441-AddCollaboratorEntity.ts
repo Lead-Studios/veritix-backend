@@ -1,9 +1,8 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class AddCollaboratorEntity1751434530441 implements MigrationInterface {
-
-    public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`
             CREATE TABLE "collaborator" (
                 "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
                 "name" character varying NOT NULL,
@@ -14,7 +13,7 @@ export class AddCollaboratorEntity1751434530441 implements MigrationInterface {
             )
         `);
 
-        await queryRunner.query(`
+    await queryRunner.query(`
             ALTER TABLE "collaborator" 
             ADD CONSTRAINT "FK_collaborator_event" 
             FOREIGN KEY ("eventId") 
@@ -22,11 +21,12 @@ export class AddCollaboratorEntity1751434530441 implements MigrationInterface {
             ON DELETE CASCADE 
             ON UPDATE NO ACTION
         `);
-    }
+  }
 
-    public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`ALTER TABLE "collaborator" DROP CONSTRAINT "FK_collaborator_event"`);
-        await queryRunner.query(`DROP TABLE "collaborator"`);
-    }
-
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(
+      `ALTER TABLE "collaborator" DROP CONSTRAINT "FK_collaborator_event"`,
+    );
+    await queryRunner.query(`DROP TABLE "collaborator"`);
+  }
 }

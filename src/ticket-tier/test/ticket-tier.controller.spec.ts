@@ -68,7 +68,11 @@ describe('TicketTierController', () => {
 
       const result = await controller.create('event-1', createDto, mockRequest);
 
-      expect(service.create).toHaveBeenCalledWith('event-1', createDto, 'user-1');
+      expect(service.create).toHaveBeenCalledWith(
+        'event-1',
+        createDto,
+        'user-1',
+      );
       expect(result).toEqual(expectedResult);
     });
 
@@ -92,7 +96,11 @@ describe('TicketTierController', () => {
 
       const result = await controller.create('event-1', customDto, mockRequest);
 
-      expect(service.create).toHaveBeenCalledWith('event-1', customDto, 'user-1');
+      expect(service.create).toHaveBeenCalledWith(
+        'event-1',
+        customDto,
+        'user-1',
+      );
       expect(result).toEqual(expectedResult);
     });
   });
@@ -196,4 +204,4 @@ describe('TicketTierController', () => {
       expect(result).toEqual(expectedResult);
     });
   });
-}); 
+});

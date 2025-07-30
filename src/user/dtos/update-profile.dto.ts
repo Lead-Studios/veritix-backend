@@ -10,4 +10,4 @@ export class UpdateProfileDto {
   phone?: string;
 
   // Add more fields as needed
-} 
+}

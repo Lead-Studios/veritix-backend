@@ -1,9 +1,9 @@
-import { Module } from "@nestjs/common";
-import { ScheduleModule } from "@nestjs/schedule";
-import { WeeklyReportService } from "./weekly-report.service";
-import { WeeklyReportController } from "./weekly-report.controller";
-import { EmailService } from "./email.service";
-import { ReportGeneratorService } from "./report-generator.service";
+import { Module } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule';
+import { WeeklyReportService } from './weekly-report.service';
+import { WeeklyReportController } from './weekly-report.controller';
+import { EmailService } from './email.service';
+import { ReportGeneratorService } from './report-generator.service';
 
 @Module({
   imports: [ScheduleModule.forRoot()],

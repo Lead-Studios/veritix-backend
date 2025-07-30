@@ -10,4 +10,4 @@ export class CreateCampaignEmailDto {
   @IsArray()
   @ArrayNotEmpty()
   recipients: string[];
-} 
+}

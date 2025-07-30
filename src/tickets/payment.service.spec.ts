@@ -19,7 +19,10 @@ describe('PaymentService', () => {
   });
 
   it('should return payment intent id on success', async () => {
-    stripeMock.paymentIntents.create.mockResolvedValue({ status: 'succeeded', id: 'pi_123' });
+    stripeMock.paymentIntents.create.mockResolvedValue({
+      status: 'succeeded',
+      id: 'pi_123',
+    });
     const result = await paymentService.processPayment('tok_test', 100);
     expect(result).toBe('pi_123');
     expect(stripeMock.paymentIntents.create).toHaveBeenCalledWith({
@@ -31,15 +34,22 @@ describe('PaymentService', () => {
   });
 
   it('should throw if payment is not successful', async () => {
-    stripeMock.paymentIntents.create.mockResolvedValue({ status: 'requires_payment_method', id: 'pi_456' });
-    await expect(paymentService.processPayment('tok_test', 100)).rejects.toThrow('Payment failed: Payment not successful');
+    stripeMock.paymentIntents.create.mockResolvedValue({
+      status: 'requires_payment_method',
+      id: 'pi_456',
+    });
+    await expect(
+      paymentService.processPayment('tok_test', 100),
+    ).rejects.toThrow('Payment failed: Payment not successful');
   });
 
   it('should throw and log error if Stripe throws', async () => {
     const error = new Error('Stripe error');
     stripeMock.paymentIntents.create.mockRejectedValue(error);
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-    await expect(paymentService.processPayment('tok_test', 100)).rejects.toThrow('Payment failed: Stripe error');
+    await expect(
+      paymentService.processPayment('tok_test', 100),
+    ).rejects.toThrow('Payment failed: Stripe error');
     expect(consoleSpy).toHaveBeenCalledWith('Stripe error:', error);
   });
-}); 
+});

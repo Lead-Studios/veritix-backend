@@ -1,12 +1,12 @@
-import { Injectable, Logger } from "@nestjs/common";
-import { FraudRuleService } from "./fraud-rule.service";
+import { Injectable, Logger } from '@nestjs/common';
+import { FraudRuleService } from './fraud-rule.service';
 import {
   Order,
   FraudAlert,
   FraudContext,
   FraudSeverity,
   FraudReport,
-} from "./fraud-detection.types";
+} from './fraud-detection.types';
 
 @Injectable()
 export class FraudDetectionService {
@@ -48,7 +48,7 @@ export class FraudDetectionService {
           this.alerts.push(alert);
 
           this.logger.warn(
-            `Fraud alert triggered: ${rule.name} for order ${order.id} (Severity: ${rule.severity})`
+            `Fraud alert triggered: ${rule.name} for order ${order.id} (Severity: ${rule.severity})`,
           );
         }
       } catch (error) {
@@ -61,7 +61,7 @@ export class FraudDetectionService {
       triggeredAlerts.some((alert) => alert.severity === FraudSeverity.CRITICAL)
     ) {
       this.logger.error(
-        `CRITICAL fraud alert for order ${order.id} - immediate review required`
+        `CRITICAL fraud alert for order ${order.id} - immediate review required`,
       );
     }
 
@@ -107,7 +107,7 @@ export class FraudDetectionService {
     fromDate.setDate(fromDate.getDate() - days);
 
     const recentAlerts = this.alerts.filter(
-      (alert) => alert.timestamp >= fromDate
+      (alert) => alert.timestamp >= fromDate,
     );
 
     const alertsBySeverity = {

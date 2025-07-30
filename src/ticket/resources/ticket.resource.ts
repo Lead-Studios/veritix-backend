@@ -5,8 +5,12 @@ export class TicketResource {
     return {
       id: ticket.id,
       name: ticket.name,
-      event: ticket.event ? { id: ticket.event.id, name: ticket.event.name } : null,
-      createdBy: ticket.createdBy ? { id: ticket.createdBy.id, email: ticket.createdBy.email } : null,
+      event: ticket.event
+        ? { id: ticket.event.id, name: ticket.event.name }
+        : null,
+      createdBy: ticket.createdBy
+        ? { id: ticket.createdBy.id, email: ticket.createdBy.email }
+        : null,
       quantity: ticket.quantity,
       price: ticket.price,
       description: ticket.description,
@@ -20,4 +24,4 @@ export class TicketResource {
   static toArray(tickets: Ticket[]) {
     return tickets.map(TicketResource.toResponse);
   }
-} 
+}

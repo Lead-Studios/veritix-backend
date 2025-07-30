@@ -35,7 +35,10 @@ describe('SyncService', () => {
       providers: [
         SyncService,
         { provide: SyncJobService, useValue: mockSyncJobService },
-        { provide: TicketSalesDataService, useValue: mockTicketSalesDataService },
+        {
+          provide: TicketSalesDataService,
+          useValue: mockTicketSalesDataService,
+        },
         { provide: WarehouseSyncService, useValue: mockWarehouseSyncService },
       ],
     }).compile();

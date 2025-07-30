@@ -26,4 +26,4 @@ export interface DynamicPriceResult {
   soldCount: number;
   totalQuantity: number;
   soldPercentage: number;
-} 
+}

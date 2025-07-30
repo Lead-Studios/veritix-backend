@@ -1,4 +1,10 @@
-import { Controller, Get, UseGuards, Param, ParseUUIDPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  UseGuards,
+  Param,
+  ParseUUIDPipe,
+} from '@nestjs/common';
 import { DashboardService } from '../services/dashboard.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
@@ -21,9 +27,7 @@ export class DashboardController {
 
   @Get('events/:eventId')
   @ApiOperation({ summary: 'Get event dashboard statistics' })
-  getEventDashboard(
-    @Param('eventId', new ParseUUIDPipe()) eventId: string
-  ) {
+  getEventDashboard(@Param('eventId', new ParseUUIDPipe()) eventId: string) {
     return this.dashboardService.getEventDashboard(eventId);
   }
-} 
+}

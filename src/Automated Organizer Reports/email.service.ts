@@ -1,6 +1,6 @@
-import { Injectable, Logger } from "@nestjs/common";
-import { WeeklyReportData } from "./weekly-report.service";
-import * as nodemailer from "nodemailer";
+import { Injectable, Logger } from '@nestjs/common';
+import { WeeklyReportData } from './weekly-report.service';
+import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class EmailService {
@@ -9,7 +9,7 @@ export class EmailService {
 
   constructor() {
     this.transporter = nodemailer.createTransporter({
-      host: process.env.SMTP_HOST || "smtp.gmail.com",
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
       port: parseInt(process.env.SMTP_PORT) || 587,
       secure: false,
       auth: {
@@ -24,10 +24,10 @@ export class EmailService {
       const htmlContent = this.generateEmailTemplate(reportData);
 
       const mailOptions = {
-        from: process.env.FROM_EMAIL || "reports@yourapp.com",
+        from: process.env.FROM_EMAIL || 'reports@yourapp.com',
         to: reportData.organizerEmail,
         subject: `Weekly Report - ${this.formatDateRange(
-          reportData.weekPeriod
+          reportData.weekPeriod,
         )}`,
         html: htmlContent,
       };
@@ -37,7 +37,7 @@ export class EmailService {
     } catch (error) {
       this.logger.error(
         `Failed to send email to ${reportData.organizerEmail}`,
-        error
+        error,
       );
       throw error;
     }
@@ -120,9 +120,9 @@ export class EmailService {
                                 <td>${event.ticketsSold}</td>
                                 <td>$${event.revenue.toLocaleString()}</td>
                             </tr>
-                        `
+                        `,
                           )
-                          .join("")}
+                          .join('')}
                     </tbody>
                 </table>
 
@@ -142,9 +142,9 @@ export class EmailService {
                                 <td>${event.eventName}</td>
                                 <td>${event.views.toLocaleString()}</td>
                             </tr>
-                        `
+                        `,
                           )
-                          .join("")}
+                          .join('')}
                     </tbody>
                 </table>
             </div>
@@ -161,14 +161,14 @@ export class EmailService {
 
   private formatDateRange(period: { startDate: Date; endDate: Date }): string {
     const options: Intl.DateTimeFormatOptions = {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
     };
 
     return `${period.startDate.toLocaleDateString(
-      "en-US",
-      options
-    )} - ${period.endDate.toLocaleDateString("en-US", options)}`;
+      'en-US',
+      options,
+    )} - ${period.endDate.toLocaleDateString('en-US', options)}`;
   }
 }

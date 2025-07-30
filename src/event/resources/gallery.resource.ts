@@ -15,4 +15,4 @@ export class GalleryResource {
   static toArray(images: GalleryImage[]) {
     return images.map(GalleryResource.toResponse);
   }
-} 
+}

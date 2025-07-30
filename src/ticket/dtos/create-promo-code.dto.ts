@@ -1,4 +1,10 @@
-import { IsString, IsNumber, IsInt, IsDateString, IsNotEmpty } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsInt,
+  IsDateString,
+  IsNotEmpty,
+} from 'class-validator';
 
 export class CreatePromoCodeDto {
   @IsString()

@@ -7,4 +7,4 @@ export class LoginDto {
   @IsString()
   @MinLength(6)
   password: string;
-} 
+}

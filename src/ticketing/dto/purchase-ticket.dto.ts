@@ -1,24 +1,32 @@
-import { IsUUID, IsString, IsEmail, IsNotEmpty, IsOptional, IsNumber, Min } from "class-validator"
+import {
+  IsUUID,
+  IsString,
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsNumber,
+  Min,
+} from 'class-validator';
 
 export class PurchaseTicketDto {
   @IsUUID()
   @IsNotEmpty()
-  eventId: string
+  eventId: string;
 
   @IsUUID()
   @IsNotEmpty()
-  purchaserId: string
+  purchaserId: string;
 
   @IsString()
   @IsNotEmpty()
-  purchaserName: string
+  purchaserName: string;
 
   @IsEmail()
   @IsNotEmpty()
-  purchaserEmail: string
+  purchaserEmail: string;
 
   @IsOptional()
   @IsNumber()
   @Min(1)
-  quantity?: number = 1
+  quantity?: number = 1;
 }

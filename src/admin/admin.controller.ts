@@ -1,6 +1,21 @@
-import { Controller, Post, Body, Get, UseGuards, Request, UploadedFile, UseInterceptors } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  UseGuards,
+  Request,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
 import { AdminService } from './admin.service';
-import { CreateAdminDto, LoginAdminDto, ForgetPasswordDto, ResetPasswordDto, RefreshTokenDto } from './dto';
+import {
+  CreateAdminDto,
+  LoginAdminDto,
+  ForgetPasswordDto,
+  ResetPasswordDto,
+  RefreshTokenDto,
+} from './dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { Roles } from './decorators/roles.decorator';

@@ -1,7 +1,10 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { FunnelTrackingService } from '../services/funnel-tracking.service';
-import { FunnelStage, FunnelActionType } from '../entities/funnel-action.entity';
+import {
+  FunnelStage,
+  FunnelActionType,
+} from '../entities/funnel-action.entity';
 
 @Injectable()
 export class FunnelTrackingMiddleware implements NestMiddleware {
@@ -13,7 +16,7 @@ export class FunnelTrackingMiddleware implements NestMiddleware {
     const startTime = Date.now();
 
     // Override end method to track completion
-    res.end = function(chunk?: any, encoding?: any) {
+    res.end = function (chunk?: any, encoding?: any) {
       const endTime = Date.now();
       const timeOnPage = Math.floor((endTime - startTime) / 1000); // Convert to seconds
 
@@ -21,7 +24,7 @@ export class FunnelTrackingMiddleware implements NestMiddleware {
       originalEnd.call(this, chunk, encoding);
 
       // Track funnel action asynchronously (don't block response)
-      this.trackFunnelAction(req, res, timeOnPage).catch(error => {
+      this.trackFunnelAction(req, res, timeOnPage).catch((error) => {
         console.error('Error tracking funnel action:', error);
       });
     }.bind(this);
@@ -29,7 +32,11 @@ export class FunnelTrackingMiddleware implements NestMiddleware {
     next();
   }
 
-  private async trackFunnelAction(req: Request, res: Response, timeOnPage: number) {
+  private async trackFunnelAction(
+    req: Request,
+    res: Response,
+    timeOnPage: number,
+  ) {
     try {
       const { method, url, params, body, query, headers } = req;
       const eventId = params?.eventId || body?.eventId || query?.eventId;
@@ -66,7 +73,8 @@ export class FunnelTrackingMiddleware implements NestMiddleware {
         utmTerm: query.utm_term as string,
         utmContent: query.utm_content as string,
         timeOnPage,
-        errorMessage: res.statusCode >= 400 ? `HTTP ${res.statusCode}` : undefined,
+        errorMessage:
+          res.statusCode >= 400 ? `HTTP ${res.statusCode}` : undefined,
       };
 
       await this.funnelTrackingService.trackAction(trackActionDto);
@@ -75,16 +83,28 @@ export class FunnelTrackingMiddleware implements NestMiddleware {
     }
   }
 
-  private determineFunnelStage(method: string, url: string, body: any): FunnelStage | null {
+  private determineFunnelStage(
+    method: string,
+    url: string,
+    body: any,
+  ): FunnelStage | null {
     const urlLower = url.toLowerCase();
 
     // Event view
-    if (method === 'GET' && urlLower.includes('/events/') && !urlLower.includes('/tickets')) {
+    if (
+      method === 'GET' &&
+      urlLower.includes('/events/') &&
+      !urlLower.includes('/tickets')
+    ) {
       return FunnelStage.EVENT_VIEW;
     }
 
     // Ticket selection
-    if (method === 'GET' && urlLower.includes('/tickets') && !urlLower.includes('/purchase')) {
+    if (
+      method === 'GET' &&
+      urlLower.includes('/tickets') &&
+      !urlLower.includes('/purchase')
+    ) {
       return FunnelStage.TICKET_SELECTION;
     }
 
@@ -94,7 +114,10 @@ export class FunnelTrackingMiddleware implements NestMiddleware {
     }
 
     // Checkout start
-    if (method === 'POST' && (urlLower.includes('/checkout') || urlLower.includes('/purchase'))) {
+    if (
+      method === 'POST' &&
+      (urlLower.includes('/checkout') || urlLower.includes('/purchase'))
+    ) {
       return FunnelStage.CHECKOUT_START;
     }
 
@@ -104,14 +127,20 @@ export class FunnelTrackingMiddleware implements NestMiddleware {
     }
 
     // Payment complete
-    if (method === 'POST' && urlLower.includes('/complete') || urlLower.includes('/confirm')) {
+    if (
+      (method === 'POST' && urlLower.includes('/complete')) ||
+      urlLower.includes('/confirm')
+    ) {
       return FunnelStage.PAYMENT_COMPLETE;
     }
 
     return null;
   }
 
-  private determineActionType(method: string, statusCode: number): FunnelActionType | null {
+  private determineActionType(
+    method: string,
+    statusCode: number,
+  ): FunnelActionType | null {
     if (statusCode >= 400) {
       return FunnelActionType.ERROR;
     }
@@ -146,7 +175,11 @@ export class FunnelTrackingMiddleware implements NestMiddleware {
     }
   }
 
-  private extractMetadata(body: any, params: any, query: any): Record<string, any> {
+  private extractMetadata(
+    body: any,
+    params: any,
+    query: any,
+  ): Record<string, any> {
     const metadata: Record<string, any> = {};
 
     // Extract relevant data from body
@@ -195,4 +228,4 @@ export class FunnelTrackingMiddleware implements NestMiddleware {
 
     return 'direct';
   }
-} 
+}

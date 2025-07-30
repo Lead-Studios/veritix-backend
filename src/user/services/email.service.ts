@@ -22,9 +22,12 @@ export class EmailService {
 
   async sendPasswordResetEmail(email: string, token: string) {
     // TODO: Implement real email sending
-    this.logger.log(`Send password reset email to ${email} with token: ${token}`);
+    this.logger.log(
+      `Send password reset email to ${email} with token: ${token}`,
+    );
     return true;
   }
+}
 
   async sendAnnouncementEmail(email: string, data: AnnouncementEmailData) {
     // TODO: Implement real email sending with proper HTML template
@@ -95,4 +98,4 @@ export class EmailService {
       </html>
     `;
   }
-} 
+}

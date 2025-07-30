@@ -15,6 +15,6 @@ export class Speaker {
   @Column({ nullable: true })
   headshotUrl?: string;
 
-  @ManyToMany(() => Session, session => session.speakers)
+  @ManyToMany(() => Session, (session) => session.speakers)
   sessions: Session[];
 }

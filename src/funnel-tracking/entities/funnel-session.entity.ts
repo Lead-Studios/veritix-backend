@@ -112,4 +112,4 @@ export class FunnelSession {
 
   @OneToMany(() => FunnelAction, (action) => action.session)
   actions: FunnelAction[];
-} 
+}

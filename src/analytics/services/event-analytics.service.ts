@@ -47,4 +47,4 @@ export class EventAnalyticsService {
     const revenue = await this.getRevenue(eventId, filter);
     return revenue - revenue * 0.1;
   }
-} 
+}

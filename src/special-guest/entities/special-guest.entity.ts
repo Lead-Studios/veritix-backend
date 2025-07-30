@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+} from 'typeorm';
 import { Event } from '../../events/entities/event.entity';
 
 @Entity()
@@ -29,4 +36,4 @@ export class SpecialGuest {
 
   @UpdateDateColumn()
   updatedAt: Date;
-} 
+}

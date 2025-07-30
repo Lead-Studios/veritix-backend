@@ -16,7 +16,7 @@ describe('OrganizerService', () => {
   describe('findOrganizerById', () => {
     it('should return organizer when found', async () => {
       const organizer = await service.findOrganizerById('org_1');
-      
+
       expect(organizer).toBeDefined();
       expect(organizer?.id).toBe('org_1');
       expect(organizer?.plan).toBe(SubscriptionPlan.FREE);
@@ -24,17 +24,17 @@ describe('OrganizerService', () => {
 
     it('should return null when organizer not found', async () => {
       const organizer = await service.findOrganizerById('nonexistent');
-      
+
       expect(organizer).toBeNull();
     });
 
     it('should return correct organizer data', async () => {
       const organizer = await service.findOrganizerById('org_2');
-      
+
       expect(organizer).toEqual({
         id: 'org_2',
         name: 'Basic Org',
-        plan: SubscriptionPlan.BASIC
+        plan: SubscriptionPlan.BASIC,
       });
     });
   });
@@ -42,13 +42,13 @@ describe('OrganizerService', () => {
   describe('getOrganizerSubscriptionPlan', () => {
     it('should return correct subscription plan for existing organizer', async () => {
       const plan = await service.getOrganizerSubscriptionPlan('org_3');
-      
+
       expect(plan).toBe(SubscriptionPlan.PREMIUM);
     });
 
     it('should return FREE plan for nonexistent organizer', async () => {
       const plan = await service.getOrganizerSubscriptionPlan('nonexistent');
-      
+
       expect(plan).toBe(SubscriptionPlan.FREE);
     });
 

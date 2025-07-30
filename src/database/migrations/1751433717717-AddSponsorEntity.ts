@@ -1,9 +1,8 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class AddSponsorEntity1751433717717 implements MigrationInterface {
-
-    public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`
             CREATE TABLE "sponsor" (
                 "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
                 "brandImage" character varying NOT NULL,
@@ -17,7 +16,7 @@ export class AddSponsorEntity1751433717717 implements MigrationInterface {
             )
         `);
 
-        await queryRunner.query(`
+    await queryRunner.query(`
             ALTER TABLE "sponsor" 
             ADD CONSTRAINT "FK_sponsor_event" 
             FOREIGN KEY ("eventId") 
@@ -25,11 +24,12 @@ export class AddSponsorEntity1751433717717 implements MigrationInterface {
             ON DELETE CASCADE 
             ON UPDATE NO ACTION
         `);
-    }
+  }
 
-    public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`ALTER TABLE "sponsor" DROP CONSTRAINT "FK_sponsor_event"`);
-        await queryRunner.query(`DROP TABLE "sponsor"`);
-    }
-
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(
+      `ALTER TABLE "sponsor" DROP CONSTRAINT "FK_sponsor_event"`,
+    );
+    await queryRunner.query(`DROP TABLE "sponsor"`);
+  }
 }

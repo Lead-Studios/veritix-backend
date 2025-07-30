@@ -145,7 +145,7 @@ describe('TicketStatsService', () => {
   it('should initialize with mock data', () => {
     const stats = service.getAllEventStats();
     expect(stats.has('event-123')).toBe(true);
-    
+
     const eventStats = stats.get('event-123');
     expect(eventStats.totalTickets).toBe(1000);
     expect(eventStats.soldTickets).toBe(750);
@@ -190,7 +190,7 @@ describe('TicketStatsService', () => {
 
   it('should get event stats', async () => {
     const stats = await service.getEventStats('event-123');
-    
+
     expect(stats).toBeDefined();
     expect(stats.eventId).toBe('event-123');
   });
@@ -204,7 +204,7 @@ describe('TicketStatsService', () => {
     await service.broadcastPeriodicStatsUpdate('event-123');
 
     expect(gateway.broadcastStatsUpdate).toHaveBeenCalled();
-    
+
     const call = gateway.broadcastStatsUpdate.mock.calls[0][0];
     expect(call.eventId).toBe('event-123');
     expect(call.lastUpdated).toBeInstanceOf(Date);

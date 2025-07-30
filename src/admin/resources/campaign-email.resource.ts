@@ -16,4 +16,4 @@ export class CampaignEmailResource {
   static toArray(emails: CampaignEmail[]) {
     return emails.map(CampaignEmailResource.toResponse);
   }
-} 
+}

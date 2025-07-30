@@ -1,5 +1,11 @@
-import { Entity, Column, ManyToOne, PrimaryGeneratedColumn, CreateDateColumn } from "typeorm";
-import { Attendee } from "./attendee.entity";
+import {
+  Entity,
+  Column,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+} from 'typeorm';
+import { Attendee } from './attendee.entity';
 
 @Entity()
 export class SessionCheckIn {
@@ -23,4 +29,4 @@ export class SessionCheckIn {
 
   @Column({ default: false })
   isCheckedIn: boolean;
-} 
+}

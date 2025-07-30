@@ -4,53 +4,53 @@ import {
   Query,
   UseGuards,
   UseInterceptors,
-} from "@nestjs/common";
+} from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
-} from "@nestjs/swagger";
-import { RevenueForecastService } from "./revenue-forecast.service";
+} from '@nestjs/swagger';
+import { RevenueForecastService } from './revenue-forecast.service';
 import {
   RevenueForecastQueryDto,
   RevenueForecastResponseDto,
-} from "./revenue-forecast.dto";
+} from './revenue-forecast.dto';
 
-@ApiTags("Revenue Forecast")
-@Controller("revenue-forecast")
+@ApiTags('Revenue Forecast')
+@Controller('revenue-forecast')
 export class RevenueForecastController {
   constructor(
-    private readonly revenueForecastService: RevenueForecastService
+    private readonly revenueForecastService: RevenueForecastService,
   ) {}
 
-  @Get("predict")
+  @Get('predict')
   @ApiOperation({
-    summary: "Generate revenue forecast based on ticket sales trends",
+    summary: 'Generate revenue forecast based on ticket sales trends',
     description:
-      "Uses linear regression to predict future revenue from ongoing ticket sales. Supports filtering by event, timeframe, and price tier.",
+      'Uses linear regression to predict future revenue from ongoing ticket sales. Supports filtering by event, timeframe, and price tier.',
   })
   @ApiResponse({
     status: 200,
-    description: "Revenue forecast generated successfully",
+    description: 'Revenue forecast generated successfully',
     type: RevenueForecastResponseDto,
   })
   @ApiResponse({
     status: 400,
-    description: "Invalid query parameters or insufficient data",
+    description: 'Invalid query parameters or insufficient data',
   })
   async predictRevenue(
-    @Query() query: RevenueForecastQueryDto
+    @Query() query: RevenueForecastQueryDto,
   ): Promise<RevenueForecastResponseDto> {
     return this.revenueForecastService.generateForecast(query);
   }
 
-  @Get("health")
-  @ApiOperation({ summary: "Health check for revenue forecast service" })
-  @ApiResponse({ status: 200, description: "Service is healthy" })
+  @Get('health')
+  @ApiOperation({ summary: 'Health check for revenue forecast service' })
+  @ApiResponse({ status: 200, description: 'Service is healthy' })
   async healthCheck(): Promise<{ status: string; timestamp: string }> {
     return {
-      status: "healthy",
+      status: 'healthy',
       timestamp: new Date().toISOString(),
     };
   }

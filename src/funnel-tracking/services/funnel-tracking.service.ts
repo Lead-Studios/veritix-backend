@@ -1,11 +1,21 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, MoreThanOrEqual, LessThanOrEqual } from 'typeorm';
-import { FunnelAction, FunnelStage, FunnelActionType } from '../entities/funnel-action.entity';
-import { FunnelSession, FunnelSessionStatus } from '../entities/funnel-session.entity';
+import {
+  FunnelAction,
+  FunnelStage,
+  FunnelActionType,
+} from '../entities/funnel-action.entity';
+import {
+  FunnelSession,
+  FunnelSessionStatus,
+} from '../entities/funnel-session.entity';
 import { FunnelStats } from '../entities/funnel-stats.entity';
 import { TrackFunnelActionDto } from '../dto/track-funnel-action.dto';
-import { FunnelStatsResponseDto, FunnelStageStatsDto } from '../dto/funnel-stats.dto';
+import {
+  FunnelStatsResponseDto,
+  FunnelStageStatsDto,
+} from '../dto/funnel-stats.dto';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
@@ -49,7 +59,7 @@ export class FunnelTrackingService {
       eventId,
       status: FunnelSessionStatus.ACTIVE,
     };
-    
+
     if (userId) {
       whereCondition.userId = userId;
     } else {
@@ -85,7 +95,9 @@ export class FunnelTrackingService {
   /**
    * Track a funnel action
    */
-  async trackAction(trackActionDto: TrackFunnelActionDto): Promise<FunnelAction> {
+  async trackAction(
+    trackActionDto: TrackFunnelActionDto,
+  ): Promise<FunnelAction> {
     const action = this.funnelActionRepository.create({
       ...trackActionDto,
       id: uuidv4(),
@@ -99,7 +111,9 @@ export class FunnelTrackingService {
     // Update daily stats
     await this.updateDailyStats(trackActionDto.eventId, trackActionDto.stage);
 
-    this.logger.log(`Tracked funnel action: ${trackActionDto.stage} - ${trackActionDto.actionType}`);
+    this.logger.log(
+      `Tracked funnel action: ${trackActionDto.stage} - ${trackActionDto.actionType}`,
+    );
 
     return savedAction;
   }
@@ -156,10 +170,13 @@ export class FunnelTrackingService {
 
     const totalSessions = sessions.length;
     const totalRevenue = sessions
-      .filter(s => s.totalSpent)
+      .filter((s) => s.totalSpent)
       .reduce((sum, s) => sum + Number(s.totalSpent), 0);
-    const completedSessions = sessions.filter(s => s.status === FunnelSessionStatus.COMPLETED);
-    const overallConversionRate = totalSessions > 0 ? (completedSessions.length / totalSessions) * 100 : 0;
+    const completedSessions = sessions.filter(
+      (s) => s.status === FunnelSessionStatus.COMPLETED,
+    );
+    const overallConversionRate =
+      totalSessions > 0 ? (completedSessions.length / totalSessions) * 100 : 0;
 
     const summary = await this.getSummaryStats(eventId, startDate, endDate);
 
@@ -203,7 +220,7 @@ export class FunnelTrackingService {
       .groupBy('action.stage')
       .getRawMany();
 
-    return stageStats.map(stat => ({
+    return stageStats.map((stat) => ({
       stage: stat.stage as FunnelStage,
       totalSessions: parseInt(stat.totalSessions),
       totalActions: parseInt(stat.totalActions),
@@ -231,7 +248,13 @@ export class FunnelTrackingService {
   ) {
     const dateFilter = this.buildDateFilter(startDate, endDate);
 
-    const [totalViews, totalPurchases, avgSessionDuration, trafficSources, countries] = await Promise.all([
+    const [
+      totalViews,
+      totalPurchases,
+      avgSessionDuration,
+      trafficSources,
+      countries,
+    ] = await Promise.all([
       this.funnelActionRepository.count({
         where: {
           eventId,
@@ -280,8 +303,14 @@ export class FunnelTrackingService {
       totalViews,
       totalPurchases,
       avgSessionDuration: parseInt(avgSessionDuration?.avgDuration) || 0,
-      topTrafficSources: trafficSources.map(t => ({ source: t.source, count: parseInt(t.count) })),
-      topCountries: countries.map(c => ({ country: c.country, count: parseInt(c.count) })),
+      topTrafficSources: trafficSources.map((t) => ({
+        source: t.source,
+        count: parseInt(t.count),
+      })),
+      topCountries: countries.map((c) => ({
+        country: c.country,
+        count: parseInt(c.count),
+      })),
     };
   }
 
@@ -307,7 +336,10 @@ export class FunnelTrackingService {
   /**
    * Update daily statistics
    */
-  private async updateDailyStats(eventId: string, stage: FunnelStage): Promise<void> {
+  private async updateDailyStats(
+    eventId: string,
+    stage: FunnelStage,
+  ): Promise<void> {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -329,14 +361,20 @@ export class FunnelTrackingService {
         where: {
           eventId,
           stage,
-          createdAt: Between(today, new Date(today.getTime() + 24 * 60 * 60 * 1000)),
+          createdAt: Between(
+            today,
+            new Date(today.getTime() + 24 * 60 * 60 * 1000),
+          ),
         },
       }),
       this.funnelActionRepository.count({
         where: {
           eventId,
           stage,
-          createdAt: Between(today, new Date(today.getTime() + 24 * 60 * 60 * 1000)),
+          createdAt: Between(
+            today,
+            new Date(today.getTime() + 24 * 60 * 60 * 1000),
+          ),
         },
       }),
       this.funnelActionRepository
@@ -345,7 +383,9 @@ export class FunnelTrackingService {
         .where('action.eventId = :eventId', { eventId })
         .andWhere('action.stage = :stage', { stage })
         .andWhere('action.createdAt >= :start', { start: today })
-        .andWhere('action.createdAt < :end', { end: new Date(today.getTime() + 24 * 60 * 60 * 1000) })
+        .andWhere('action.createdAt < :end', {
+          end: new Date(today.getTime() + 24 * 60 * 60 * 1000),
+        })
         .getRawOne(),
     ]);
 
@@ -361,11 +401,11 @@ export class FunnelTrackingService {
    */
   private buildDateFilter(startDate?: Date, endDate?: Date) {
     const filter: any = {};
-    
+
     if (startDate) {
       filter.createdAt = MoreThanOrEqual(startDate);
     }
-    
+
     if (endDate) {
       if (filter.createdAt) {
         filter.createdAt = Between(startDate, endDate);
@@ -376,4 +416,4 @@ export class FunnelTrackingService {
 
     return filter;
   }
-} 
+}

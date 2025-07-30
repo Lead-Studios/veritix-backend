@@ -21,8 +21,13 @@ describe('SyncJobService', () => {
     it('should create a new sync job', () => {
       const startDate = new Date('2024-01-01');
       const endDate = new Date('2024-01-31');
-      
-      const job = service.createJob(SyncDestination.BIGQUERY, startDate, endDate, 2000);
+
+      const job = service.createJob(
+        SyncDestination.BIGQUERY,
+        startDate,
+        endDate,
+        2000,
+      );
 
       expect(job.syncId).toBeDefined();
       expect(job.destination).toBe(SyncDestination.BIGQUERY);
@@ -62,8 +67,9 @@ describe('SyncJobService', () => {
     });
 
     it('should throw error for non-existing job', () => {
-      expect(() => service.updateJob('non-existing', { status: SyncStatus.RUNNING }))
-        .toThrow('Sync job non-existing not found');
+      expect(() =>
+        service.updateJob('non-existing', { status: SyncStatus.RUNNING }),
+      ).toThrow('Sync job non-existing not found');
     });
   });
 
@@ -92,7 +98,7 @@ describe('SyncJobService', () => {
     it('should mark job as failed with error message', () => {
       const job = service.createJob(SyncDestination.BIGQUERY);
       const errorMessage = 'Connection timeout';
-      
+
       service.markAsFailed(job.syncId, errorMessage);
 
       const updatedJob = service.getJob(job.syncId);

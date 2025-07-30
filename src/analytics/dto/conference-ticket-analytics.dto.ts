@@ -76,4 +76,4 @@ export class ConferenceTicketTotalResponseDto {
 
   @ApiProperty()
   averageTicketPrice: number;
-} 
+}

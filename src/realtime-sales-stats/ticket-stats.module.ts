@@ -17,11 +17,7 @@ import { TicketController } from './ticket.controller';
       inject: [ConfigService],
     }),
   ],
-  providers: [
-    TicketStatsGateway,
-    TicketStatsService,
-    WsAuthGuard,
-  ],
+  providers: [TicketStatsGateway, TicketStatsService, WsAuthGuard],
   controllers: [TicketController],
   exports: [TicketStatsService],
 })

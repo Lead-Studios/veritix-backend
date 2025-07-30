@@ -1,6 +1,22 @@
-import { Controller, Post, Get, Put, Delete, Param, Body, UseGuards, ParseUUIDPipe, ValidationPipe, UsePipes, Query } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Put,
+  Delete,
+  Param,
+  Body,
+  UseGuards,
+  ParseUUIDPipe,
+  ValidationPipe,
+  UsePipes,
+  Query,
+} from '@nestjs/common';
 import { GalleryService } from '../services/gallery.service';
-import { CreateGalleryImageDto, UpdateGalleryImageDto } from '../dtos/gallery.dto';
+import {
+  CreateGalleryImageDto,
+  UpdateGalleryImageDto,
+} from '../dtos/gallery.dto';
 // import { AuthGuard, RolesGuard } from './auth.guard'; // Placeholder for real guards
 
 @Controller()
@@ -40,7 +56,10 @@ export class GalleryController {
   @Put('gallery/:id')
   @UseGuards() // Add real guards: AuthGuard, RolesGuard
   @UsePipes(new ValidationPipe({ whitelist: true }))
-  update(@Param('id', new ParseUUIDPipe()) id: string, @Body() dto: UpdateGalleryImageDto) {
+  update(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() dto: UpdateGalleryImageDto,
+  ) {
     return this.galleryService.update(id, dto);
   }
 
@@ -50,4 +69,4 @@ export class GalleryController {
   remove(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.galleryService.remove(id);
   }
-} 
+}

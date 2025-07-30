@@ -32,6 +32,7 @@ import { FunnelTrackingModule } from './funnel-tracking/funnel-tracking.module';
 import { NftTicketsModule } from './nft-tickets/nft-tickets.module';
 import { AnnouncementModule } from './announcement/announcement.module';
 import { TicketingModule } from './ticketing/ticketing.module';
+import { CheckoutModule } from './checkout/checkout.module';
 import { TenantMiddleware } from './common/middleware/tenant.middleware';
 import { RsvpModule } from './rsvp/rsvp.module';
 import { MailerModule } from './mailer./mailer..module';
@@ -55,6 +56,14 @@ import { MailerModule } from './mailer./mailer..module';
     ConferenceModule,
     TicketTierModule,
     BadgeModule,
+    AnalyticsEventModule,
+    WaitlistEntryModule,
+    ConferenceSearchModule,
+    FunnelTrackingModule,
+    NftTicketsModule,
+    TicketingModule,
+    CheckoutModule,
+    AnnouncementModule
     MailerModule,
     RsvpModule
   ],

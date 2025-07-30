@@ -1,8 +1,24 @@
-import { Controller, Post, Body, Get, Param, UsePipes, ValidationPipe, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Param,
+  UsePipes,
+  ValidationPipe,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { TicketsService } from './tickets.service';
 import { PurchaseTicketDto } from './dto/purchase-ticket.dto';
 import { ReceiptDto } from './dto/receipt.dto';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBody,
+  ApiParam,
+} from '@nestjs/swagger';
 
 @ApiTags('Tickets')
 @Controller('tickets')
@@ -17,7 +33,11 @@ export class TicketsController {
   @Post('purchase')
   @ApiOperation({ summary: 'Purchase one or more tickets for an event' })
   @ApiBody({ type: PurchaseTicketDto })
-  @ApiResponse({ status: 201, description: 'Ticket(s) purchased successfully', type: ReceiptDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Ticket(s) purchased successfully',
+    type: ReceiptDto,
+  })
   @ApiResponse({ status: 400, description: 'Validation or business error' })
   @ApiResponse({ status: 404, description: 'User or event not found' })
   @UsePipes(new ValidationPipe({ whitelist: true }))
@@ -29,14 +49,23 @@ export class TicketsController {
       if (error.status && error.response) {
         throw error;
       }
-      throw new HttpException(error.message || 'Internal server error', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        error.message || 'Internal server error',
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 
   @Get('receipt/:orderId')
-  @ApiOperation({ summary: 'Retrieve the receipt for a confirmed ticket purchase' })
+  @ApiOperation({
+    summary: 'Retrieve the receipt for a confirmed ticket purchase',
+  })
   @ApiParam({ name: 'orderId', required: true })
-  @ApiResponse({ status: 200, description: 'Receipt retrieved successfully', type: ReceiptDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Receipt retrieved successfully',
+    type: ReceiptDto,
+  })
   @ApiResponse({ status: 404, description: 'Receipt not found' })
   async getReceipt(@Param('orderId') orderId: string): Promise<ReceiptDto> {
     const userId = this.getMockUserId();
@@ -46,7 +75,10 @@ export class TicketsController {
       if (error.status && error.response) {
         throw error;
       }
-      throw new HttpException(error.message || 'Internal server error', HttpStatus.NOT_FOUND);
+      throw new HttpException(
+        error.message || 'Internal server error',
+        HttpStatus.NOT_FOUND,
+      );
     }
   }
-} 
+}

@@ -7,6 +7,6 @@ import { Attendee } from '../conference/entities/attendee.entity';
 @Module({
   imports: [TypeOrmModule.forFeature([Attendee])],
   providers: [BadgeService],
-  controllers: [BadgeController]
+  controllers: [BadgeController],
 })
 export class BadgeModule {}

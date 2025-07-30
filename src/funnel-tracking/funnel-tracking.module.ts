@@ -9,6 +9,7 @@ import { TenantRepositoryModule } from '../../common/database/tenant-repository.
 
 @Module({
   imports: [
+    TypeOrmModule.forFeature([FunnelAction, FunnelSession, FunnelStats]),
     TenantRepositoryModule.forFeature([
       FunnelAction,
       FunnelSession,
@@ -19,4 +20,4 @@ import { TenantRepositoryModule } from '../../common/database/tenant-repository.
   providers: [FunnelTrackingService, FunnelTrackingMiddleware],
   exports: [FunnelTrackingService, FunnelTrackingMiddleware],
 })
-export class FunnelTrackingModule {} 
+export class FunnelTrackingModule {}

@@ -35,4 +35,4 @@ export class FunnelStatsResponseDto {
     topTrafficSources: Array<{ source: string; count: number }>;
     topCountries: Array<{ country: string; count: number }>;
   };
-} 
+}

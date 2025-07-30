@@ -101,4 +101,4 @@ export class NftMintingConfig {
 
   @UpdateDateColumn()
   updatedAt: Date;
-} 
+}

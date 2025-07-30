@@ -20,4 +20,4 @@ export class TicketController {
   resolve(@Body() dto: ResolveTicketDto) {
     return this.ticketService.resolveTicket(dto);
   }
-} 
+}

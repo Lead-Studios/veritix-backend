@@ -44,6 +44,7 @@ describe('TicketsService', () => {
     nftTicketsService = module.get<NftTicketsService>(NftTicketsService);
   });
 
+
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
@@ -202,6 +203,8 @@ describe('TicketsService', () => {
   });
 
   it('should throw if receipt not found', async () => {
-    await expect(service.getReceipt('invalid', 'user1')).rejects.toThrow(NotFoundException);
+    await expect(service.getReceipt('invalid', 'user1')).rejects.toThrow(
+      NotFoundException,
+    );
   });
-}); 
+});

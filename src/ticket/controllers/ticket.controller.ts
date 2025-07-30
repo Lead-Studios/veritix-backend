@@ -1,4 +1,15 @@
-import { Controller, Post, Get, Put, Delete, Param, Body, Query, UseGuards, Req } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Put,
+  Delete,
+  Param,
+  Body,
+  Query,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
 import { TicketService } from '../services/ticket.service';
 import { CreateTicketDto } from '../dtos/create-ticket.dto';
 import { UpdateTicketDto } from '../dtos/update-ticket.dto';
@@ -6,7 +17,14 @@ import { CreatePromoCodeDto } from '../dtos/create-promo-code.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiBody } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiBody,
+} from '@nestjs/swagger';
 
 @ApiTags('Ticket')
 @ApiBearerAuth()
@@ -66,7 +84,10 @@ export class TicketController {
   @ApiParam({ name: 'eventId', type: 'string' })
   @ApiBody({ type: CreatePromoCodeDto })
   @Roles('admin')
-  createPromoCode(@Param('eventId') eventId: string, @Body() dto: CreatePromoCodeDto) {
+  createPromoCode(
+    @Param('eventId') eventId: string,
+    @Body() dto: CreatePromoCodeDto,
+  ) {
     return this.ticketService.createPromoCode(eventId, dto);
   }
 

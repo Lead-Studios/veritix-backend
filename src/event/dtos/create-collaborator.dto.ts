@@ -16,4 +16,4 @@ export class CreateCollaboratorDto {
   @IsNotEmpty()
   @IsUUID()
   eventId: string;
-} 
+}

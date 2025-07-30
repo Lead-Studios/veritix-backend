@@ -13,4 +13,4 @@ export class UserProfileResource {
       updatedAt: user.updatedAt,
     };
   }
-} 
+}

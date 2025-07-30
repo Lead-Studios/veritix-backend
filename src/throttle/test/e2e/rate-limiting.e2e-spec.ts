@@ -22,13 +22,13 @@ describe('Rate Limiting (e2e)', () => {
   it('should enforce minute-based rate limiting', async () => {
     // FREE plan has 5 requests per minute for the /api/events/:id endpoint
     const promises = [];
-    
+
     // Make 5 requests (should all succeed)
     for (let i = 0; i < 5; i++) {
       promises.push(
         request(app.getHttpServer())
           .get('/api/events/event_1?organizerId=org_1')
-          .expect(200)
+          .expect(200),
       );
     }
 

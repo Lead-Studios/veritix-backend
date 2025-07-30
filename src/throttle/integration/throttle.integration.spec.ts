@@ -38,14 +38,18 @@ describe('Throttle Integration', () => {
         .get('/api/events?organizerId=org_1')
         .expect(200);
 
-      const firstRemaining = parseInt(firstResponse.headers['x-ratelimit-remaining']);
+      const firstRemaining = parseInt(
+        firstResponse.headers['x-ratelimit-remaining'],
+      );
 
       // Second request
       const secondResponse = await request(app.getHttpServer())
         .get('/api/events?organizerId=org_1')
         .expect(200);
 
-      const secondRemaining = parseInt(secondResponse.headers['x-ratelimit-remaining']);
+      const secondRemaining = parseInt(
+        secondResponse.headers['x-ratelimit-remaining'],
+      );
 
       expect(secondRemaining).toBe(firstRemaining - 1);
     });
@@ -67,9 +71,7 @@ describe('Throttle Integration', () => {
     });
 
     it('should return 401 when organizer ID is missing', () => {
-      return request(app.getHttpServer())
-        .get('/api/events')
-        .expect(401);
+      return request(app.getHttpServer()).get('/api/events').expect(401);
     });
   });
 

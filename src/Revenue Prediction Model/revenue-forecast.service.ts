@@ -1,11 +1,11 @@
-import { Injectable, BadRequestException, Logger } from "@nestjs/common";
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import {
   RevenueForecastQueryDto,
   RevenueForecastResponseDto,
   HistoricalDataPoint,
   PredictionDataPoint,
   ModelMetrics,
-} from "./revenue-forecast.dto";
+} from './revenue-forecast.dto';
 
 interface TicketSale {
   id: string;
@@ -21,7 +21,7 @@ export class RevenueForecastService {
   private readonly logger = new Logger(RevenueForecastService.name);
 
   async generateForecast(
-    query: RevenueForecastQueryDto
+    query: RevenueForecastQueryDto,
   ): Promise<RevenueForecastResponseDto> {
     try {
       // Fetch historical data based on filters
@@ -29,7 +29,7 @@ export class RevenueForecastService {
 
       if (historicalData.length < 3) {
         throw new BadRequestException(
-          "Insufficient historical data for accurate prediction"
+          'Insufficient historical data for accurate prediction',
         );
       }
 
@@ -45,7 +45,7 @@ export class RevenueForecastService {
         intercept,
         historicalData.length,
         query.forecastPeriods,
-        query.timeframe
+        query.timeframe,
       );
 
       // Calculate model metrics
@@ -54,13 +54,13 @@ export class RevenueForecastService {
       // Calculate confidence intervals
       const confidenceInterval = this.calculateConfidenceInterval(
         predictions,
-        modelMetrics.rootMeanSquareError
+        modelMetrics.rootMeanSquareError,
       );
 
       // Calculate total predicted revenue
       const totalPredictedRevenue = predictions.reduce(
         (sum, pred) => sum + pred.predictedRevenue,
-        0
+        0,
       );
 
       return {
@@ -74,14 +74,14 @@ export class RevenueForecastService {
     } catch (error) {
       this.logger.error(
         `Error generating forecast: ${error.message}`,
-        error.stack
+        error.stack,
       );
       throw error;
     }
   }
 
   private async getHistoricalData(
-    query: RevenueForecastQueryDto
+    query: RevenueForecastQueryDto,
   ): Promise<HistoricalDataPoint[]> {
     // In a real application, this would query your database
     // For demo purposes, generating mock data
@@ -117,7 +117,7 @@ export class RevenueForecastService {
         const tiers = Object.keys(priceTiers);
         const selectedTier = tiers[Math.floor(Math.random() * tiers.length)];
 
-        if (query.priceTier !== "all" && query.priceTier !== selectedTier)
+        if (query.priceTier !== 'all' && query.priceTier !== selectedTier)
           continue;
 
         sales.push({
@@ -137,7 +137,7 @@ export class RevenueForecastService {
 
   private aggregateDataByTimeframe(
     sales: TicketSale[],
-    timeframe: string
+    timeframe: string,
   ): HistoricalDataPoint[] {
     const grouped = new Map<string, TicketSale[]>();
 
@@ -154,7 +154,7 @@ export class RevenueForecastService {
         date,
         revenue: salesGroup.reduce(
           (sum, sale) => sum + sale.price * sale.quantity,
-          0
+          0,
         ),
         ticketsSold: salesGroup.length,
         averagePrice:
@@ -170,23 +170,23 @@ export class RevenueForecastService {
     const day = date.getDate();
 
     switch (timeframe) {
-      case "daily":
-        return `${year}-${month.toString().padStart(2, "0")}-${day
+      case 'daily':
+        return `${year}-${month.toString().padStart(2, '0')}-${day
           .toString()
-          .padStart(2, "0")}`;
-      case "weekly":
+          .padStart(2, '0')}`;
+      case 'weekly':
         const weekStart = new Date(date);
         weekStart.setDate(date.getDate() - date.getDay());
         return `${weekStart.getFullYear()}-W${Math.ceil(
-          weekStart.getDate() / 7
+          weekStart.getDate() / 7,
         )}`;
-      case "monthly":
-        return `${year}-${month.toString().padStart(2, "0")}`;
-      case "quarterly":
+      case 'monthly':
+        return `${year}-${month.toString().padStart(2, '0')}`;
+      case 'quarterly':
         const quarter = Math.ceil(month / 3);
         return `${year}-Q${quarter}`;
       default:
-        return `${year}-${month.toString().padStart(2, "0")}`;
+        return `${year}-${month.toString().padStart(2, '0')}`;
     }
   }
 
@@ -201,7 +201,7 @@ export class RevenueForecastService {
 
   private performLinearRegression(
     x: number[],
-    y: number[]
+    y: number[],
   ): { slope: number; intercept: number; rSquared: number } {
     const n = x.length;
     const sumX = x.reduce((a, b) => a + b, 0);
@@ -217,7 +217,7 @@ export class RevenueForecastService {
     const yMean = sumY / n;
     const totalSumSquares = y.reduce(
       (sum, yi) => sum + Math.pow(yi - yMean, 2),
-      0
+      0,
     );
     const residualSumSquares = y.reduce((sum, yi, i) => {
       const predicted = slope * x[i] + intercept;
@@ -234,7 +234,7 @@ export class RevenueForecastService {
     intercept: number,
     startIndex: number,
     periods: number,
-    timeframe: string
+    timeframe: string,
   ): PredictionDataPoint[] {
     const predictions: PredictionDataPoint[] = [];
 
@@ -244,7 +244,7 @@ export class RevenueForecastService {
       const confidence = Math.max(0.6, 1 - i * 0.05); // Confidence decreases over time
 
       const trend =
-        slope > 5 ? "increasing" : slope < -5 ? "decreasing" : "stable";
+        slope > 5 ? 'increasing' : slope < -5 ? 'decreasing' : 'stable';
 
       predictions.push({
         date: this.getFutureDate(i, timeframe),
@@ -262,28 +262,28 @@ export class RevenueForecastService {
     const futureDate = new Date(now);
 
     switch (timeframe) {
-      case "daily":
+      case 'daily':
         futureDate.setDate(now.getDate() + periodsFromNow);
         break;
-      case "weekly":
+      case 'weekly':
         futureDate.setDate(now.getDate() + periodsFromNow * 7);
         break;
-      case "monthly":
+      case 'monthly':
         futureDate.setMonth(now.getMonth() + periodsFromNow);
         break;
-      case "quarterly":
+      case 'quarterly':
         futureDate.setMonth(now.getMonth() + periodsFromNow * 3);
         break;
     }
 
-    return futureDate.toISOString().split("T")[0];
+    return futureDate.toISOString().split('T')[0];
   }
 
   private calculateModelMetrics(
     x: number[],
     y: number[],
     slope: number,
-    intercept: number
+    intercept: number,
   ): ModelMetrics {
     const predictions = x.map((xi) => slope * xi + intercept);
     const errors = y.map((yi, i) => Math.abs(yi - predictions[i]));
@@ -291,14 +291,14 @@ export class RevenueForecastService {
 
     const meanAbsoluteError = errors.reduce((a, b) => a + b, 0) / errors.length;
     const rootMeanSquareError = Math.sqrt(
-      squaredErrors.reduce((a, b) => a + b, 0) / squaredErrors.length
+      squaredErrors.reduce((a, b) => a + b, 0) / squaredErrors.length,
     );
 
     // R-squared calculation
     const yMean = y.reduce((a, b) => a + b, 0) / y.length;
     const totalSumSquares = y.reduce(
       (sum, yi) => sum + Math.pow(yi - yMean, 2),
-      0
+      0,
     );
     const residualSumSquares = squaredErrors.reduce((a, b) => a + b, 0);
     const rSquared = 1 - residualSumSquares / totalSumSquares;
@@ -307,22 +307,22 @@ export class RevenueForecastService {
       rSquared,
       meanAbsoluteError,
       rootMeanSquareError,
-      modelType: "Linear Regression",
+      modelType: 'Linear Regression',
     };
   }
 
   private calculateConfidenceInterval(
     predictions: PredictionDataPoint[],
-    rmse: number
+    rmse: number,
   ): { lower: number[]; upper: number[] } {
     const confidenceLevel = 1.96; // 95% confidence interval
 
     return {
       lower: predictions.map((pred) =>
-        Math.max(0, pred.predictedRevenue - confidenceLevel * rmse)
+        Math.max(0, pred.predictedRevenue - confidenceLevel * rmse),
       ),
       upper: predictions.map(
-        (pred) => pred.predictedRevenue + confidenceLevel * rmse
+        (pred) => pred.predictedRevenue + confidenceLevel * rmse,
       ),
     };
   }

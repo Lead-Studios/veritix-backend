@@ -10,4 +10,4 @@ export class CreatePosterDto {
 
   @IsUUID()
   eventId: string;
-} 
+}

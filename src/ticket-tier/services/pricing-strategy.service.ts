@@ -3,11 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TicketTier } from '../entities/ticket-tier.entity';
 import { TicketHistory } from '../../ticket/entities/ticket-history.entity';
-import { 
-  PricingStrategy, 
-  PricingStrategyConfig, 
+import {
+  PricingStrategy,
+  PricingStrategyConfig,
   DynamicPriceResult,
-  PriceThreshold 
+  PriceThreshold,
 } from '../enums/pricing-strategy.enum';
 
 @Injectable()
@@ -26,7 +26,8 @@ export class PricingStrategyService {
   ): Promise<DynamicPriceResult> {
     const soldCount = await this.getSoldCount(ticketTier);
     const totalQuantity = ticketTier.quantity;
-    const soldPercentage = totalQuantity > 0 ? (soldCount / totalQuantity) * 100 : 0;
+    const soldPercentage =
+      totalQuantity > 0 ? (soldCount / totalQuantity) * 100 : 0;
     const originalPrice = ticketTier.price;
 
     let currentPrice: number;
@@ -35,19 +36,31 @@ export class PricingStrategyService {
       case PricingStrategy.FIXED:
         currentPrice = originalPrice;
         break;
-      
+
       case PricingStrategy.LINEAR:
-        currentPrice = this.calculateLinearPrice(originalPrice, soldPercentage, config);
+        currentPrice = this.calculateLinearPrice(
+          originalPrice,
+          soldPercentage,
+          config,
+        );
         break;
-      
+
       case PricingStrategy.THRESHOLD:
-        currentPrice = this.calculateThresholdPrice(originalPrice, soldPercentage, config);
+        currentPrice = this.calculateThresholdPrice(
+          originalPrice,
+          soldPercentage,
+          config,
+        );
         break;
-      
+
       case PricingStrategy.EXPONENTIAL:
-        currentPrice = this.calculateExponentialPrice(originalPrice, soldPercentage, config);
+        currentPrice = this.calculateExponentialPrice(
+          originalPrice,
+          soldPercentage,
+          config,
+        );
         break;
-      
+
       default:
         currentPrice = originalPrice;
     }
@@ -88,7 +101,7 @@ export class PricingStrategyService {
       .andWhere('th.amount >= :minPrice', { minPrice })
       .andWhere('th.amount <= :maxPrice', { maxPrice })
       .getCount();
-    
+
     return result;
   }
 
@@ -119,12 +132,12 @@ export class PricingStrategyService {
 
     // Sort thresholds by soldPercentage in descending order
     const sortedThresholds = [...config.thresholds].sort(
-      (a, b) => b.soldPercentage - a.soldPercentage
+      (a, b) => b.soldPercentage - a.soldPercentage,
     );
 
     // Find the applicable threshold
     const applicableThreshold = sortedThresholds.find(
-      threshold => soldPercentage >= threshold.soldPercentage
+      (threshold) => soldPercentage >= threshold.soldPercentage,
     );
 
     if (applicableThreshold) {
@@ -160,7 +173,7 @@ export class PricingStrategyService {
           maxPrice: undefined,
           minPrice: undefined,
         };
-      
+
       case PricingStrategy.THRESHOLD:
         return {
           strategy,
@@ -172,7 +185,7 @@ export class PricingStrategyService {
             { soldPercentage: 90, priceMultiplier: 2.0 },
           ],
         };
-      
+
       case PricingStrategy.EXPONENTIAL:
         return {
           strategy,
@@ -181,7 +194,7 @@ export class PricingStrategyService {
           maxPrice: undefined,
           minPrice: undefined,
         };
-      
+
       default:
         return {
           strategy: PricingStrategy.FIXED,
@@ -189,4 +202,4 @@ export class PricingStrategyService {
         };
     }
   }
-} 
+}

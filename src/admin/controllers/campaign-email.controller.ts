@@ -1,4 +1,13 @@
-import { Controller, Post, Get, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Put,
+  Delete,
+  Body,
+  Param,
+  UseGuards,
+} from '@nestjs/common';
 import { CampaignEmailService } from '../services/campaign-email.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
@@ -48,4 +57,4 @@ export class CampaignEmailController {
   delete(@Body() dto: DeleteCampaignEmailDto) {
     return this.campaignEmailService.delete(dto.id);
   }
-} 
+}

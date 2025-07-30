@@ -1,4 +1,14 @@
-import { Controller, Get, Put, Post, Body, Req, UseGuards, UseInterceptors, UploadedFile } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Put,
+  Post,
+  Body,
+  Req,
+  UseGuards,
+  UseInterceptors,
+  UploadedFile,
+} from '@nestjs/common';
 import { ProfileService } from '../services/profile.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { UpdateProfileDto } from '../dtos/update-profile.dto';
@@ -39,4 +49,4 @@ export class ProfileController {
   async uploadProfileImage(@Req() req, @UploadedFile() file: MulterFile) {
     return this.profileService.uploadProfileImage(req.user.userId, file);
   }
-} 
+}

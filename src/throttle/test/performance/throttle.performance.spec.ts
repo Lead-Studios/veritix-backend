@@ -23,11 +23,18 @@ describe('ThrottleService Performance', () => {
     const startTime = Date.now();
 
     // Create 100 concurrent requests
-    const promises = Array.from({ length: concurrentRequests }, async (_, index) => {
-      await service.checkThrottle(organizerId, SubscriptionPlan.ENTERPRISE, 'day');
-      await service.incrementCounter(organizerId, 'day');
-      return index;
-    });
+    const promises = Array.from(
+      { length: concurrentRequests },
+      async (_, index) => {
+        await service.checkThrottle(
+          organizerId,
+          SubscriptionPlan.ENTERPRISE,
+          'day',
+        );
+        await service.incrementCounter(organizerId, 'day');
+        return index;
+      },
+    );
 
     const results = await Promise.all(promises);
     const endTime = Date.now();
@@ -37,7 +44,11 @@ describe('ThrottleService Performance', () => {
     expect(duration).toBeLessThan(1000); // Should complete within 1 second
 
     // Verify final count
-    const finalCheck = await service.checkThrottle(organizerId, SubscriptionPlan.ENTERPRISE, 'day');
+    const finalCheck = await service.checkThrottle(
+      organizerId,
+      SubscriptionPlan.ENTERPRISE,
+      'day',
+    );
     expect(finalCheck.remaining).toBe(100000 - concurrentRequests);
   });
 
@@ -49,11 +60,12 @@ describe('ThrottleService Performance', () => {
     const promises = [];
     for (let orgIndex = 0; orgIndex < organizerCount; orgIndex++) {
       const organizerId = `perf_org_${orgIndex}`;
-      
+
       for (let reqIndex = 0; reqIndex < requestsPerOrganizer; reqIndex++) {
         promises.push(
-          service.checkThrottle(organizerId, SubscriptionPlan.BASIC, 'hour')
-            .then(() => service.incrementCounter(organizerId, 'hour'))
+          service
+            .checkThrottle(organizerId, SubscriptionPlan.BASIC, 'hour')
+            .then(() => service.incrementCounter(organizerId, 'hour')),
         );
       }
     }
@@ -71,12 +83,12 @@ describe('ThrottleService Performance', () => {
 
   it('should cleanup efficiently', () => {
     const storage = (service as any).storage;
-    
+
     // Add 1000 expired records
     for (let i = 0; i < 1000; i++) {
       storage.set(`expired_${i}`, {
         count: 1,
-        resetTime: Date.now() - 60000 // 1 minute ago
+        resetTime: Date.now() - 60000, // 1 minute ago
       });
     }
 
@@ -84,7 +96,7 @@ describe('ThrottleService Performance', () => {
     for (let i = 0; i < 100; i++) {
       storage.set(`active_${i}`, {
         count: 1,
-        resetTime: Date.now() + 60000 // 1 minute from now
+        resetTime: Date.now() + 60000, // 1 minute from now
       });
     }
 

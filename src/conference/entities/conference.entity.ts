@@ -19,9 +19,9 @@ export class Conference {
   @Column({ type: 'date' })
   endDate: string;
 
-  @OneToMany(() => Session, session => session.conference)
+  @OneToMany(() => Session, (session) => session.conference)
   sessions: Session[];
 
-  @OneToMany(() => Track, track => track.conference, { nullable: true })
+  @OneToMany(() => Track, (track) => track.conference, { nullable: true })
   tracks?: Track[];
 }

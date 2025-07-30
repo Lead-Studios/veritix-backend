@@ -43,16 +43,24 @@ export class DashboardService {
       .where('ticket.eventId = :eventId', { eventId })
       .getMany();
     const totalTicketsSold = ticketHistories.length;
-    const totalRevenue = ticketHistories.reduce((sum, th) => sum + Number(th.amount), 0);
+    const totalRevenue = ticketHistories.reduce(
+      (sum, th) => sum + Number(th.amount),
+      0,
+    );
     const totalProfit = totalRevenue - totalRevenue * 0.1;
 
     // Get total ticket quantity for the event
-    const tickets = await this.ticketRepo.find({ where: { event: { id: eventId } } });
+    const tickets = await this.ticketRepo.find({
+      where: { event: { id: eventId } },
+    });
     const ticketQuantity = tickets.reduce((sum, t) => sum + t.quantity, 0);
     const ticketsAvailable = ticketQuantity - totalTicketsSold;
 
     // Get event image (first image)
-    const eventImage = event.galleryImages && event.galleryImages.length > 0 ? event.galleryImages[0].imageUrl : null;
+    const eventImage =
+      event.galleryImages && event.galleryImages.length > 0
+        ? event.galleryImages[0].imageUrl
+        : null;
 
     return EventDashboardResource.toResponse({
       event,
@@ -63,4 +71,4 @@ export class DashboardService {
       eventImage,
     });
   }
-} 
+}

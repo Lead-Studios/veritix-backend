@@ -17,9 +17,7 @@ describe('SyncController', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [SyncController],
-      providers: [
-        { provide: SyncService, useValue: mockSyncService },
-      ],
+      providers: [{ provide: SyncService, useValue: mockSyncService }],
     }).compile();
 
     controller = module.get<SyncController>(SyncController);

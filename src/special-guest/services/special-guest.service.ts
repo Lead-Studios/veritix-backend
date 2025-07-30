@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SpecialGuest } from '../entities/special-guest.entity';
@@ -30,7 +34,9 @@ export class SpecialGuestService {
     const event = await this.eventRepo.findOne({ where: { id: dto.eventId } });
     if (!event) throw new BadRequestException('Event not found');
     const guest = this.specialGuestRepo.create({ ...dto, event });
-    return SpecialGuestResource.toResponse(await this.specialGuestRepo.save(guest));
+    return SpecialGuestResource.toResponse(
+      await this.specialGuestRepo.save(guest),
+    );
   }
 
   async findAll() {
@@ -55,12 +61,16 @@ export class SpecialGuestService {
     const guest = await this.specialGuestRepo.findOne({ where: { id } });
     if (!guest) throw new NotFoundException('Special guest not found');
     if (dto.eventId) {
-      const event = await this.eventRepo.findOne({ where: { id: dto.eventId } });
+      const event = await this.eventRepo.findOne({
+        where: { id: dto.eventId },
+      });
       if (!event) throw new BadRequestException('Event not found');
       guest.event = event;
     }
     Object.assign(guest, dto);
-    return SpecialGuestResource.toResponse(await this.specialGuestRepo.save(guest));
+    return SpecialGuestResource.toResponse(
+      await this.specialGuestRepo.save(guest),
+    );
   }
 
   async remove(id: string) {
@@ -70,7 +80,9 @@ export class SpecialGuestService {
     if (guest.image && guest.image.includes(this.bucket)) {
       const key = guest.image.split(`.amazonaws.com/`)[1];
       if (key) {
-        await this.s3.deleteObject({ Bucket: this.bucket as string, Key: key }).promise();
+        await this.s3
+          .deleteObject({ Bucket: this.bucket as string, Key: key })
+          .promise();
       }
     }
     await this.specialGuestRepo.delete(id);
@@ -92,4 +104,4 @@ export class SpecialGuestService {
       .promise();
     return `https://${this.bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
   }
-} 
+}

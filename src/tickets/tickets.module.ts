@@ -17,4 +17,4 @@ import { NftTicketsModule } from '../nft-tickets/nft-tickets.module';
   providers: [TicketsService, PaymentService, InsuranceService],
   exports: [TicketsService],
 })
-export class TicketsModule {} 
+export class TicketsModule {}

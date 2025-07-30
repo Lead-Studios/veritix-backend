@@ -17,7 +17,7 @@ describe('WarehouseSyncService', () => {
       insert: jest.fn().mockResolvedValue(undefined),
       exists: jest.fn().mockResolvedValue([true]),
     };
-    
+
     const mockDataset = {
       table: jest.fn().mockReturnValue(mockTable),
       createTable: jest.fn().mockResolvedValue(undefined),
@@ -37,7 +37,7 @@ describe('WarehouseSyncService', () => {
     // Mock the constructors
     const { BigQuery } = require('@google-cloud/bigquery');
     const { Client } = require('pg');
-    
+
     BigQuery.mockImplementation(() => mockBigQuery);
     Client.mockImplementation(() => mockRedshiftClient);
 
@@ -89,13 +89,13 @@ describe('WarehouseSyncService', () => {
       ];
 
       const jobId = 'test-job-id';
-      
+
       await service.syncToBigQuery(mockRecords, jobId);
 
       expect(mockBigQuery.dataset).toHaveBeenCalledWith('ticket_sales');
       const mockDataset = mockBigQuery.dataset.mock.results[0].value;
       expect(mockDataset.table).toHaveBeenCalledWith('sales_data');
-      
+
       const mockTable = mockDataset.table.mock.results[0].value;
       expect(mockTable.insert).toHaveBeenCalledWith([
         expect.objectContaining({
@@ -109,18 +109,19 @@ describe('WarehouseSyncService', () => {
     it('should handle BigQuery errors', async () => {
       const mockRecords: TicketSalesRecord[] = [];
       const error = new Error('BigQuery connection failed');
-      
+
       const mockTable = {
         insert: jest.fn().mockRejectedValue(error),
         exists: jest.fn().mockResolvedValue([true]),
       };
-      
+
       mockBigQuery.dataset.mockReturnValue({
         table: jest.fn().mockReturnValue(mockTable),
       });
 
-      await expect(service.syncToBigQuery(mockRecords, 'job-id'))
-        .rejects.toThrow('BigQuery connection failed');
+      await expect(
+        service.syncToBigQuery(mockRecords, 'job-id'),
+      ).rejects.toThrow('BigQuery connection failed');
     });
   });
 
@@ -157,7 +158,7 @@ describe('WarehouseSyncService', () => {
       ];
 
       const jobId = 'test_job_id';
-      
+
       await service.syncToRedshift(mockRecords, jobId);
 
       expect(mockRedshiftClient.connect).toHaveBeenCalled();
@@ -173,12 +174,13 @@ describe('WarehouseSyncService', () => {
     it('should handle Redshift errors and cleanup', async () => {
       const mockRecords: TicketSalesRecord[] = [];
       const error = new Error('Redshift connection failed');
-      
+
       mockRedshiftClient.connect.mockRejectedValue(error);
 
-      await expect(service.syncToRedshift(mockRecords, 'job-id'))
-        .rejects.toThrow('Redshift connection failed');
-      
+      await expect(
+        service.syncToRedshift(mockRecords, 'job-id'),
+      ).rejects.toThrow('Redshift connection failed');
+
       expect(mockRedshiftClient.end).toHaveBeenCalled();
     });
   });

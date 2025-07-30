@@ -11,7 +11,9 @@ describe('ConferenceSearchController', () => {
       providers: [ConferenceSearchService],
     }).compile();
 
-    controller = module.get<ConferenceSearchController>(ConferenceSearchController);
+    controller = module.get<ConferenceSearchController>(
+      ConferenceSearchController,
+    );
   });
 
   it('should be defined', () => {

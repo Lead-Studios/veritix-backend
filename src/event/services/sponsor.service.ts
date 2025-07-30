@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Sponsor } from '../entities/sponsor.entity';
@@ -44,13 +49,18 @@ export class SponsorService {
     if (imageUrl && imageUrl.includes(this.bucket)) {
       const key = imageUrl.split(`.amazonaws.com/`)[1];
       if (key) {
-        await this.s3.deleteObject({ Bucket: this.bucket as string, Key: key }).promise();
+        await this.s3
+          .deleteObject({ Bucket: this.bucket as string, Key: key })
+          .promise();
       }
     }
   }
 
   async create(dto: CreateSponsorDto) {
-    const event = await this.eventRepo.findOne({ where: { id: dto.eventId }, relations: ['sponsors'] });
+    const event = await this.eventRepo.findOne({
+      where: { id: dto.eventId },
+      relations: ['sponsors'],
+    });
     if (!event) throw new NotFoundException('Event not found');
     const sponsor = this.sponsorRepo.create({
       brandImage: dto.brandImage,
@@ -69,13 +79,19 @@ export class SponsorService {
   }
 
   async findOne(id: string) {
-    const sponsor = await this.sponsorRepo.findOne({ where: { id }, relations: ['event'] });
+    const sponsor = await this.sponsorRepo.findOne({
+      where: { id },
+      relations: ['event'],
+    });
     if (!sponsor) throw new NotFoundException('Sponsor not found');
     return sponsor;
   }
 
   async findByEvent(eventId: string) {
-    const event = await this.eventRepo.findOne({ where: { id: eventId }, relations: ['sponsors'] });
+    const event = await this.eventRepo.findOne({
+      where: { id: eventId },
+      relations: ['sponsors'],
+    });
     if (!event) throw new NotFoundException('Event not found');
     return event.sponsors;
   }
@@ -93,7 +109,9 @@ export class SponsorService {
     if (dto.twitter !== undefined) sponsor.twitter = dto.twitter;
     if (dto.instagram !== undefined) sponsor.instagram = dto.instagram;
     if (dto.eventId) {
-      const event = await this.eventRepo.findOne({ where: { id: dto.eventId } });
+      const event = await this.eventRepo.findOne({
+        where: { id: dto.eventId },
+      });
       if (!event) throw new NotFoundException('Event not found');
       sponsor.event = event;
     }
@@ -107,4 +125,4 @@ export class SponsorService {
     await this.sponsorRepo.remove(sponsor);
     return { deleted: true };
   }
-} 
+}

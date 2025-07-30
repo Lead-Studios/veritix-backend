@@ -13,4 +13,4 @@ export class UpdatePosterDto {
   @IsOptional()
   @IsUUID()
   eventId?: string;
-} 
+}

@@ -15,7 +15,9 @@ export class CampaignEmailService {
 
   async create(dto: CreateCampaignEmailDto) {
     const email = this.campaignEmailRepo.create(dto);
-    return CampaignEmailResource.toResponse(await this.campaignEmailRepo.save(email));
+    return CampaignEmailResource.toResponse(
+      await this.campaignEmailRepo.save(email),
+    );
   }
 
   async findAll() {
@@ -40,4 +42,4 @@ export class CampaignEmailService {
     await this.campaignEmailRepo.delete(id);
     return { deleted: true };
   }
-} 
+}

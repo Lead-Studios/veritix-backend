@@ -10,4 +10,4 @@ import { PosterController } from './controllers/poster.controller';
   providers: [PosterService],
   controllers: [PosterController],
 })
-export class PosterModule {} 
+export class PosterModule {}

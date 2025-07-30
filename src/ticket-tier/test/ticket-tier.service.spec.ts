@@ -69,8 +69,12 @@ describe('TicketTierService', () => {
     }).compile();
 
     service = module.get<TicketTierService>(TicketTierService);
-    ticketTierRepo = module.get<Repository<TicketTier>>(getRepositoryToken(TicketTier));
-    pricingStrategyService = module.get<PricingStrategyService>(PricingStrategyService);
+    ticketTierRepo = module.get<Repository<TicketTier>>(
+      getRepositoryToken(TicketTier),
+    );
+    pricingStrategyService = module.get<PricingStrategyService>(
+      PricingStrategyService,
+    );
     eventsService = module.get<EventsService>(EventsService);
   });
 
@@ -147,13 +151,17 @@ describe('TicketTierService', () => {
       };
 
       mockEventsService.findOne.mockResolvedValue(mockEvent);
-      mockPricingStrategyService.getDefaultConfig.mockReturnValue(defaultConfig);
+      mockPricingStrategyService.getDefaultConfig.mockReturnValue(
+        defaultConfig,
+      );
       mockTicketTierRepo.create.mockReturnValue(mockTicketTier);
       mockTicketTierRepo.save.mockResolvedValue(mockTicketTier);
 
       const result = await service.create('event-1', linearDto, 'user-1');
 
-      expect(mockPricingStrategyService.getDefaultConfig).toHaveBeenCalledWith(PricingStrategy.LINEAR);
+      expect(mockPricingStrategyService.getDefaultConfig).toHaveBeenCalledWith(
+        PricingStrategy.LINEAR,
+      );
       expect(mockTicketTierRepo.create).toHaveBeenCalledWith({
         ...linearDto,
         eventId: 'event-1',
@@ -170,13 +178,17 @@ describe('TicketTierService', () => {
     it('should throw NotFoundException when event not found', async () => {
       mockEventsService.findOne.mockResolvedValue(null);
 
-      await expect(service.create('event-1', createDto, 'user-1')).rejects.toThrow(NotFoundException);
+      await expect(
+        service.create('event-1', createDto, 'user-1'),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should throw ForbiddenException when user does not own the event', async () => {
       mockEventsService.findOne.mockResolvedValue(mockEvent);
 
-      await expect(service.create('event-1', createDto, 'user-2')).rejects.toThrow(ForbiddenException);
+      await expect(
+        service.create('event-1', createDto, 'user-2'),
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 
@@ -210,8 +222,12 @@ describe('TicketTierService', () => {
 
       const result = await service.findByEvent('event-1');
 
-      expect(mockTicketTierRepo.find).toHaveBeenCalledWith({ where: { eventId: 'event-1' } });
-      expect(mockPricingStrategyService.calculateDynamicPrice).toHaveBeenCalledWith(mockTicketTier, {
+      expect(mockTicketTierRepo.find).toHaveBeenCalledWith({
+        where: { eventId: 'event-1' },
+      });
+      expect(
+        mockPricingStrategyService.calculateDynamicPrice,
+      ).toHaveBeenCalledWith(mockTicketTier, {
         strategy: PricingStrategy.FIXED,
         basePrice: 100,
         maxPrice: undefined,
@@ -250,7 +266,9 @@ describe('TicketTierService', () => {
       const result = await service.findByEvent('event-1');
 
       expect(result).toHaveLength(2);
-      expect(mockPricingStrategyService.calculateDynamicPrice).toHaveBeenCalledTimes(2);
+      expect(
+        mockPricingStrategyService.calculateDynamicPrice,
+      ).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -283,14 +301,18 @@ describe('TicketTierService', () => {
 
       const result = await service.findOne('tier-1');
 
-      expect(mockTicketTierRepo.findOne).toHaveBeenCalledWith({ where: { id: 'tier-1' } });
+      expect(mockTicketTierRepo.findOne).toHaveBeenCalledWith({
+        where: { id: 'tier-1' },
+      });
       expect(result).toEqual(enrichedTier);
     });
 
     it('should throw NotFoundException when tier not found', async () => {
       mockTicketTierRepo.findOne.mockResolvedValue(null);
 
-      await expect(service.findOne('tier-1')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('tier-1')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -308,8 +330,12 @@ describe('TicketTierService', () => {
 
       const result = await service.getCurrentPrice('tier-1');
 
-      expect(mockTicketTierRepo.findOne).toHaveBeenCalledWith({ where: { id: 'tier-1' } });
-      expect(mockPricingStrategyService.calculateDynamicPrice).toHaveBeenCalledWith(mockTicketTier, {
+      expect(mockTicketTierRepo.findOne).toHaveBeenCalledWith({
+        where: { id: 'tier-1' },
+      });
+      expect(
+        mockPricingStrategyService.calculateDynamicPrice,
+      ).toHaveBeenCalledWith(mockTicketTier, {
         strategy: PricingStrategy.FIXED,
         basePrice: 100,
         maxPrice: undefined,
@@ -323,7 +349,9 @@ describe('TicketTierService', () => {
     it('should throw NotFoundException when tier not found', async () => {
       mockTicketTierRepo.findOne.mockResolvedValue(null);
 
-      await expect(service.getCurrentPrice('tier-1')).rejects.toThrow(NotFoundException);
+      await expect(service.getCurrentPrice('tier-1')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -351,7 +379,9 @@ describe('TicketTierService', () => {
 
       const result = await service['enrichWithDynamicPricing'](tierWithConfig);
 
-      expect(mockPricingStrategyService.calculateDynamicPrice).toHaveBeenCalledWith(tierWithConfig, {
+      expect(
+        mockPricingStrategyService.calculateDynamicPrice,
+      ).toHaveBeenCalledWith(tierWithConfig, {
         strategy: PricingStrategy.THRESHOLD,
         basePrice: 100,
         maxPrice: undefined,
@@ -384,4 +414,4 @@ describe('TicketTierService', () => {
       });
     });
   });
-}); 
+});

@@ -12,13 +12,17 @@ import { Certificate } from '../entities/certificate.entity';
 @Injectable()
 export class ConferenceService {
   constructor(
-    @InjectRepository(Conference) private conferenceRepo: Repository<Conference>,
+    @InjectRepository(Conference)
+    private conferenceRepo: Repository<Conference>,
     @InjectRepository(Session) private sessionRepo: Repository<Session>,
     @InjectRepository(Speaker) private speakerRepo: Repository<Speaker>,
     @InjectRepository(Track) private trackRepo: Repository<Track>,
-    @InjectRepository(AttendeeSession) private attendeeSessionRepo: Repository<AttendeeSession>,
-    @InjectRepository(SessionFeedback) private feedbackRepo: Repository<SessionFeedback>,
-    @InjectRepository(Certificate) private certificateRepo: Repository<Certificate>,
+    @InjectRepository(AttendeeSession)
+    private attendeeSessionRepo: Repository<AttendeeSession>,
+    @InjectRepository(SessionFeedback)
+    private feedbackRepo: Repository<SessionFeedback>,
+    @InjectRepository(Certificate)
+    private certificateRepo: Repository<Certificate>,
   ) {}
 
   // Conference CRUD
@@ -29,7 +33,10 @@ export class ConferenceService {
     return this.conferenceRepo.find({ relations: ['sessions', 'tracks'] });
   }
   findConferenceById(id: number) {
-    return this.conferenceRepo.findOne({ where: { id }, relations: ['sessions', 'tracks'] });
+    return this.conferenceRepo.findOne({
+      where: { id },
+      relations: ['sessions', 'tracks'],
+    });
   }
   updateConference(id: number, data: Partial<Conference>) {
     return this.conferenceRepo.update(id, data);
@@ -43,7 +50,10 @@ export class ConferenceService {
     return this.sessionRepo.update(id, data);
   }
   async assignSpeakersToSession(sessionId: number, speakerIds: number[]) {
-    const session = await this.sessionRepo.findOne({ where: { id: sessionId }, relations: ['speakers'] });
+    const session = await this.sessionRepo.findOne({
+      where: { id: sessionId },
+      relations: ['speakers'],
+    });
     if (!session) throw new Error('Session not found');
     const speakers = await this.speakerRepo.findByIds(speakerIds);
     session.speakers = speakers;
@@ -68,11 +78,17 @@ export class ConferenceService {
     return this.attendeeSessionRepo.save({ attendee, session });
   }
   async getMyAgenda(attendeeId: string) {
-    return this.attendeeSessionRepo.find({ where: { attendee: { id: attendeeId } }, relations: ['session'] });
+    return this.attendeeSessionRepo.find({
+      where: { attendee: { id: attendeeId } },
+      relations: ['session'],
+    });
   }
 
   // Session feedback
-  async submitSessionFeedback(attendeeId: string, dto: { sessionId: number; rating?: number; comment?: string }) {
+  async submitSessionFeedback(
+    attendeeId: string,
+    dto: { sessionId: number; rating?: number; comment?: string },
+  ) {
     const feedback = this.feedbackRepo.create({
       attendee: { id: attendeeId } as any,
       session: { id: dto.sessionId } as any,
@@ -83,7 +99,11 @@ export class ConferenceService {
   }
 
   // Certificate issuing
-  async issueCertificate(conferenceId: number, attendeeId: string, fileUrl: string) {
+  async issueCertificate(
+    conferenceId: number,
+    attendeeId: string,
+    fileUrl: string,
+  ) {
     const cert = this.certificateRepo.create({
       conference: { id: conferenceId } as any,
       attendee: { id: attendeeId } as any,

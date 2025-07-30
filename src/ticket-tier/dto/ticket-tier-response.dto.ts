@@ -21,4 +21,4 @@ export class TicketTierResponseDto {
     }>;
   };
   eventId: string;
-} 
+}

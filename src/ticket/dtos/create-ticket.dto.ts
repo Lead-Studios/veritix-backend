@@ -1,4 +1,14 @@
-import { IsString, IsInt, IsNumber, IsBoolean, IsDateString, Min, MaxLength, IsUUID, IsOptional } from 'class-validator';
+import {
+  IsString,
+  IsInt,
+  IsNumber,
+  IsBoolean,
+  IsDateString,
+  Min,
+  MaxLength,
+  IsUUID,
+  IsOptional,
+} from 'class-validator';
 
 export class CreateTicketDto {
   @IsString()
@@ -29,4 +39,4 @@ export class CreateTicketDto {
 
   @IsBoolean()
   isReserved: boolean;
-} 
+}

@@ -1,3 +1,4 @@
+
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { PurchaseTicketDto } from './dto/purchase-ticket.dto';
 import { ReceiptDto } from './dto/receipt.dto';
@@ -37,13 +38,12 @@ export class TicketsService {
   async applyPromoCode(eventId: string, code: string) {
     // For demo: always 10% off if code is 'PROMO10' and event matches
     if (code === 'PROMO10') {
-      const event = this.events.find(e => e.id === eventId);
+      const event = this.events.find((e) => e.id === eventId);
       if (!event) throw new BadRequestException('Event not found');
       return { valid: true, discount: 0.1 };
     }
     throw new BadRequestException('Invalid promo code');
   }
-
   async purchaseTickets(userId: string, dto: PurchaseTicketDto): Promise<ReceiptDto | { success: boolean; transactionHash?: string; message?: string }> {
     const user = this.users.find(u => u.id === userId);
     if (!user) throw new NotFoundException('User not found');
@@ -90,7 +90,27 @@ export class TicketsService {
         this.logger.error(`Error during secondary sale for ticket ${dto.itemId}: ${error.message}`);
         throw new BadRequestException(`Secondary sale failed: ${error.message}`);
       }
-
+    }
+    let totalPrice = event.pricePerTicket * dto.ticketQuantity;
+    if (discount > 0) {
+      totalPrice = totalPrice * (1 - discount);
+    }
+    // Process payment
+    const paymentConfirmationId = await this.paymentService.processPayment(
+      dto.paymentToken,
+      totalPrice,
+    );
+    // Update event ticket inventory
+    event.availableTickets -= dto.ticketQuantity;
+    // Conference/session ticketing logic
+    let ticketInfo = {};
+    if (dto.ticketType === 'conference') {
+      ticketInfo = { type: 'conference', sessions: 'all' };
+    } else if (dto.ticketType === 'session') {
+      if (!dto.sessionIds || !dto.sessionIds.length) {
+        throw new BadRequestException(
+          'Session IDs required for session ticket',
+        );
     } else {
       this.logger.log(`Processing initial sale for event ID: ${dto.itemId}`);
       // Initial sale: Mint new ticket or reduce available tickets
@@ -171,10 +191,12 @@ export class TicketsService {
   }
 
   async getReceipt(orderId: string, userId: string): Promise<ReceiptDto> {
-    const purchase = this.purchases.find(p => p.id === orderId && p.userId === userId);
+    const purchase = this.purchases.find(
+      (p) => p.id === orderId && p.userId === userId,
+    );
     if (!purchase) throw new NotFoundException('Receipt not found');
-    const user = this.users.find(u => u.id === purchase.userId);
-    const event = this.events.find(e => e.id === purchase.eventId);
+    const user = this.users.find((u) => u.id === purchase.userId);
+    const event = this.events.find((e) => e.id === purchase.eventId);
     return {
       receiptId: purchase.id,
       user: {

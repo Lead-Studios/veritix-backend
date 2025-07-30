@@ -1,4 +1,16 @@
-import { Controller, Post, Get, Patch, Param, Body, Query, UseGuards, Req, ParseUUIDPipe, ForbiddenException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Patch,
+  Param,
+  Body,
+  Query,
+  UseGuards,
+  Req,
+  ParseUUIDPipe,
+  ForbiddenException,
+} from '@nestjs/common';
 import { NotificationService } from '../services/notification.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { ApiBearerAuth, ApiTags, ApiOperation } from '@nestjs/swagger';
@@ -23,13 +35,17 @@ export class NotificationController {
     @Param('userId', new ParseUUIDPipe()) userId: string,
     @Param('eventId', new ParseUUIDPipe()) eventId: string,
     @Body() dto: AddNotificationDto,
-    @Req() req
+    @Req() req,
   ) {
     // Only allow self or admin
     if (req.user.role !== 'admin' && req.user.userId !== userId) {
       throw new ForbiddenException('Access denied');
     }
-    return this.notificationService.addNotification(userId, eventId, dto.message);
+    return this.notificationService.addNotification(
+      userId,
+      eventId,
+      dto.message,
+    );
   }
 
   @Get('users/:userId')
@@ -38,7 +54,7 @@ export class NotificationController {
     @Param('userId', new ParseUUIDPipe()) userId: string,
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 20,
-    @Req() req
+    @Req() req,
   ) {
     if (req.user.role !== 'admin' && req.user.userId !== userId) {
       throw new ForbiddenException('Access denied');
@@ -51,11 +67,11 @@ export class NotificationController {
   async markAsRead(
     @Param('userId', new ParseUUIDPipe()) userId: string,
     @Param('notificationId', new ParseUUIDPipe()) notificationId: string,
-    @Req() req
+    @Req() req,
   ) {
     if (req.user.role !== 'admin' && req.user.userId !== userId) {
       throw new ForbiddenException('Access denied');
     }
     return this.notificationService.markAsRead(userId, notificationId);
   }
-} 
+}

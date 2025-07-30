@@ -16,8 +16,10 @@ const baseDataSourceOptions: DataSourceOptions = {
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   entities: [isProd ? 'dist/**/*.entity.js' : 'src/**/*.entity.ts'],
-  migrations: [isProd ? 'dist/database/migrations/*.js' : 'src/database/migrations/*.ts'],
-  synchronize: false,
+  migrations: [
+    isProd ? 'dist/database/migrations/*.js' : 'src/database/migrations/*.ts',
+  ],
+});
 };
 
 export const getTenantDataSource = (): DataSource => {

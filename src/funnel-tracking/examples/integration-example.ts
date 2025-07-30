@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { FunnelTrackingService } from '../services/funnel-tracking.service';
-import { FunnelStage, FunnelActionType } from '../entities/funnel-action.entity';
+import {
+  FunnelStage,
+  FunnelActionType,
+} from '../entities/funnel-action.entity';
 
 /**
  * Example integration showing how to integrate funnel tracking
@@ -23,7 +26,10 @@ export class TicketPurchaseIntegrationExample {
     },
   ) {
     // 1. Start or get existing session
-    const session = await this.funnelTrackingService.getOrCreateSession(eventId, userId);
+    const session = await this.funnelTrackingService.getOrCreateSession(
+      eventId,
+      userId,
+    );
 
     // 2. Track ticket selection
     await this.funnelTrackingService.trackAction({
@@ -104,11 +110,15 @@ export class TicketPurchaseIntegrationExample {
     },
   ) {
     // 1. Start or get existing session
-    const session = await this.funnelTrackingService.getOrCreateSession(eventId, userId, {
-      ipAddress: viewData.ipAddress,
-      userAgent: viewData.userAgent,
-      referrerUrl: viewData.referrerUrl,
-    });
+    const session = await this.funnelTrackingService.getOrCreateSession(
+      eventId,
+      userId,
+      {
+        ipAddress: viewData.ipAddress,
+        userAgent: viewData.userAgent,
+        referrerUrl: viewData.referrerUrl,
+      },
+    );
 
     // 2. Track event view
     await this.funnelTrackingService.trackAction({
@@ -157,8 +167,10 @@ export class TicketPurchaseIntegrationExample {
     // Analyze drop-off points
     const dropoffAnalysis = stats.stages.map((stage, index) => {
       const nextStage = stats.stages[index + 1];
-      const dropoffRate = nextStage 
-        ? ((stage.totalSessions - nextStage.totalSessions) / stage.totalSessions) * 100
+      const dropoffRate = nextStage
+        ? ((stage.totalSessions - nextStage.totalSessions) /
+            stage.totalSessions) *
+          100
         : 0;
 
       return {
@@ -171,8 +183,8 @@ export class TicketPurchaseIntegrationExample {
 
     // Identify optimization opportunities
     const optimizationOpportunities = dropoffAnalysis
-      .filter(analysis => analysis.dropoffRate > 50)
-      .map(analysis => ({
+      .filter((analysis) => analysis.dropoffRate > 50)
+      .map((analysis) => ({
         stage: analysis.stage,
         issue: `High drop-off rate: ${analysis.dropoffRate.toFixed(1)}%`,
         recommendation: this.getOptimizationRecommendation(analysis.stage),
@@ -325,4 +337,4 @@ export class FrontendIntegrationExample {
       }),
     });
   }
-} 
+}

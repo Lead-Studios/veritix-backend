@@ -9,12 +9,7 @@ import { ZoraService } from './services/zora.service';
 import { NftMetadataService } from './services/nft-metadata.service';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([
-      NftTicket,
-      NftMintingConfig,
-    ]),
-  ],
+  imports: [TypeOrmModule.forFeature([NftTicket, NftMintingConfig])],
   controllers: [NftTicketsController],
   providers: [
     NftTicketsService,
@@ -24,4 +19,4 @@ import { NftMetadataService } from './services/nft-metadata.service';
   ],
   exports: [NftTicketsService],
 })
-export class NftTicketsModule {} 
+export class NftTicketsModule {}

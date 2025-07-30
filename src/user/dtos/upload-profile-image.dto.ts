@@ -1,1 +1,1 @@
-export class UploadProfileImageDto {} 
+export class UploadProfileImageDto {}

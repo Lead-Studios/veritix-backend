@@ -19,4 +19,4 @@ export class UpdateCampaignEmailDto {
   @IsOptional()
   @IsString()
   status?: string;
-} 
+}

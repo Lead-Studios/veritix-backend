@@ -4,4 +4,4 @@ export class UserReportFilterDto {
   @IsOptional()
   @IsString()
   period?: 'week' | 'month' | 'year';
-} 
+}

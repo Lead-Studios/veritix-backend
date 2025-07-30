@@ -41,7 +41,9 @@ describe('RefreshTokenService', () => {
     }).compile();
 
     service = module.get<RefreshTokenService>(RefreshTokenService);
-    repository = module.get<Repository<RefreshToken>>(getRepositoryToken(RefreshToken));
+    repository = module.get<Repository<RefreshToken>>(
+      getRepositoryToken(RefreshToken),
+    );
   });
 
   afterEach(() => {
@@ -52,14 +54,22 @@ describe('RefreshTokenService', () => {
     it('should create a new refresh token', async () => {
       const tokenId = 'token-123';
       const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-      const mockToken = { id: 'refresh-1', tokenHash: 'hash', userId: 'user-1' };
+      const mockToken = {
+        id: 'refresh-1',
+        tokenHash: 'hash',
+        userId: 'user-1',
+      };
 
       mockRepository.count.mockResolvedValue(0);
       mockRepository.delete.mockResolvedValue({ affected: 0 });
       mockRepository.create.mockReturnValue(mockToken);
       mockRepository.save.mockResolvedValue(mockToken);
 
-      const result = await service.createRefreshToken(mockUser, tokenId, expiresAt);
+      const result = await service.createRefreshToken(
+        mockUser,
+        tokenId,
+        expiresAt,
+      );
 
       expect(mockRepository.create).toHaveBeenCalled();
       expect(mockRepository.save).toHaveBeenCalledWith(mockToken);
@@ -294,7 +304,10 @@ describe('TokenService', () => {
     it('should throw error for invalid refresh token', async () => {
       const invalidToken = 'invalid-token';
 
-      mockJwtService.verifyAsync.mockResolvedValue({ sub: 'user-1', tokenId: 'token-123' });
+      mockJwtService.verifyAsync.mockResolvedValue({
+        sub: 'user-1',
+        tokenId: 'token-123',
+      });
       mockRefreshTokenService.findByTokenHash.mockResolvedValue(null);
 
       await expect(service.refreshTokens(invalidToken)).rejects.toThrow();
@@ -327,7 +340,9 @@ describe('TokenService', () => {
 
       await service.revokeRefreshToken(refreshToken);
 
-      expect(mockRefreshTokenService.revokeToken).toHaveBeenCalledWith('token-123');
+      expect(mockRefreshTokenService.revokeToken).toHaveBeenCalledWith(
+        'token-123',
+      );
     });
   });
 });

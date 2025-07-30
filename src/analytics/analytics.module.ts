@@ -25,12 +25,13 @@ import { PurchaseAggregationService } from './services/purchase-aggregation.serv
 @Module({
   imports: [
     TypeOrmModule.forFeature([
-      TicketHistory, 
-      TicketingTicket, 
+      TicketHistory,
+      TicketingTicket,
       Conference,
       Session,
       Attendance,
       Feedback,
+    ]),
       PurchaseLocation,
       PurchaseLog
     ])
@@ -63,4 +64,4 @@ import { PurchaseAggregationService } from './services/purchase-aggregation.serv
     PurchaseAggregationService
   ],
 })
-export class AnalyticsModule {} 
+export class AnalyticsModule {}

@@ -1,83 +1,83 @@
-import { IsUUID, IsString, IsNumber, IsOptional, Min } from "class-validator"
+import { IsUUID, IsString, IsNumber, IsOptional, Min } from 'class-validator';
 
 export class TrackPurchaseDto {
   @IsUUID()
-  eventId: string
+  eventId: string;
 
   @IsUUID()
-  purchaserId: string
+  purchaserId: string;
 
   @IsString()
-  purchaserName: string
+  purchaserName: string;
 
   @IsString()
-  purchaserEmail: string
+  purchaserEmail: string;
 
   @IsNumber()
   @Min(1)
-  quantity: number
+  quantity: number;
 
   @IsNumber()
   @Min(0)
-  unitPrice: number
+  unitPrice: number;
 
   @IsNumber()
   @Min(0)
-  totalAmount: number
+  totalAmount: number;
 
   @IsOptional()
   @IsNumber()
   @Min(0)
-  discountAmount?: number
+  discountAmount?: number;
 
   @IsOptional()
   @IsString()
-  discountCode?: string
+  discountCode?: string;
 
   @IsString()
-  status: string
-
-  @IsOptional()
-  @IsString()
-  paymentMethod?: string
+  status: string;
 
   @IsOptional()
   @IsString()
-  transactionId?: string
+  paymentMethod?: string;
 
   @IsOptional()
   @IsString()
-  trafficSource?: string
+  transactionId?: string;
 
   @IsOptional()
   @IsString()
-  referrerUrl?: string
+  trafficSource?: string;
 
   @IsOptional()
   @IsString()
-  utmSource?: string
+  referrerUrl?: string;
 
   @IsOptional()
   @IsString()
-  utmMedium?: string
+  utmSource?: string;
 
   @IsOptional()
   @IsString()
-  utmCampaign?: string
+  utmMedium?: string;
 
   @IsOptional()
   @IsString()
-  deviceType?: string
+  utmCampaign?: string;
 
   @IsOptional()
   @IsString()
-  country?: string
+  deviceType?: string;
 
   @IsOptional()
   @IsString()
-  city?: string
+  country?: string;
 
   @IsOptional()
   @IsString()
-  ipAddress?: string
+  city?: string;
+
+  @IsOptional()
+  @IsString()
+  ipAddress?: string;
 }

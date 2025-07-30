@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity()
 export class CampaignEmail {
@@ -22,4 +28,4 @@ export class CampaignEmail {
 
   @UpdateDateColumn()
   updatedAt: Date;
-} 
+}
