@@ -2,7 +2,6 @@ import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './database.module';
-import { TicketsModule } from './tickets/tickets.module';
 // import { AdminModule } from './admin/admin.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { GalleryImage } from './event/entities/gallery-image.entity';
@@ -34,6 +33,8 @@ import { NftTicketsModule } from './nft-tickets/nft-tickets.module';
 import { AnnouncementModule } from './announcement/announcement.module';
 import { TicketingModule } from './ticketing/ticketing.module';
 import { TenantMiddleware } from './common/middleware/tenant.middleware';
+import { RsvpModule } from './rsvp/rsvp.module';
+import { MailerModule } from './mailer./mailer..module';
 
 @Module({
   imports: [
@@ -54,14 +55,8 @@ import { TenantMiddleware } from './common/middleware/tenant.middleware';
     ConferenceModule,
     TicketTierModule,
     BadgeModule,
-
-    AnalyticsEventModule,
-    WaitlistEntryModule,
-    ConferenceSearchModule,
-    FunnelTrackingModule,
-    NftTicketsModule,
-    TicketingModule,
-    AnnouncementModule
+    MailerModule,
+    RsvpModule
   ],
   controllers: [AppController, GalleryController, EventController],
   providers: [AppService, GalleryService, EventService],
