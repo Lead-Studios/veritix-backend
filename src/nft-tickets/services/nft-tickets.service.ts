@@ -261,6 +261,37 @@ export class NftTicketsService {
     });
   }
 
+  /**
+   * Get ERC-721 metadata for an NFT ticket
+   */
+  async getErc721Metadata(nftTicketId: string): Promise<Erc721Metadata> {
+    const nftTicket = await this.nftTicketRepository.findOne({
+      where: { id: nftTicketId },
+      relations: ['event'],
+    });
+
+    if (!nftTicket) {
+      throw new NotFoundException('NFT ticket not found');
+    }
+
+    if (!nftTicket.event) {
+      throw new NotFoundException('Associated event not found for NFT ticket');
+    }
+
+    const config = await this.nftMintingConfigRepository.findOne({
+      where: { eventId: nftTicket.eventId },
+    });
+
+    // If no specific config, create a default one for metadata generation purposes
+    const mintingConfig = config || this.nftMintingConfigRepository.create({ /* default values */ });
+
+    return this.nftMetadataService.generateTicketMetadata(
+      nftTicket.event,
+      nftTicket,
+      mintingConfig,
+    );
+  }
+
   async transferNftTicketByDto(transferDto: TransferNftTicketDto): Promise<{
     success: boolean;
     transactionHash?: string;
