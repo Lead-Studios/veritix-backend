@@ -1,3 +1,4 @@
+
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -6,6 +7,8 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Role } from '../../rbac/enums/role.enum';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinTable } from 'typeorm';
+
 
 @Entity('users')
 export class User {
@@ -30,6 +33,8 @@ export class User {
     array: true,
     default: [Role.USER],
   })
+  @ManyToMany(() => Role, role => role.users, { eager: true }) // Many-to-many relationship with Role entity
+  @JoinTable({ name: 'user_roles' }) // Custom join table name
   roles: Role[];
 
   @Column({ default: true })
@@ -74,5 +79,20 @@ export class User {
 
   isUser(): boolean {
     return this.hasRole(Role.USER);
+  // Helper methods (will need to be updated to check permissions via roles)
+  async hasPermission(permissionName: string): Promise<boolean> {
+    if (!this.roles || this.roles.length === 0) {
+      return false;
+    }
+    for (const role of this.roles) {
+      if (role.rolePermissions) {
+        for (const rp of role.rolePermissions) {
+          if (rp.permission.name === permissionName) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
   }
 }

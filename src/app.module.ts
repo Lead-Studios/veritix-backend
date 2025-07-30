@@ -1,7 +1,8 @@
-import { Module } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './database.module';
+// import { AdminModule } from './admin/admin.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { GalleryImage } from './event/entities/gallery-image.entity';
 import { GalleryService } from './event/services/gallery.service';
@@ -23,7 +24,8 @@ import { EventsModule } from './events/events.module';
 import { ConferenceModule } from './conference/conference.module';
 import { TicketTierModule } from './ticket-tier/ticket-tier.module';
 import { BadgeModule } from './badge/badge.module';
-import { AnalyticsEventModule } from './analytics-event/analytics-event.module';
+// import { MailerModule } from './mailer/mailer.module';
+import { AnalyticsEventModule }n from './analytics-event/analytics-event.module';
 import { WaitlistEntryModule } from './waitlist-entry/waitlist-entry.module';
 import { ConferenceSearchModule } from './conference-search/conference-search.module';
 import { FunnelTrackingModule } from './funnel-tracking/funnel-tracking.module';
@@ -31,12 +33,15 @@ import { NftTicketsModule } from './nft-tickets/nft-tickets.module';
 import { AnnouncementModule } from './announcement/announcement.module';
 import { TicketingModule } from './ticketing/ticketing.module';
 import { CheckoutModule } from './checkout/checkout.module';
+import { TenantMiddleware } from './common/middleware/tenant.middleware';
+import { RsvpModule } from './rsvp/rsvp.module';
+import { MailerModule } from './mailer./mailer..module';
 
 @Module({
   imports: [
     DatabaseModule,
     AdminModule,
-    TypeOrmModule.forFeature([Event, GalleryImage]),
+    TenantRepositoryModule.forFeature([Event, GalleryImage]),
     AuthModule,
     UserModule,
     TicketModule,
@@ -51,7 +56,6 @@ import { CheckoutModule } from './checkout/checkout.module';
     ConferenceModule,
     TicketTierModule,
     BadgeModule,
-
     AnalyticsEventModule,
     WaitlistEntryModule,
     ConferenceSearchModule,
@@ -60,8 +64,14 @@ import { CheckoutModule } from './checkout/checkout.module';
     TicketingModule,
     CheckoutModule,
     AnnouncementModule
+    MailerModule,
+    RsvpModule
   ],
   controllers: [AppController, GalleryController, EventController],
   providers: [AppService, GalleryService, EventService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(TenantMiddleware).forRoutes('*');
+  }
+}

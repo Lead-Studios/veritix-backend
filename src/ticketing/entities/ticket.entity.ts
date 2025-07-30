@@ -19,6 +19,11 @@ export enum TicketStatus {
 export enum TicketFormat {
   QR = 'qr',
   NFT = 'nft',
+export enum InsuranceStatus {
+  PENDING = "pending",
+  APPROVED = "approved",
+  REJECTED = "rejected",
+  CLAIMED = "claimed",
 }
 
 @Entity('ticketing_tickets')
@@ -101,6 +106,26 @@ export class TicketingTicket {
   @ManyToOne(() => TicketingEvent, (event) => event.ticketingTickets)
   @JoinColumn({ name: 'eventId' })
   event: TicketingEvent;
+  // Insurance fields
+  @Column({ type: "boolean", default: false })
+  insuranceOptIn: boolean;
+
+  @Column({ type: "varchar", length: 255, nullable: true })
+  insuranceId: string;
+
+  @Column({
+    type: "enum",
+    enum: InsuranceStatus,
+    nullable: true,
+  })
+  insuranceStatus: InsuranceStatus;
+
+  @ManyToOne(
+    () => TicketingEvent,
+    (event) => event.ticketingTickets,
+  )
+  @JoinColumn({ name: "eventId" })
+  event: TicketingEvent
 
   @CreateDateColumn()
   createdAt: Date;

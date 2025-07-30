@@ -14,18 +14,7 @@ import { ConferenceController } from './controllers/conference.controller';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      Conference,
-      Session,
-      Speaker,
-      Track,
-      AttendeeSession,
-      SessionFeedback,
-      Certificate,
-    ]),
-  ],
-  imports: [
-    TypeOrmModule.forFeature([
+    TenantRepositoryModule.forFeature([
       Conference,
       Session,
       Speaker,
@@ -34,7 +23,7 @@ import { ConferenceController } from './controllers/conference.controller';
       SessionFeedback,
       Certificate,
       Attendee,
-      SessionCheckIn,
+      SessionCheckIn
     ]),
   ],
   providers: [ConferenceService],

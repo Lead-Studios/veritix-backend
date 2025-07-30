@@ -11,9 +11,8 @@ import {
 import { EventService } from '../services/event.service';
 import { CreateEventDto } from '../dtos/event.dto';
 import { ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
-
-// import { AuthGuard } from '../../auth/auth.guard';
-// import { RolesGuard } from '../../auth/roles.guard';
+import { PermissionsGuard } from '../../rbac/guards/permissions.guard';
+import { HasPermission } from '../../rbac/decorators/has-permission.decorator';
 
 @Controller('events')
 export class EventController {
@@ -21,7 +20,8 @@ export class EventController {
 
   @Post()
   @UsePipes(new ValidationPipe({ whitelist: true }))
-  @UseGuards()
+  @UseGuards(PermissionsGuard)
+  @HasPermission('can:create_event')
   create(@Body() dto: CreateEventDto) {
     return this.eventService.create(dto);
   }

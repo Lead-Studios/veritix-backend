@@ -1,7 +1,6 @@
-import 'reflect-metadata';
-import { DataSource } from 'typeorm';
+import { DataSource, DataSourceOptions } from 'typeorm';
 import * as dotenv from 'dotenv';
-import { getTenantId } from './common/context/tenant.context';
+import { getTenantId } from '../../common/context/tenant.context';
 
 dotenv.config();
 
@@ -16,10 +15,8 @@ const baseDataSourceOptions: DataSourceOptions = {
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   entities: [isProd ? 'dist/**/*.entity.js' : 'src/**/*.entity.ts'],
-  migrations: [
-    isProd ? 'dist/database/migrations/*.js' : 'src/database/migrations/*.ts',
-  ],
-});
+  migrations: [isProd ? 'dist/database/migrations/*.js' : 'src/database/migrations/*.ts'],
+  synchronize: false,
 };
 
 export const getTenantDataSource = (): DataSource => {
@@ -45,4 +42,4 @@ export const getTenantDataSource = (): DataSource => {
 export const AppDataSource = new DataSource({
   ...baseDataSourceOptions,
   schema: 'public', // Default schema for global entities
-}); 
+});

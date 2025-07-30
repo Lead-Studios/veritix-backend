@@ -23,6 +23,13 @@ export enum NftPlatform {
   ZORA = 'zora',
 }
 
+export interface TransferHistoryEntry {
+  fromAddress: string;
+  toAddress: string;
+  transactionHash: string;
+  timestamp: Date;
+}
+
 @Entity('nft_tickets')
 @Index(['eventId', 'createdAt'])
 @Index(['tokenId', 'contractAddress'])
@@ -47,6 +54,12 @@ export class NftTicket {
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   purchaserWalletAddress: string;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  previousOwnerWalletAddress: string;
+
+  @Column({ type: 'jsonb', nullable: true, default: [] })
+  transferHistory: TransferHistoryEntry[];
 
   @Column({
     type: 'enum',

@@ -288,9 +288,83 @@ export class NftTicketsService {
   }
 
   /**
-   * Transfer NFT ticket
+   * Get ERC-721 metadata for an NFT ticket
    */
-  async transferNftTicket(
+  async getErc721Metadata(nftTicketId: string): Promise<Erc721Metadata> {
+    const nftTicket = await this.nftTicketRepository.findOne({
+      where: { id: nftTicketId },
+      relations: ['event'],
+    });
+
+    if (!nftTicket) {
+      throw new NotFoundException('NFT ticket not found');
+    }
+
+    if (!nftTicket.event) {
+      throw new NotFoundException('Associated event not found for NFT ticket');
+    }
+
+    const config = await this.nftMintingConfigRepository.findOne({
+      where: { eventId: nftTicket.eventId },
+    });
+
+    // If no specific config, create a default one for metadata generation purposes
+    const mintingConfig = config || this.nftMintingConfigRepository.create({ /* default values */ });
+
+    return this.nftMetadataService.generateTicketMetadata(
+      nftTicket.event,
+      nftTicket,
+      mintingConfig,
+    );
+  }
+
+  async transferNftTicketByDto(transferDto: TransferNftTicketDto): Promise<{
+    success: boolean;
+    transactionHash?: string;
+    error?: string;
+  }> {
+    const nftTicket = await this.nftTicketRepository.findOne({
+      where: { id: transferDto.ticketId },
+    });
+
+    if (!nftTicket) {
+      throw new NotFoundException('NFT ticket not found');
+    }
+
+    // Ownership validation: Ensure the ticket's current owner is the one initiating the transfer
+    // For now, we assume the `purchaserWalletAddress` is the current owner.
+    // In a real-world scenario, this would involve authenticating the user and comparing their wallet address.
+    const fromAddress = nftTicket.purchaserWalletAddress; // Assuming this is the current owner's address
+
+    if (!fromAddress) {
+      throw new BadRequestException('Ticket does not have an associated owner wallet address.');
+    }
+
+    this.logger.log(`Initiating transfer for NFT ticket ${transferDto.ticketId} from ${fromAddress} to ${transferDto.recipientWalletAddress}`);
+
+    const result = await this.transferNftTicketInternal(
+      transferDto.ticketId,
+      fromAddress,
+      transferDto.recipientWalletAddress,
+    );
+
+    if (result.success) {
+      this.logger.log(`Successfully transferred NFT ticket ${transferDto.ticketId}. Transaction Hash: ${result.transactionHash}`);
+      // Update the purchaserWalletAddress to the new owner after successful transfer
+      await this.nftTicketRepository.update(nftTicket.id, {
+        purchaserWalletAddress: transferDto.recipientWalletAddress,
+      });
+    } else {
+      this.logger.error(`Failed to transfer NFT ticket ${transferDto.ticketId}: ${result.error}`);
+    }
+
+    return result;
+  }
+
+  /**
+   * Transfer NFT ticket (internal helper)
+   */
+  private async transferNftTicketInternal(
     nftTicketId: string,
     fromAddress: string,
     toAddress: string,
@@ -307,8 +381,8 @@ export class NftTicketsService {
       throw new NotFoundException('NFT ticket not found');
     }
 
-    if (nftTicket.status !== NftTicketStatus.MINTED) {
-      throw new BadRequestException('Only minted tickets can be transferred');
+    if (nftTicket.status !== NftTicketStatus.MINTED && nftTicket.status !== NftTicketStatus.TRANSFERRED) {
+      throw new BadRequestException('Only minted or already transferred tickets can be re-transferred');
     }
 
     const config = await this.nftMintingConfigRepository.findOne({
@@ -339,9 +413,20 @@ export class NftTicketsService {
     }
 
     if (transferResult.success) {
+      const updatedTransferHistory = nftTicket.transferHistory || [];
+      updatedTransferHistory.push({
+        fromAddress: fromAddress,
+        toAddress: toAddress,
+        transactionHash: transferResult.transactionHash!,
+        timestamp: new Date(),
+      });
+
       await this.nftTicketRepository.update(nftTicketId, {
         status: NftTicketStatus.TRANSFERRED,
         transferredAt: new Date(),
+        previousOwnerWalletAddress: fromAddress,
+        purchaserWalletAddress: toAddress,
+        transferHistory: updatedTransferHistory,
       });
     }
 
@@ -464,6 +549,7 @@ export class NftTicketsService {
       purchaserName: nftTicket.purchaserName,
       purchaserEmail: nftTicket.purchaserEmail,
       purchaserWalletAddress: nftTicket.purchaserWalletAddress,
+      previousOwnerWalletAddress: nftTicket.previousOwnerWalletAddress,
       platform: nftTicket.platform,
       status: nftTicket.status,
       contractAddress: nftTicket.contractAddress,
@@ -473,8 +559,10 @@ export class NftTicketsService {
       pricePaid: nftTicket.pricePaid,
       purchaseDate: nftTicket.purchaseDate,
       mintedAt: nftTicket.mintedAt,
+      transferredAt: nftTicket.transferredAt,
       errorMessage: nftTicket.errorMessage,
       metadata: nftTicket.metadata,
+      transferHistory: nftTicket.transferHistory,
     };
   }
 }
