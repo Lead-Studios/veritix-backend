@@ -19,12 +19,13 @@ import { Collaborator } from '../../event/entities/collaborator.entity';
 import { User } from '../../user/entities/user.entity';
 // import { EventStatus } from "../../common/enums/event-status.enum"; // Not found
 // import { GalleryItem } from "../../event-gallery/entities/gallery-item.entity"; // Not found
-import { PromoCode } from '../../ticket/entities/promo-code.entity';
-import { EventView } from '../../analytics-event/entities/event-view.entity';
-import { PurchaseLog } from '../../analytics-event/entities/purchase-log.entity';
-import { TicketTier } from '../../ticket-tier/entities/ticket-tier.entity';
-import { GalleryImage } from '../../event/entities/gallery-image.entity';
-import { Notification } from '../../notification/entities/notification.entity';
+import { PromoCode } from "../../ticket/entities/promo-code.entity";
+import { EventView } from "../../analytics-event/entities/event-view.entity";
+import { PurchaseLog } from "../../analytics-event/entities/purchase-log.entity";
+import { TicketTier } from "../../ticket-tier/entities/ticket-tier.entity";
+import { GalleryImage } from "../../event/entities/gallery-image.entity";
+import { Notification } from "../../notification/entities/notification.entity";
+import { Announcement } from "../../announcement/entities/announcement.entity";
 
 @Entity()
 export class Event {
@@ -109,6 +110,9 @@ export class Event {
 
   @OneToMany(() => Notification, (notification) => notification.event)
   notifications: Notification[];
+
+  @OneToMany(() => Announcement, (announcement) => announcement.event)
+  announcements: Announcement[];
 
   @Column({ nullable: true })
   ownerId: string;

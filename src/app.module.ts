@@ -28,6 +28,7 @@ import { WaitlistEntryModule } from './waitlist-entry/waitlist-entry.module';
 import { ConferenceSearchModule } from './conference-search/conference-search.module';
 import { FunnelTrackingModule } from './funnel-tracking/funnel-tracking.module';
 import { NftTicketsModule } from './nft-tickets/nft-tickets.module';
+import { AnnouncementModule } from './announcement/announcement.module';
 import { TicketingModule } from './ticketing/ticketing.module';
 import { CheckoutModule } from './checkout/checkout.module';
 
@@ -58,6 +59,7 @@ import { CheckoutModule } from './checkout/checkout.module';
     NftTicketsModule,
     TicketingModule,
     CheckoutModule,
+    AnnouncementModule
   ],
   controllers: [AppController, GalleryController, EventController],
   providers: [AppService, GalleryService, EventService],

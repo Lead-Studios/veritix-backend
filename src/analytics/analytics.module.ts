@@ -6,6 +6,8 @@ import { Conference } from '../conference/entities/conference.entity';
 import { Session } from './entities/session.entity';
 import { Attendance } from './entities/attendance.entity';
 import { Feedback } from './entities/feedback.entity';
+import { PurchaseLocation } from './entities/purchase-location.entity';
+import { PurchaseLog } from '../event-analytics/entities/purchase-log.entity';
 import { EventAnalyticsService } from './services/event-analytics.service';
 import { EventAnalyticsController } from './controllers/event-analytics.controller';
 import { ConferenceTicketAnalyticsService } from './services/conference-ticket-analytics.service';
@@ -15,6 +17,10 @@ import { SessionAnalyticsController } from './controllers/session-analytics.cont
 import { AnalyticsService } from './services/analytics.service';
 import { AnalyticsController } from './controllers/analytics.controller';
 import { ExportService } from './services/export.service';
+import { MapVisualizationService } from './services/map-visualization.service';
+import { MapVisualizationController } from './controllers/map-visualization.controller';
+import { GeolocationService } from './services/geolocation.service';
+import { PurchaseAggregationService } from './services/purchase-aggregation.service';
 
 @Module({
   imports: [
@@ -26,6 +32,9 @@ import { ExportService } from './services/export.service';
       Attendance,
       Feedback,
     ]),
+      PurchaseLocation,
+      PurchaseLog
+    ])
   ],
   providers: [
     EventAnalyticsService,
@@ -33,12 +42,16 @@ import { ExportService } from './services/export.service';
     SessionAnalyticsService,
     AnalyticsService,
     ExportService,
+    MapVisualizationService,
+    GeolocationService,
+    PurchaseAggregationService
   ],
   controllers: [
     EventAnalyticsController,
     ConferenceTicketAnalyticsController,
     SessionAnalyticsController,
     AnalyticsController,
+    MapVisualizationController
   ],
   exports: [
     EventAnalyticsService,
@@ -46,6 +59,9 @@ import { ExportService } from './services/export.service';
     SessionAnalyticsService,
     AnalyticsService,
     ExportService,
+    MapVisualizationService,
+    GeolocationService,
+    PurchaseAggregationService
   ],
 })
 export class AnalyticsModule {}
