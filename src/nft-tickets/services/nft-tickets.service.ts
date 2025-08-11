@@ -340,8 +340,14 @@ export class NftTicketsService {
         if (event.transferDeadline && new Date() > new Date(event.transferDeadline)) {
           throw new BadRequestException('Transfer deadline for resale has passed.');
         }
-          if (event.maxResalePrice && transferDto.resalePrice && transferDto.resalePrice > event.maxResalePrice) {
-            throw new BadRequestException('Resale price exceeds the maximum allowed resale price.');
+          if (event.maxResalePrice == null) {
+            throw new BadRequestException('Max resale price policy is not set for this event.');
+          }
+          if (typeof transferDto.resalePrice !== 'number' || isNaN(transferDto.resalePrice)) {
+            throw new BadRequestException('A valid resale price must be provided for NFT transfer.');
+          }
+          if (transferDto.resalePrice > event.maxResalePrice) {
+            throw new BadRequestException(`Resale price (${transferDto.resalePrice}) exceeds the maximum allowed resale price (${event.maxResalePrice}).`);
           }
       }
     // Ownership validation: Ensure the ticket's current owner is the one initiating the transfer
