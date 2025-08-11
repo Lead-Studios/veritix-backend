@@ -1,5 +1,7 @@
 import { IsString, IsNotEmpty } from 'class-validator';
 
+import { IsNumber, IsOptional } from 'class-validator';
+
 export class TransferNftTicketDto {
   @IsString()
   @IsNotEmpty()
@@ -8,4 +10,8 @@ export class TransferNftTicketDto {
   @IsString()
   @IsNotEmpty()
   readonly recipientWalletAddress: string;
+
+  @IsOptional()
+  @IsNumber()
+  resalePrice?: number;
 }

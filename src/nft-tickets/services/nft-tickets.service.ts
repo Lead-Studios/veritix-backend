@@ -340,7 +340,9 @@ export class NftTicketsService {
         if (event.transferDeadline && new Date() > new Date(event.transferDeadline)) {
           throw new BadRequestException('Transfer deadline for resale has passed.');
         }
-        // Note: maxResalePrice enforcement would require price context, which is not present in this DTO.
+          if (event.maxResalePrice && transferDto.resalePrice && transferDto.resalePrice > event.maxResalePrice) {
+            throw new BadRequestException('Resale price exceeds the maximum allowed resale price.');
+          }
       }
     // Ownership validation: Ensure the ticket's current owner is the one initiating the transfer
     // For now, we assume the `purchaserWalletAddress` is the current owner.
