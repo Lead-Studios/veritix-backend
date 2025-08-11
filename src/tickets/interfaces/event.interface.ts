@@ -5,4 +5,9 @@ export interface Event {
   location: string;
   availableTickets: number;
   pricePerTicket: number;
+
+  // Resale policy fields
+  maxResalePrice?: number;
+  transferDeadline?: Date;
+  resaleLocked?: boolean;
 }

@@ -62,6 +62,19 @@ export class TicketsService {
         throw new BadRequestException('Current owner wallet address does not match ticket owner.');
       }
 
+        // Enforce resale policy
+        const event = this.events.find((e) => e.id === nftTicket.eventId);
+        if (event) {
+          if (event.resaleLocked) {
+            throw new BadRequestException('Resale is currently locked for this event.');
+          }
+          if (event.maxResalePrice && dto.price > event.maxResalePrice) {
+            throw new BadRequestException('Resale price exceeds the maximum allowed resale price.');
+          }
+          if (event.transferDeadline && new Date() > new Date(event.transferDeadline)) {
+            throw new BadRequestException('Transfer deadline for resale has passed.');
+          }
+        }
       // Process payment for secondary sale (if applicable, e.g., platform fees)
       // For simplicity, assuming direct transfer for now, no separate payment processing for the ticket price itself
       // In a real scenario, payment for the ticket would be handled between buyer and seller,
