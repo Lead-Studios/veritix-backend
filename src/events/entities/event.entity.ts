@@ -116,7 +116,7 @@ export class Event {
 
   @Column({ nullable: true })
   ownerId: string;
-    // Resale policy fields
+    // Resales policy fields
     @Column({ type: 'float', nullable: true })
     maxResalePrice?: number;
 
