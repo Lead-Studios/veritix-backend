@@ -56,6 +56,16 @@ export class TicketingEvent {
   @Column({ type: 'boolean', default: false })
   nftEnabled: boolean;
 
+  // Resale policy fields
+  @Column({ type: 'float', nullable: true })
+  maxResalePrice?: number;
+
+  @Column({ type: 'timestamp', nullable: true })
+  transferDeadline?: Date;
+
+  @Column({ default: false })
+  resaleLocked: boolean;
+
   @OneToMany(() => TicketingTicket, (ticket) => ticket.event)
   ticketingTickets: TicketingTicket[];
 

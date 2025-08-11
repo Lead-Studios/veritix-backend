@@ -59,6 +59,16 @@ export class Event {
   @Column({ nullable: true })
   facebook: string;
 
+  // Resale policy fields
+  @Column({ type: 'float', nullable: true })
+  maxResalePrice?: number;
+
+  @Column({ type: 'timestamp', nullable: true })
+  transferDeadline?: Date;
+
+  @Column({ default: false })
+  resaleLocked: boolean;
+
   @Column({ nullable: true })
   twitter: string;
 

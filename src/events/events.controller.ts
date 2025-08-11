@@ -19,6 +19,8 @@ import { AuthGuard } from '../auth/auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 
+import { ResalePolicyDto } from './dto/resale-policy.dto';
+
 @Controller('events')
 @UseGuards(AuthGuard, RolesGuard)
 export class EventsController {
@@ -56,5 +58,14 @@ export class EventsController {
   async remove(@Param('id', new ParseUUIDPipe()) id: string) {
     await this.eventsService.remove(id);
     return;
+  }
+
+  @Put(':id/resale-policy')
+  @Roles('admin', 'event-manager')
+  async updateResalePolicy(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() resalePolicyDto: ResalePolicyDto,
+  ) {
+    return this.eventsService.updateResalePolicy(id, resalePolicyDto);
   }
 }
