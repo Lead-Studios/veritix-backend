@@ -331,6 +331,25 @@ export class NftTicketsService {
       throw new NotFoundException('NFT ticket not found');
     }
 
+      // Enforce resale policy from event
+      const event = await this.eventRepository.findOne({ where: { id: nftTicket.eventId } });
+      if (event) {
+        if (event.resaleLocked) {
+          throw new BadRequestException('Resale is currently locked for this event.');
+        }
+        if (event.transferDeadline && new Date() > new Date(event.transferDeadline)) {
+          throw new BadRequestException('Transfer deadline for resale has passed.');
+        }
+          if (event.maxResalePrice == null) {
+            throw new BadRequestException('Max resale price policy is not set for this event.');
+          }
+          if (typeof transferDto.resalePrice !== 'number' || isNaN(transferDto.resalePrice)) {
+            throw new BadRequestException('A valid resale price must be provided for NFT transfer.');
+          }
+          if (transferDto.resalePrice > event.maxResalePrice) {
+            throw new BadRequestException(`Resale price (${transferDto.resalePrice}) exceeds the maximum allowed resale price (${event.maxResalePrice}).`);
+          }
+      }
     // Ownership validation: Ensure the ticket's current owner is the one initiating the transfer
     // For now, we assume the `purchaserWalletAddress` is the current owner.
     // In a real-world scenario, this would involve authenticating the user and comparing their wallet address.

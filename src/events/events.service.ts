@@ -5,6 +5,8 @@ import { Event } from './event.entity';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 
+import { ResalePolicyDto } from './dto/resale-policy.dto';
+
 @Injectable()
 export class EventsService {
   constructor(
@@ -36,5 +38,19 @@ export class EventsService {
   async remove(id: string): Promise<void> {
     const event = await this.findOne(id);
     await this.eventRepository.remove(event);
+  }
+
+  async updateResalePolicy(id: string, resalePolicyDto: ResalePolicyDto): Promise<Event> {
+    const event = await this.findOne(id);
+    if (resalePolicyDto.maxResalePrice !== undefined) {
+      event.maxResalePrice = resalePolicyDto.maxResalePrice;
+    }
+    if (resalePolicyDto.transferDeadline !== undefined) {
+      event.transferDeadline = new Date(resalePolicyDto.transferDeadline);
+    }
+    if (resalePolicyDto.resaleLocked !== undefined) {
+      event.resaleLocked = resalePolicyDto.resaleLocked;
+    }
+    return this.eventRepository.save(event);
   }
 }

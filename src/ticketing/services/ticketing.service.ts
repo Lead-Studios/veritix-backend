@@ -54,6 +54,16 @@ export class TicketingService {
       throw new NotFoundException('Event not found or is not active');
     }
 
+      // Enforce resale policy
+      if (event.resaleLocked) {
+        throw new BadRequestException('Resale is currently locked for this event.');
+      }
+      if (event.maxResalePrice && event.ticketPrice > event.maxResalePrice) {
+        throw new BadRequestException('Ticket price exceeds the maximum allowed resale price.');
+      }
+      if (event.transferDeadline && new Date() > new Date(event.transferDeadline)) {
+        throw new BadRequestException('Transfer deadline for resale has passed.');
+      }
     // Check if event has started
     if (new Date() > event.endDate) {
       throw new BadRequestException('Cannot purchase tickets for past events');
