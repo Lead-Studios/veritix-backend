@@ -1,4 +1,4 @@
-import { Event } from 'src/events/entities/event.entity';
+import { Event } from '../../events/entities/event.entity';
 import {
   Entity,
   Column,

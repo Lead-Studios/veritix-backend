@@ -25,7 +25,7 @@ import { ConferenceModule } from './conference/conference.module';
 import { TicketTierModule } from './ticket-tier/ticket-tier.module';
 import { BadgeModule } from './badge/badge.module';
 // import { MailerModule } from './mailer/mailer.module';
-import { AnalyticsEventModule }n from './analytics-event/analytics-event.module';
+import { AnalyticsEventModule } from './analytics-event/analytics-event.module';
 import { WaitlistEntryModule } from './waitlist-entry/waitlist-entry.module';
 import { ConferenceSearchModule } from './conference-search/conference-search.module';
 import { FunnelTrackingModule } from './funnel-tracking/funnel-tracking.module';
@@ -35,7 +35,9 @@ import { TicketingModule } from './ticketing/ticketing.module';
 import { CheckoutModule } from './checkout/checkout.module';
 import { TenantMiddleware } from './common/middleware/tenant.middleware';
 import { RsvpModule } from './rsvp/rsvp.module';
-import { MailerModule } from './mailer./mailer..module';
+import { MailerModule } from './mailer/mailer.module';
+import { SeatMapModule } from './seat-map/seat-map.module';
+import { TenantRepositoryModule } from './common/database/tenant-repository.module';
 
 @Module({
   imports: [
@@ -63,9 +65,10 @@ import { MailerModule } from './mailer./mailer..module';
     NftTicketsModule,
     TicketingModule,
     CheckoutModule,
-    AnnouncementModule
+    AnnouncementModule,
     MailerModule,
-    RsvpModule
+    RsvpModule,
+    SeatMapModule
   ],
   controllers: [AppController, GalleryController, EventController],
   providers: [AppService, GalleryService, EventService],

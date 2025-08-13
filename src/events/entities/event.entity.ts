@@ -26,6 +26,7 @@ import { TicketTier } from "../../ticket-tier/entities/ticket-tier.entity";
 import { GalleryImage } from "../../event/entities/gallery-image.entity";
 import { Notification } from "../../notification/entities/notification.entity";
 import { Announcement } from "../../announcement/entities/announcement.entity";
+import { SeatMap } from "../../seat-map/entities/seat-map.entity";
 
 @Entity()
 export class Event {
@@ -113,6 +114,9 @@ export class Event {
 
   @OneToMany(() => Announcement, (announcement) => announcement.event)
   announcements: Announcement[];
+
+  @OneToMany(() => SeatMap, (seatMap) => seatMap.event)
+  seatMaps: SeatMap[];
 
   @Column({ nullable: true })
   ownerId: string;
