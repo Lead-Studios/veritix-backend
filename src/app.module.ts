@@ -38,6 +38,7 @@ import { RsvpModule } from './rsvp/rsvp.module';
 import { MailerModule } from './mailer/mailer.module';
 import { SeatMapModule } from './seat-map/seat-map.module';
 import { TenantRepositoryModule } from './common/database/tenant-repository.module';
+import { DynamicPricingModule } from './dynamic-pricing/dynamic-pricing.module';
 
 @Module({
   imports: [
@@ -68,7 +69,8 @@ import { TenantRepositoryModule } from './common/database/tenant-repository.modu
     AnnouncementModule,
     MailerModule,
     RsvpModule,
-    SeatMapModule
+    SeatMapModule,
+    DynamicPricingModule
   ],
   controllers: [AppController, GalleryController, EventController],
   providers: [AppService, GalleryService, EventService],
