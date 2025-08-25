@@ -39,6 +39,7 @@ import { MailerModule } from './mailer/mailer.module';
 import { SeatMapModule } from './seat-map/seat-map.module';
 import { TenantRepositoryModule } from './common/database/tenant-repository.module';
 import { DynamicPricingModule } from './dynamic-pricing/dynamic-pricing.module';
+import { AdvancedSeatSelectionModule } from './advanced-seat-selection/advanced-seat-selection.module';
 
 @Module({
   imports: [
@@ -70,7 +71,8 @@ import { DynamicPricingModule } from './dynamic-pricing/dynamic-pricing.module';
     MailerModule,
     RsvpModule,
     SeatMapModule,
-    DynamicPricingModule
+    DynamicPricingModule,
+    AdvancedSeatSelectionModule,
   ],
   controllers: [AppController, GalleryController, EventController],
   providers: [AppService, GalleryService, EventService],
