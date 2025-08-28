@@ -35,11 +35,12 @@ import { TicketingModule } from './ticketing/ticketing.module';
 import { CheckoutModule } from './checkout/checkout.module';
 import { TenantMiddleware } from './common/middleware/tenant.middleware';
 import { RsvpModule } from './rsvp/rsvp.module';
-import { MailerModule } from './mailer/mailer.module';
+// import { MailerModule } from './mailer/mailer.module';
 import { SeatMapModule } from './seat-map/seat-map.module';
 import { TenantRepositoryModule } from './common/database/tenant-repository.module';
 import { DynamicPricingModule } from './dynamic-pricing/dynamic-pricing.module';
 import { AdvancedSeatSelectionModule } from './advanced-seat-selection/advanced-seat-selection.module';
+import { QaPollsModule } from './qa-polls/qa-polls.module';
 
 @Module({
   imports: [
@@ -68,11 +69,12 @@ import { AdvancedSeatSelectionModule } from './advanced-seat-selection/advanced-
     TicketingModule,
     CheckoutModule,
     AnnouncementModule,
-    MailerModule,
+    // MailerModule,
     RsvpModule,
     SeatMapModule,
     DynamicPricingModule,
     AdvancedSeatSelectionModule,
+    QaPollsModule,
   ],
   controllers: [AppController, GalleryController, EventController],
   providers: [AppService, GalleryService, EventService],
