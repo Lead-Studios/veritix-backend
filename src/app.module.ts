@@ -41,6 +41,7 @@ import { TenantRepositoryModule } from './common/database/tenant-repository.modu
 import { DynamicPricingModule } from './dynamic-pricing/dynamic-pricing.module';
 import { AdvancedSeatSelectionModule } from './advanced-seat-selection/advanced-seat-selection.module';
 import { QaPollsModule } from './qa-polls/qa-polls.module';
+import { LoginSecurityModule } from './login-security/login-security.module';
 
 @Module({
   imports: [
@@ -75,6 +76,7 @@ import { QaPollsModule } from './qa-polls/qa-polls.module';
     DynamicPricingModule,
     AdvancedSeatSelectionModule,
     QaPollsModule,
+    LoginSecurityModule,
   ],
   controllers: [AppController, GalleryController, EventController],
   providers: [AppService, GalleryService, EventService],
