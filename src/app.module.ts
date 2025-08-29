@@ -42,6 +42,7 @@ import { DynamicPricingModule } from './dynamic-pricing/dynamic-pricing.module';
 import { AdvancedSeatSelectionModule } from './advanced-seat-selection/advanced-seat-selection.module';
 import { QaPollsModule } from './qa-polls/qa-polls.module';
 import { LoginSecurityModule } from './login-security/login-security.module';
+import { VirtualEventsModule } from './virtual-events/virtual-events.module';
 
 @Module({
   imports: [
@@ -77,6 +78,7 @@ import { LoginSecurityModule } from './login-security/login-security.module';
     AdvancedSeatSelectionModule,
     QaPollsModule,
     LoginSecurityModule,
+    VirtualEventsModule,
   ],
   controllers: [AppController, GalleryController, EventController],
   providers: [AppService, GalleryService, EventService],
