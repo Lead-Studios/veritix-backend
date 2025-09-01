@@ -43,6 +43,7 @@ import { AdvancedSeatSelectionModule } from './advanced-seat-selection/advanced-
 import { QaPollsModule } from './qa-polls/qa-polls.module';
 import { LoginSecurityModule } from './login-security/login-security.module';
 import { VirtualEventsModule } from './virtual-events/virtual-events.module';
+import { IntelligentChatbotModule } from './intelligent-chatbot/intelligent-chatbot.module';
 
 @Module({
   imports: [
@@ -79,6 +80,7 @@ import { VirtualEventsModule } from './virtual-events/virtual-events.module';
     QaPollsModule,
     LoginSecurityModule,
     VirtualEventsModule,
+    IntelligentChatbotModule,
   ],
   controllers: [AppController, GalleryController, EventController],
   providers: [AppService, GalleryService, EventService],
