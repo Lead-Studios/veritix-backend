@@ -45,6 +45,7 @@ import { LoginSecurityModule } from './login-security/login-security.module';
 import { VirtualEventsModule } from './virtual-events/virtual-events.module';
 import { IntelligentChatbotModule } from './intelligent-chatbot/intelligent-chatbot.module';
 import { AIRecommendationsModule } from './ai-recommendations/ai-recommendations.module';
+import { PWAModule } from './pwa/pwa.module';
 
 @Module({
   imports: [
@@ -83,6 +84,7 @@ import { AIRecommendationsModule } from './ai-recommendations/ai-recommendations
     VirtualEventsModule,
     IntelligentChatbotModule,
     AIRecommendationsModule,
+    PWAModule,
   ],
   controllers: [AppController, GalleryController, EventController],
   providers: [AppService, GalleryService, EventService],
