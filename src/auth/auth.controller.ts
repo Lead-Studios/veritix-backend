@@ -27,24 +27,24 @@ export class AuthController {
   @ApiOperation({ summary: 'User login' })
   @ApiBody({ type: LoginDto })
   @UsePipes(new ValidationPipe({ whitelist: true }))
-  async login(@Body() dto: LoginDto) {
-    return this.authService.login(dto);
+  async login(@Body() loginDto: LoginDto, @Req() req) {
+    return this.authService.login(loginDto, req);
   }
 
   @Post('create')
   @ApiOperation({ summary: 'User signup' })
   @ApiBody({ type: CreateUserDto })
   @UsePipes(new ValidationPipe({ whitelist: true }))
-  async signup(@Body() dto: CreateUserDto) {
-    return this.authService.signup(dto);
+  async signup(@Body() dto: CreateUserDto, @Req() req) {
+    return this.authService.signup(dto, req);
   }
 
   @Post('google-auth')
   @ApiOperation({ summary: 'Google OAuth signup/login' })
   @ApiBody({ type: GoogleAuthDto })
   @UsePipes(new ValidationPipe({ whitelist: true }))
-  async googleAuth(@Body() dto: GoogleAuthDto) {
-    return this.authService.googleAuth(dto.idToken);
+  async googleAuth(@Body() dto: GoogleAuthDto, @Req() req) {
+    return this.authService.googleAuth(dto.idToken, req);
   }
 
   @Get('me')
