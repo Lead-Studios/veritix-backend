@@ -44,6 +44,7 @@ import { QaPollsModule } from './qa-polls/qa-polls.module';
 import { LoginSecurityModule } from './login-security/login-security.module';
 import { VirtualEventsModule } from './virtual-events/virtual-events.module';
 import { IntelligentChatbotModule } from './intelligent-chatbot/intelligent-chatbot.module';
+import { AIRecommendationsModule } from './ai-recommendations/ai-recommendations.module';
 
 @Module({
   imports: [
@@ -81,6 +82,7 @@ import { IntelligentChatbotModule } from './intelligent-chatbot/intelligent-chat
     LoginSecurityModule,
     VirtualEventsModule,
     IntelligentChatbotModule,
+    AIRecommendationsModule,
   ],
   controllers: [AppController, GalleryController, EventController],
   providers: [AppService, GalleryService, EventService],
