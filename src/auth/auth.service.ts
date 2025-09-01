@@ -12,6 +12,7 @@ import { OAuth2Client } from 'google-auth-library';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Organizer } from 'organizer/entities/organizer.entity';
 import { Repository } from 'typeorm';
+import { SessionTrackingService } from '../session-management/services/session-tracking.service';
 
 @Injectable()
 export class AuthService {
@@ -21,6 +22,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly emailService: EmailService,
     private readonly organizerRepo: Repository<Organizer>,
+    private readonly sessionTrackingService: SessionTrackingService,
   ) {
     this.googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
   }
@@ -37,28 +39,44 @@ export class AuthService {
     return null;
   }
 
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto, request?: any) {
     const user = await this.userService.findByEmail(dto.email);
     if (!user || !(await bcrypt.compare(dto.password, user.password))) {
       throw new UnauthorizedException('Invalid credentials');
     }
-    const payload = { sub: user.id, email: user.email, roles: user.roles };
+
+    // Create session tracking
+    const { jwtId } = await this.sessionTrackingService.createSessionFromRequest(
+      user.id,
+      request,
+      'password',
+    );
+
+    const payload = { sub: user.id, email: user.email, roles: user.roles, jti: jwtId };
     return {
       accessToken: this.jwtService.sign(payload),
       user,
     };
   }
 
-  async signup(dto: CreateUserDto) {
+  async signup(dto: CreateUserDto, request?: any) {
     const user = await this.userService.create(dto);
-    const payload = { sub: user.id, email: user.email, roles: user.roles };
+
+    // Create session tracking for new user
+    const { jwtId } = await this.sessionTrackingService.createSessionFromRequest(
+      user.id,
+      request,
+      'signup',
+    );
+
+    const payload = { sub: user.id, email: user.email, roles: user.roles, jti: jwtId };
     return {
       accessToken: this.jwtService.sign(payload),
       user,
     };
   }
 
-  async googleAuth(idToken: string) {
+  async googleAuth(idToken: string, request?: any) {
     // Verify Google idToken
     const ticket = await this.googleClient.verifyIdToken({
       idToken,
@@ -78,7 +96,15 @@ export class AuthService {
         isEmailVerified: true,
       });
     }
-    const jwtPayload = { sub: user.id, email: user.email, roles: user.roles };
+
+    // Create session tracking for Google auth
+    const { jwtId } = await this.sessionTrackingService.createSessionFromRequest(
+      user.id,
+      request,
+      'google',
+    );
+
+    const jwtPayload = { sub: user.id, email: user.email, roles: user.roles, jti: jwtId };
     return {
       accessToken: this.jwtService.sign(jwtPayload),
       user,
