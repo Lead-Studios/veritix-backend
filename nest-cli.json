@@ -1,8 +1,32 @@
 {
   "$schema": "https://json.schemastore.org/nest-cli",
   "collection": "@nestjs/schematics",
-  "sourceRoot": "src",
+  "sourceRoot": "apps/veritix-backend/src",
   "compilerOptions": {
-    "deleteOutDir": true
+    "deleteOutDir": true,
+    "webpack": true,
+    "tsConfigPath": "apps/veritix-backend/tsconfig.app.json"
+  },
+  "monorepo": true,
+  "root": "apps/veritix-backend",
+  "projects": {
+    ".": {
+      "type": "application",
+      "root": "apps",
+      "entryFile": "main",
+      "sourceRoot": "apps/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/tsconfig.app.json"
+      }
+    },
+    "veritix-backend": {
+      "type": "application",
+      "root": "apps/veritix-backend",
+      "entryFile": "main",
+      "sourceRoot": "apps/veritix-backend/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/veritix-backend/tsconfig.app.json"
+      }
+    }
   }
 }
