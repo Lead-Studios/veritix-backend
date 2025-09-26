@@ -41,21 +41,25 @@ import { WebhookModule } from "./webhook/webhook.module";
       ttl: 300, // 5 minutes
       max: 100, // maximum number of items in cache
     }),
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        type: configService.get<"postgres">("database.type"),
-        url: configService.get<string>("database.url"),
-        host: configService.get<string>("database.host"),
-        port: configService.get<number>("database.port"),
-        username: configService.get<string>("database.username"),
-        password: configService.get<string>("database.password"),
-        database: configService.get<string>("database.database"),
-        synchronize: configService.get<boolean>("database.synchronize"),
-        autoLoadEntities: true,
-      }),
-    }),
+   TypeOrmModule.forRootAsync({
+  imports: [ConfigModule],
+  inject: [ConfigService],
+  useFactory: (configService: ConfigService) => ({
+    type: 'postgres',
+    host: configService.get<string>('database.host'),
+    port: configService.get<number>('database.port'),
+    username: configService.get<string>('database.username'),
+    password: configService.get<string>('database.password'),
+    database: configService.get<string>('database.database'),
+    synchronize: configService.get<boolean>('database.synchronize') || false,
+    autoLoadEntities: true,
+    migrations: ['dist/migrations/*.js'],
+    migrationsRun: true, 
+    logging: true,       
+  }),
+}),
+
+
     SponsorsModule,
     UsersModule,
     AuthModule,
