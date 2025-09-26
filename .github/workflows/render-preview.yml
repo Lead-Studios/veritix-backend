@@ -1,18 +1,64 @@
-name: Render PR Preview
+name: CI/CD Pipeline
 
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+  push:
+    branches:
+      - main   
 
 jobs:
-  deploy:
+  ci:
+    name: Lint, Test, Build
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Deploy to Render (or trigger preview)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run lint
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test -- --ci --reporters=default --reporters=jest-junit
+
+      - name: Build project
+        run: npm run build
+
+  cd:
+    name: Deploy to Staging
+    needs: ci
+    if: github.ref == 'refs/heads/main'   # only deploy when pushing to main
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+
+      - name: Run migrations
+        run: npm run migrate  
+
+      - name: Deploy to Render
         run: |
-          echo "Trigger your Render deployment here, e.g., via Render Deploy Hook"
-          curl -X POST https://api.render.com/deploy/srv-d069ees9c44c73fc0cr0?key=UaPGsJy9E0A
+          curl -X POST https://api.render.com/deploy/srv-d069ees9c44c73fc0cr0?key=${{ secrets.RENDER_API_KEY }}
