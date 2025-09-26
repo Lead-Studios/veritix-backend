@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { OrganizerController } from './organizer/organizer.controller';
+import { OrganizerService } from './organizer/organizer.service';
 import { ConfigModule } from './config/config.module';
 import { HealthModule } from './modules/health/health.module';
 import { UsersModule } from './user/user.module';
@@ -23,7 +25,7 @@ import { ConfigService } from '@nestjs/config';
       }),
     }),
   ],
-  providers: [AppService],
-  controllers: [AppController],
+  providers: [AppService, OrganizerService],
+  controllers: [AppController, OrganizerController],
 })
 export class AppModule {}
