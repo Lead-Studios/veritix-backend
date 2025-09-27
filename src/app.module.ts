@@ -8,12 +8,14 @@ import { HealthModule } from './modules/health/health.module';
 import { UsersModule } from './user/user.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
+import { TicketsModule } from './ticket/ticket.module';
 
 @Module({
   imports: [
     ConfigModule,
     HealthModule,
     UsersModule,
+    TicketsModule,
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

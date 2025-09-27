@@ -24,6 +24,15 @@ export class EnvironmentVariables {
   @IsString()
   @IsNotEmpty()
   STELLAR_KEYS: string;
+
+  @IsNumber()
+  @IsOptional()
+  @Transform(({ value }) => parseInt(String(value), 10))
+  QR_EXPIRY_SECONDS?: number;
+
+  @IsString()
+  @IsOptional()
+  QR_SECRET?: string;
 }
 
 export function validate(config: Record<string, unknown>) {
