@@ -1,34 +1,15 @@
-import { Module, Logger, OnModuleInit } from "@nestjs/common";
-import { AuditLogModule } from "./audit-log/audit-log.module";
-import { TypeOrmModule } from "@nestjs/typeorm";
-import { AppController } from "./app.controller";
-import { AppService } from "./app.service";
-// import { DatabaseModule } from "./database.module";
-import { AuthModule } from "./auth/auth.module";
-import { SponsorsModule } from "./sponsors/sponsors.module";
-import { UsersModule } from "./users/users.module";
-import { ConfigModule, ConfigService } from "@nestjs/config";
-import { PdfService } from "./utils/pdf.service";
-import { TicketModule } from "./tickets/tickets.module";
-import { SpecialGuestModule } from "./special-guests/special-guests.module";
-import { NotificationModule } from "./notification/notification.module";
-import { EventsModule } from "./events/events.module";
-import { PostersModule } from "./posters/posters.module";
-import databaseConfig from "src/config/database.config";
-import jwtConfig from "src/config/jwt.config";
-import { EventDashboardModule } from "./dashboard/dashboard.module";
-import { EventGalleryModule } from "./event-gallery/event-gallery.module";
-import { ContactUsModule } from "./contact-us/contact-us.module";
-import { ConferenceModule } from "./conference/conference.module";
-import { ContactModule } from "./contact/contact.module";
-import { ConferenceSponsorsModule } from "./conference-sponsors/conference-sponsors.module";
-import { SpecialSpeakerModule } from "./special-speaker/special-speaker.module";
-import { CacheModule } from "@nestjs/cache-manager";
-import { ConferencePosterManagementModule } from "./conference-poster-management/conference-poster-management.module";
-import { ConferenceGalleryModule } from "./conference-gallery/conference-gallery.module";
-import { JwtStrategy } from "../security/strategies/jwt.strategy";
-import { PromoCodeModule } from './promo-code/promo-code.module';
-import { WebhookModule } from "./webhook/webhook.module";
+import { Module } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { OrganizerController } from './organizer/organizer.controller';
+import { OrganizerService } from './organizer/organizer.service';
+import { ConfigModule } from './config/config.module';
+import { HealthModule } from './modules/health/health.module';
+import { UsersModule } from './user/user.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigService } from '@nestjs/config';
+import { TicketsModule } from './ticket/ticket.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -80,24 +61,13 @@ import { WebhookModule } from "./webhook/webhook.module";
     ConferenceGalleryModule,
     PromoCodeModule,
     AuditLogModule,
+    ConfigModule,
+    HealthModule,
+    UsersModule,
+    TicketsModule,
+   
   ],
-  controllers: [AppController],
-  providers: [AppService, PdfService, JwtStrategy],
-  exports: [PdfService, AppService],
+  providers: [AppService, OrganizerService],
+  controllers: [AppController, OrganizerController],
 })
-export class AppModule implements OnModuleInit {
-  constructor(private configService: ConfigService) {}
-  private readonly logger = new Logger(AppModule.name);
-
-  onModuleInit() {
-    const dbType = this.configService.get("database.type");
-    const dbHost = this.configService.get("database.host");
-    const dbUrl = this.configService.get("database.url");
-    this.logger.log(`Database Type: ${dbType}`);
-    this.logger.log(`Database Host: ${dbHost}`);
-    this.logger.log(`Database URL: ${dbUrl}`);
-    this.logger.log(
-      `Connection to ${dbType} database established successfully through ${dbUrl}.`,
-    );
-  }
-}
+export class AppModule {}
