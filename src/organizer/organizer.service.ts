@@ -1,10 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  Event,
-  Attendee,
-  OrganizerEventsResponse,
-  EventStats,
-} from '../dto/event.dto';
+import { Event, OrganizerEventsResponse } from '../dto/event.dto';
 
 @Injectable()
 export class OrganizerService {
@@ -67,9 +62,7 @@ export class OrganizerService {
     },
   ];
 
-  async getOrganizerEvents(
-    organizerId: string,
-  ): Promise<OrganizerEventsResponse> {
+  getOrganizerEvents(organizerId: string): OrganizerEventsResponse {
     // In a real app, this would query the database
     const events = this.mockEvents.filter(
       (event) => event.organizerId === organizerId,

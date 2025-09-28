@@ -1,15 +1,15 @@
 import { Controller, Get, Param, ForbiddenException } from '@nestjs/common';
 import { OrganizerService } from './organizer.service';
-import { OrganizerEventsResponse } from '../dto/event.dto';
+import type { OrganizerEventsResponse } from '../dto/event.dto';
 
 @Controller('organizer')
 export class OrganizerController {
   constructor(private readonly organizerService: OrganizerService) {}
 
   @Get(':id/events')
-  async getOrganizerEvents(
+  getOrganizerEvents(
     @Param('id') organizerId: string,
-  ): Promise<OrganizerEventsResponse> {
+  ): OrganizerEventsResponse {
     // In a real app, we'd get the current user from authentication context
     // For now, we'll assume the organizerId is provided and check authorization
     const currentUserId = organizerId; // This would come from JWT token or session
