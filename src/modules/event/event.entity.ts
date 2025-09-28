@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
 import { User } from '../../user/user.entity';
+import { RevenueShareRule } from '../../modules/revenue-sharing/revenue-sharing.entity';
 
 @Entity()
 export class Event {
@@ -26,4 +27,7 @@ export class Event {
 
   @ManyToOne(() => User, user => user.id, { eager: true })
   organizer: User;
+
+  @OneToMany(() => RevenueShareRule, rule => rule.event)
+  revenueShareRules: RevenueShareRule[];
 }

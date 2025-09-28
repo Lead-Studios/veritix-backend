@@ -65,6 +65,7 @@ import { TicketsModule } from './ticket/ticket.module';
     HealthModule,
     UsersModule,
     TicketsModule,
+    RevenueSharingModule,
    
   ],
   providers: [AppService, OrganizerService],
