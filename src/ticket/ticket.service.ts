@@ -4,14 +4,19 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as QRCode from 'qrcode';
 import * as crypto from 'crypto';
-import { Ticket } from './ticket.entity';
+import { Ticket, TicketStatus } from './ticket.entity';
 
 export interface ValidationResult {
   valid: boolean;
   expired: boolean;
   ticketId?: string;
   reason?: string;
-  ticket?: Ticket;
+  ticket?: {
+    id: string;
+    status: string;
+    eventId?: string;
+    currentOwnerId?: string;
+  };
 }
 
 @Injectable()
@@ -84,11 +89,21 @@ export class TicketQrService {
       }
 
       // Check if ticket is still active
-      if (ticket.status !== 'active') {
+      if (ticket.status !== TicketStatus.ACTIVE) {
         return { valid: false, expired: false, reason: 'Ticket is not active' };
       }
 
-      return { valid: true, expired: false, ticketId, ticket };
+      return {
+        valid: true,
+        expired: false,
+        ticketId,
+        ticket: {
+          id: ticket.id,
+          status: ticket.status,
+          eventId: ticket.event?.id,
+          currentOwnerId: ticket.currentOwner?.id,
+        },
+      };
     } catch (e) {
       return { valid: false, expired: false, reason: 'Validation error' };
     }

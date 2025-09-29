@@ -5,11 +5,9 @@ import {
   ManyToOne,
   CreateDateColumn,
   UpdateDateColumn,
-  OneToMany,
 } from 'typeorm';
 import { User } from '../../user/user.entity';
 import { TestEvent } from './test-event.entity';
-import { TicketTransfer } from '../../ticket/ticket-transfer.entity';
 
 export enum TicketStatus {
   ACTIVE = 'active',
@@ -27,7 +25,8 @@ export class TestTicket {
   ticketNumber: string;
 
   @Column({
-    type: 'text',
+    type: 'enum',
+    enum: TicketStatus,
     default: TicketStatus.ACTIVE,
   })
   status: TicketStatus;
@@ -56,8 +55,6 @@ export class TestTicket {
   @ManyToOne(() => TestEvent, { eager: true })
   event: TestEvent;
 
-  @OneToMany(() => TicketTransfer, (transfer) => transfer.ticket)
-  transfers: TicketTransfer[];
 
   @CreateDateColumn()
   createdAt: Date;

@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
 import { User } from '../../user/user.entity';
-import { Ticket } from '../../ticket/ticket.entity';
+import { TestTicket } from './test-ticket.entity';
 
 @Entity()
 export class TestEvent {
@@ -43,6 +43,6 @@ export class TestEvent {
   @ManyToOne(() => User, user => user.id, { eager: true })
   organizer: User;
 
-  @OneToMany(() => Ticket, (ticket) => ticket.event)
-  tickets: Ticket[];
+  @OneToMany(() => TestTicket, (ticket) => ticket.event)
+  tickets: TestTicket[];
 }

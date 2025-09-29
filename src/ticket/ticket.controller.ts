@@ -27,10 +27,9 @@ export class TicketController {
       // Explicitly reject expired codes per acceptance criteria
       throw new BadRequestException(result.reason ?? 'Invalid code');
     }
-    return { 
-      status: 'ok', 
+    return {
+      status: 'ok',
       ticketId: result.ticketId,
-      ticket: result.ticket 
     };
   }
 }

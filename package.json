@@ -18,9 +18,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "test:anti-scalping": "jest --testPathPattern=anti-scalping",
-    "demo": "node test-demo.js",
-    "seed": "node seed-test-data.js"
+    "test:anti-scalping": "jest --testPathPattern=anti-scalping"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

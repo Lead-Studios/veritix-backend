@@ -1,7 +1,7 @@
 import { Injectable, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Ticket } from './ticket.entity';
+import { Ticket, TicketStatus } from './ticket.entity';
 import { TicketTransfer, TransferType } from './ticket-transfer.entity';
 import { Event } from '../modules/event/event.entity';
 import { User } from '../user/user.entity';
@@ -22,105 +22,119 @@ export class TransferService {
 
   async transferTicket(transferDto: TransferTicketDto, fromUserId: string): Promise<TicketTransfer> {
     const { ticketId, toUserId, transferPrice, transferType, reason } = transferDto;
-
-    // Find the ticket
-    const ticket = await this.ticketRepository.findOne({
-      where: { id: ticketId },
-      relations: ['event', 'currentOwner', 'originalOwner'],
-    });
-
-    if (!ticket) {
-      throw new NotFoundException('Ticket not found');
-    }
-
-    // Verify ownership
-    if (ticket.currentOwner.id !== fromUserId) {
-      throw new ForbiddenException('You can only transfer tickets you own');
-    }
-
-    // Check if ticket is transferable
-    if (ticket.status !== 'active') {
-      throw new BadRequestException('Ticket is not in a transferable state');
-    }
-
-    // Find the event and check transfer settings
-    const event = await this.eventRepository.findOne({
-      where: { id: ticket.event.id },
-    });
-
-    if (!event) {
-      throw new NotFoundException('Event not found');
-    }
-
-    // Check if transfers are allowed for this event
-    if (!event.allowTransfers) {
-      throw new BadRequestException('Transfers are not allowed for this event');
-    }
-
-    // Check transfer cooldown
-    if (ticket.lastTransferDate) {
-      const cooldownMs = event.transferCooldownHours * 60 * 60 * 1000;
-      const timeSinceLastTransfer = Date.now() - ticket.lastTransferDate.getTime();
+    
+    return this.ticketRepository.manager.transaction(async (em) => {
+      const ticketRepo = em.getRepository(Ticket);
+      const transferRepo = em.getRepository(TicketTransfer);
+      const userRepo = em.getRepository(User);
       
-      if (timeSinceLastTransfer < cooldownMs) {
-        const remainingCooldown = Math.ceil((cooldownMs - timeSinceLastTransfer) / (60 * 60 * 1000));
+      // Lock ticket row to prevent race conditions
+      const ticket = await ticketRepo.findOne({
+        where: { id: ticketId },
+        relations: ['event', 'currentOwner', 'originalOwner'],
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (!ticket) {
+        throw new NotFoundException('Ticket not found');
+      }
+
+      // Verify ownership
+      if (ticket.currentOwner.id !== fromUserId) {
+        throw new ForbiddenException('You can only transfer tickets you own');
+      }
+
+      // Check if ticket is transferable
+      if (ticket.status !== TicketStatus.ACTIVE) {
+        throw new BadRequestException('Ticket is not in a transferable state');
+      }
+
+      // Find the event and check transfer settings
+      const event = await em.findOne(Event, {
+        where: { id: ticket.event.id },
+      });
+
+      if (!event) {
+        throw new NotFoundException('Event not found');
+      }
+
+      // Check if transfers are allowed for this event
+      if (!event.allowTransfers) {
+        throw new BadRequestException('Transfers are not allowed for this event');
+      }
+
+      // Check transfer cooldown
+      if (ticket.lastTransferDate) {
+        const cooldownMs = event.transferCooldownHours * 60 * 60 * 1000;
+        const timeSinceLastTransfer = Date.now() - ticket.lastTransferDate.getTime();
+        
+        if (timeSinceLastTransfer < cooldownMs) {
+          const remainingCooldown = Math.ceil((cooldownMs - timeSinceLastTransfer) / (60 * 60 * 1000));
+          throw new BadRequestException(
+            `Transfer cooldown active. Please wait ${remainingCooldown} more hours before transferring again.`
+          );
+        }
+      }
+
+      // Check maximum transfers per ticket
+      if (ticket.transferCount >= event.maxTransfersPerTicket) {
         throw new BadRequestException(
-          `Transfer cooldown active. Please wait ${remainingCooldown} more hours before transferring again.`
+          `Maximum number of transfers (${event.maxTransfersPerTicket}) reached for this ticket`
         );
       }
-    }
 
-    // Check maximum transfers per ticket
-    if (ticket.transferCount >= event.maxTransfersPerTicket) {
-      throw new BadRequestException(
-        `Maximum number of transfers (${event.maxTransfersPerTicket}) reached for this ticket`
-      );
-    }
-
-    // Validate resale price cap
-    if (transferType === TransferType.RESALE && transferPrice) {
-      if (event.maxResalePrice && transferPrice > event.maxResalePrice) {
-        throw new BadRequestException(
-          `Resale price cannot exceed the maximum allowed price of $${event.maxResalePrice}`
-        );
+      // Validate resale price cap
+      const effectivePrice =
+        transferPrice ?? ticket.currentPrice ?? ticket.originalPrice;
+      if (transferType === TransferType.RESALE) {
+        if (transferPrice === undefined) {
+          throw new BadRequestException('transferPrice is required for RESALE');
+        }
+        if (event.maxResalePrice !== null && event.maxResalePrice !== undefined) {
+          if (Number(effectivePrice) > Number(event.maxResalePrice)) {
+            throw new BadRequestException(
+              `Resale price cannot exceed the maximum allowed price of $${Number(event.maxResalePrice).toFixed(2)}`
+            );
+          }
+        }
       }
-    }
 
-    // Find the recipient user
-    const toUser = await this.userRepository.findOne({
-      where: { id: toUserId },
+      // Find the recipient user
+      const toUser = await userRepo.findOne({
+        where: { id: toUserId },
+      });
+
+      if (!toUser) {
+        throw new NotFoundException('Recipient user not found');
+      }
+
+      // Prevent self-transfer
+      if (fromUserId === toUserId) {
+        throw new BadRequestException('Cannot transfer ticket to yourself');
+      }
+
+      // Create transfer record
+      const transfer = transferRepo.create({
+        ticket,
+        fromUser: ticket.currentOwner,
+        toUser,
+        transferPrice: effectivePrice,
+        transferType,
+        reason,
+      });
+
+      // Update ticket
+      ticket.currentOwner = toUser;
+      ticket.lastTransferDate = new Date();
+      ticket.transferCount += 1;
+      ticket.currentPrice = effectivePrice;
+
+      // Save both transfer and updated ticket within transaction
+      await transferRepo.save(transfer);
+      await ticketRepo.save(ticket);
+
+      return transfer;
     });
-
-    if (!toUser) {
-      throw new NotFoundException('Recipient user not found');
-    }
-
-    // Prevent self-transfer
-    if (fromUserId === toUserId) {
-      throw new BadRequestException('Cannot transfer ticket to yourself');
-    }
-
-    // Create transfer record
-    const transfer = this.transferRepository.create({
-      ticket,
-      fromUser: ticket.currentOwner,
-      toUser,
-      transferPrice: transferPrice || ticket.currentPrice || ticket.originalPrice,
-      transferType,
-      reason,
-    });
-
-    // Update ticket
-    ticket.currentOwner = toUser;
-    ticket.lastTransferDate = new Date();
-    ticket.transferCount += 1;
-    ticket.currentPrice = transferPrice || ticket.currentPrice || ticket.originalPrice;
-
-    // Save both transfer and updated ticket
-    await this.transferRepository.save(transfer);
-    await this.ticketRepository.save(ticket);
-
-    return transfer;
   }
 
   async getTicketTransferHistory(ticketId: string): Promise<TicketTransfer[]> {
@@ -160,7 +174,7 @@ export class TransferService {
       return { canTransfer: false, reason: 'You can only transfer tickets you own' };
     }
 
-    if (ticket.status !== 'active') {
+    if (ticket.status !== TicketStatus.ACTIVE) {
       return { canTransfer: false, reason: 'Ticket is not in a transferable state' };
     }
 

@@ -1,4 +1,4 @@
-import { IsNumber, IsBoolean, IsOptional, Min } from 'class-validator';
+import { IsNumber, IsBoolean, IsOptional, Min, IsInt } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateEventAntiScalpingDto {
@@ -21,7 +21,7 @@ export class UpdateEventAntiScalpingDto {
 
   @ApiProperty({ description: 'Maximum number of transfers allowed per ticket', required: false })
   @IsOptional()
-  @IsNumber()
+  @IsInt()
   @Min(0)
   maxTransfersPerTicket?: number;
 }
