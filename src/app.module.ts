@@ -6,6 +6,7 @@ import { OrganizerService } from './organizer/organizer.service';
 import { ConfigModule } from './config/config.module';
 import { HealthModule } from './modules/health/health.module';
 import { UsersModule } from './user/user.module';
+import { AuthModule } from './modules/auth/auth.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { TicketsModule } from './ticket/ticket.module';
@@ -13,6 +14,9 @@ import { TicketsModule } from './ticket/ticket.module';
 @Module({
   imports: [
     ConfigModule,
+    HealthModule,
+    UsersModule,
+  AuthModule,
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
