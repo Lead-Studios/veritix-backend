@@ -1,21 +1,29 @@
+import { IsString, IsNumber, IsOptional, IsEnum, Min, IsUUID } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, IsUUID } from 'class-validator';
+import { TransferType } from '../ticket-transfer.entity';
 
 export class TransferTicketDto {
-  @ApiProperty({
-    description: 'The UUID of the new owner',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
+  @ApiProperty({ description: 'ID of the ticket to transfer' })
   @IsUUID()
-  @IsString()
-  newOwnerId: string;
+  ticketId: string;
 
-  @ApiProperty({
-    description: 'Optional reason for transfer',
-    example: 'Gift to friend',
-    required: false,
-  })
+  @ApiProperty({ description: 'ID of the user receiving the ticket' })
+  @IsUUID()
+  toUserId: string;
+
+  @ApiProperty({ description: 'Price for the transfer (for resale)', required: false })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  transferPrice?: number;
+
+  @ApiProperty({ description: 'Type of transfer', enum: TransferType })
+  @IsEnum(TransferType)
+  transferType: TransferType;
+
+  @ApiProperty({ description: 'Reason for transfer', required: false })
   @IsOptional()
   @IsString()
   reason?: string;
 }
+

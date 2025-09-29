@@ -1,17 +1,20 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UsersModule } from '../user/user.module';
-import { TicketQrService } from './ticket-qr.service';
-import { TicketService } from './ticket.service';
+import { TicketQrService } from './ticket.service';
 import { TicketController } from './ticket.controller';
+import { TransferService } from './transfer.service';
+import { TransferController } from './transfer.controller';
 import { Ticket } from './ticket.entity';
-import { User } from '../user/user.entity';
+import { TicketTransfer } from './ticket-transfer.entity';
 import { Event } from '../modules/event/event.entity';
+import { User } from '../user/user.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Ticket, User, Event]), UsersModule],
-  providers: [TicketQrService, TicketService],
-  controllers: [TicketController],
-  exports: [TicketQrService, TicketService],
+  imports: [
+    TypeOrmModule.forFeature([Ticket, TicketTransfer, Event, User]),
+  ],
+  providers: [TicketQrService, TransferService],
+  controllers: [TicketController, TransferController],
+  exports: [TicketQrService, TransferService],
 })
 export class TicketsModule {}

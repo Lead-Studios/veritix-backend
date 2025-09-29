@@ -5,11 +5,9 @@ import {
   ManyToOne,
   CreateDateColumn,
   UpdateDateColumn,
-  OneToMany,
 } from 'typeorm';
-import { User } from '../user/user.entity';
-import { Event } from '../modules/event/event.entity';
-import { TicketTransfer } from './ticket-transfer.entity';
+import { User } from '../../user/user.entity';
+import { TestEvent } from './test-event.entity';
 
 export enum TicketStatus {
   ACTIVE = 'active',
@@ -19,7 +17,7 @@ export enum TicketStatus {
 }
 
 @Entity()
-export class Ticket {
+export class TestTicket {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -39,10 +37,10 @@ export class Ticket {
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
   currentPrice: number;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'datetime' })
   purchaseDate: Date;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: 'datetime', nullable: true })
   lastTransferDate: Date;
 
   @Column({ type: 'int', default: 0 })
@@ -54,11 +52,9 @@ export class Ticket {
   @ManyToOne(() => User, { eager: true })
   originalOwner: User;
 
-  @ManyToOne(() => Event, { eager: true })
-  event: Event;
+  @ManyToOne(() => TestEvent, { eager: true })
+  event: TestEvent;
 
-  @OneToMany(() => TicketTransfer, (transfer) => transfer.ticket)
-  transfers: TicketTransfer[];
 
   @CreateDateColumn()
   createdAt: Date;
@@ -66,4 +62,3 @@ export class Ticket {
   @UpdateDateColumn()
   updatedAt: Date;
 }
-

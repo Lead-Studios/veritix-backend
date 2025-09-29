@@ -10,6 +10,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { TicketsModule } from './ticket/ticket.module';
+import { EventModule } from './modules/event/event.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { TicketsModule } from './ticket/ticket.module';
     HealthModule,
     UsersModule,
     TicketsModule,
+    EventModule,
   ],
   providers: [AppService, OrganizerService],
   controllers: [AppController, OrganizerController],
