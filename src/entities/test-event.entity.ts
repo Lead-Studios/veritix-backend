@@ -3,7 +3,7 @@ import { User } from '../../user/user.entity';
 import { Ticket } from '../../ticket/ticket.entity';
 
 @Entity()
-export class Event {
+export class TestEvent {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -16,10 +16,10 @@ export class Event {
   @Column()
   location: string;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'datetime' })
   startDate: Date;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'datetime' })
   endDate: Date;
 
   @Column({ type: 'int' })
