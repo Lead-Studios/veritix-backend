@@ -32,7 +32,10 @@ describe('UserService', () => {
       const saveSpy = jest.spyOn(repo, 'save').mockResolvedValue({} as User);
       jest.spyOn(repo, 'create').mockReturnValue({} as User);
 
-      await service.create({ email: 'test@example.com', password: 'secret123' });
+      await service.create({
+        email: 'test@example.com',
+        password: 'secret123',
+      });
 
       expect(saveSpy).toHaveBeenCalled();
     });

@@ -1,5 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  OneToMany,
+} from 'typeorm';
 import { User } from '../../user/user.entity';
+import { Ticket } from '../../ticket/ticket.entity';
 
 @Entity()
 export class Event {
@@ -15,15 +22,18 @@ export class Event {
   @Column()
   location: string;
 
-  @Column({ type: 'timestamp' })
+  @Column()
   startDate: Date;
 
-  @Column({ type: 'timestamp' })
+  @Column()
   endDate: Date;
 
   @Column({ type: 'int' })
   capacity: number;
 
-  @ManyToOne(() => User, user => user.id, { eager: true })
+  @ManyToOne(() => User, (user) => user.id, { eager: true })
   organizer: User;
+
+  @OneToMany(() => Ticket, (ticket) => ticket.event)
+  tickets?: Ticket[];
 }
