@@ -13,12 +13,12 @@ describe('UserController', () => {
         {
           provide: UserService,
           useValue: {
-            findAll: jest.fn().mockResolvedValue([]),
-            create: jest
-              .fn()
-              .mockResolvedValue({ id: '1', email: 'test@example.com' }),
-            update: jest.fn().mockResolvedValue({ id: '1', role: 'admin' }),
-            remove: jest.fn().mockResolvedValue(undefined),
+            findAll: jest.fn(() => Promise.resolve([])),
+            create: jest.fn(() =>
+              Promise.resolve({ id: '1', email: 'test@example.com' }),
+            ),
+            update: jest.fn(() => Promise.resolve({ id: '1', role: 'admin' })),
+            remove: jest.fn(() => Promise.resolve(undefined)),
           },
         },
       ],
@@ -34,6 +34,7 @@ describe('UserController', () => {
 
   it('should return all users', async () => {
     expect(await controller.findAll()).toEqual([]);
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(service.findAll).toHaveBeenCalled();
   });
 
@@ -43,6 +44,7 @@ describe('UserController', () => {
       id: '1',
       email: 'test@example.com',
     });
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(service.create).toHaveBeenCalledWith(dto);
   });
 
@@ -52,11 +54,13 @@ describe('UserController', () => {
       id: '1',
       role: 'admin',
     });
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(service.update).toHaveBeenCalledWith('1', dto);
   });
 
   it('should delete a user', async () => {
     expect(await controller.remove('1')).toBeUndefined();
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(service.remove).toHaveBeenCalledWith('1');
   });
 });
