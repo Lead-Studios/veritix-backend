@@ -61,7 +61,6 @@
     "qrcode": "^1.5.3",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "sqlite3": "^5.1.7",
     "stream": "^0.0.3",
     "stripe": "^17.7.0",
     "typeorm": "^0.3.27",
