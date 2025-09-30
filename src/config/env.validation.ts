@@ -33,6 +33,27 @@ export class EnvironmentVariables {
   @IsString()
   @IsOptional()
   QR_SECRET?: string;
+
+  // Logging configuration
+  @IsString()
+  @IsOptional()
+  LOG_LEVEL?: string;
+
+  @IsString()
+  @IsOptional()
+  LOG_EXTERNAL_PROVIDER?: string;
+
+  @IsString()
+  @IsOptional()
+  LOG_EXTERNAL_URL?: string;
+
+  @IsString()
+  @IsOptional()
+  LOG_EXTERNAL_TOKEN?: string;
+
+  @IsString()
+  @IsOptional()
+  LOG_EXTERNAL_ENABLED?: string;
 }
 
 export function validate(config: Record<string, unknown>) {

@@ -1,42 +1,37 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { OrganizerController } from './organizer/organizer.controller';
-import { OrganizerService } from './organizer/organizer.service';
 import { ConfigModule } from './config/config.module';
 import { HealthModule } from './modules/health/health.module';
 import { UsersModule } from './user/user.module';
-import { AuthModule } from './modules/auth/auth.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { TicketsModule } from './ticket/ticket.module';
-import { EventModule } from './modules/event/event.module';
+import { RequestLoggerMiddleware } from './logger/request-logger.middleware.js';
+import { WinstonLoggerService } from './logger/winston-logger.service.js';
 
 @Module({
   imports: [
     ConfigModule,
     HealthModule,
     UsersModule,
-  AuthModule,
+    TicketsModule,
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: async (configService: ConfigService) => ({
-        ...(await configService.get('database')),
+      useFactory: (config: ConfigService) => ({
+        type: 'postgres',
+        url: config.get<string>('database.url'),
         autoLoadEntities: true,
-        migrations: ['dist/migrations/*.js'],
-        migrationsRun: true,
-        logging: true,
+        synchronize: true,
       }),
     }),
-    HealthModule,
-    UsersModule,
-    TicketsModule,
-    RevenueSharingModule,
-    EventModule,
-
   ],
-  providers: [AppService, OrganizerService],
-  controllers: [AppController, OrganizerController],
+  providers: [AppService, WinstonLoggerService],
+  controllers: [AppController],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RequestLoggerMiddleware).forRoutes('*');
+  }
+}
