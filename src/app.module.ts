@@ -32,7 +32,9 @@ import { EventModule } from './modules/event/event.module';
     HealthModule,
     UsersModule,
     TicketsModule,
+    RevenueSharingModule,
     EventModule,
+
   ],
   providers: [AppService, OrganizerService],
   controllers: [AppController, OrganizerController],

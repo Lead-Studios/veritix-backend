@@ -28,6 +28,7 @@ export class TicketController {
   constructor(
     private readonly ticketQrService: TicketQrService,
     private readonly ticketCrud: TicketCrudService,
+
   ) {}
 
   // Basic CRUD endpoints
@@ -80,5 +81,6 @@ export class TicketController {
       status: 'ok',
       ticketId: result.ticketId,
     };
+
   }
 }
