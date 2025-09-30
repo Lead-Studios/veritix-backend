@@ -1,3 +1,6 @@
+  async findByEmail(email: string): Promise<User | undefined> {
+    return this.userRepo.findOne({ where: { email } });
+  }
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -30,7 +33,9 @@ export class UserService {
       passwordHash: hash,
       role: dto.role || 'user',
     });
-    return this.userRepo.save(user);
+    const savedUser = await this.userRepo.save(user);
+    // For AuthService compatibility, return user with password field
+    return { ...savedUser, password: savedUser.passwordHash } as User & { password: string };
   }
 
   async update(id: string, dto: UpdateUserDto): Promise<User> {

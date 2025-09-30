@@ -1,10 +1,9 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
 import { User } from '../../user/user.entity';
-import { RevenueShareRule } from '../../modules/revenue-sharing/revenue-sharing.entity';
-import { Ticket } from '../../ticket/ticket.entity';
+import { TestTicket } from './test-ticket.entity';
 
 @Entity()
-export class Event {
+export class TestEvent {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -17,10 +16,10 @@ export class Event {
   @Column()
   location: string;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'datetime' })
   startDate: Date;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'datetime' })
   endDate: Date;
 
   @Column({ type: 'int' })
@@ -44,12 +43,6 @@ export class Event {
   @ManyToOne(() => User, user => user.id, { eager: true })
   organizer: User;
 
-
-  @OneToMany(() => RevenueShareRule, rule => rule.event)
-  revenueShareRules: RevenueShareRule[];
+  @OneToMany(() => TestTicket, (ticket) => ticket.event)
+  tickets: TestTicket[];
 }
-
-  @OneToMany(() => Ticket, (ticket) => ticket.event)
-  tickets: Ticket[];
-}
-
