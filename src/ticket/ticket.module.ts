@@ -8,13 +8,14 @@ import { Ticket } from './ticket.entity';
 import { TicketTransfer } from './ticket-transfer.entity';
 import { Event } from '../modules/event/event.entity';
 import { User } from '../user/user.entity';
+import { TicketCrudService } from './ticket-crud.service';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Ticket, TicketTransfer, Event, User]),
   ],
-  providers: [TicketQrService, TransferService],
+  providers: [TicketQrService, TransferService, TicketCrudService],
   controllers: [TicketController, TransferController],
-  exports: [TicketQrService, TransferService],
+  exports: [TicketQrService, TransferService, TicketCrudService],
 })
 export class TicketsModule {}
