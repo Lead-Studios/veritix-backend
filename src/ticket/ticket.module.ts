@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { TicketQrService } from './ticket.service';
+import { TicketQrService } from './ticket-qr.service';
 import { TicketController } from './ticket.controller';
 import { TransferService } from './transfer.service';
 import { TransferController } from './transfer.controller';

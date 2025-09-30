@@ -15,16 +15,13 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { TicketQrService } from './ticket-qr.service';
-import { TicketService } from './ticket.service';
 import { ValidateQrDto } from './dto/validate-qr.dto';
-import { TransferTicketDto } from './dto/transfer-ticket.dto';
 
 @ApiTags('Tickets')
 @Controller('tickets')
 export class TicketController {
   constructor(
     private readonly ticketQrService: TicketQrService,
-    private readonly ticketService: TicketService,
   ) {}
 
   @Get(':id/qr')
@@ -42,34 +39,10 @@ export class TicketController {
   @ApiResponse({ status: 200, description: 'Validation result' })
   async validateTicketQr(@Body() dto: ValidateQrDto) {
     const result = await this.ticketQrService.validateCode(dto.code);
-    if (!result.valid) {
-      // Explicitly reject expired codes per acceptance criteria
-      throw new BadRequestException(result.reason ?? 'Invalid code');
+    if (result.valid) {
+      return { valid: true };
+    } else {
+      return { valid: false, reason: result.reason };
     }
-    return {
-      status: 'ok',
-      ticketId: result.ticketId,
-    };
-  }
-
-  @Post(':id/transfer')
-  @ApiOperation({ summary: 'Transfer ticket ownership to another user' })
-  @ApiParam({ name: 'id', description: 'Ticket ID' })
-  @ApiBody({ type: TransferTicketDto })
-  @ApiResponse({ status: 200, description: 'Ticket transferred successfully' })
-  @ApiResponse({
-    status: 400,
-    description: 'Bad request - non-transferable or max transfers exceeded',
-  })
-  @ApiResponse({ status: 404, description: 'Ticket or user not found' })
-  async transferTicket(
-    @Param('id') id: string,
-    @Body() dto: TransferTicketDto,
-  ) {
-    const updatedTicket = await this.ticketService.transferTicket(id, dto);
-    return {
-      message: 'Ticket transferred successfully',
-      ticket: updatedTicket,
-    };
   }
 }
