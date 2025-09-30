@@ -1,6 +1,3 @@
-  async findByEmail(email: string): Promise<User | undefined> {
-    return this.userRepo.findOne({ where: { email } });
-  }
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -15,6 +12,10 @@ export class UserService {
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
   ) {}
+
+  async findByEmail(email: string): Promise<User | null> {
+    return this.userRepo.findOne({ where: { email } });
+  }
 
   async findAll(): Promise<User[]> {
     return this.userRepo.find();
