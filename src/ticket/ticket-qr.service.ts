@@ -1,20 +1,33 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import * as QRCode from 'qrcode';
 import * as crypto from 'crypto';
+import { Ticket, TicketStatus } from './ticket.entity';
 
 export interface ValidationResult {
   valid: boolean;
   expired: boolean;
   ticketId?: string;
   reason?: string;
+  ticket?: {
+    id: string;
+    status: string;
+    eventId?: string;
+    currentOwnerId?: string;
+  };
 }
 
 @Injectable()
 export class TicketQrService {
   private readonly prefix = 'vtx';
 
-  constructor(private readonly config: ConfigService) {}
+  constructor(
+    private readonly config: ConfigService,
+    @InjectRepository(Ticket)
+    private ticketRepository: Repository<Ticket>,
+  ) {}
 
   private getExpirySeconds(): number {
     return this.config.get<number>('qr.expirySeconds') ?? 30;
@@ -48,7 +61,7 @@ export class TicketQrService {
     }
   }
 
-  validateCode(code: string): ValidationResult {
+  async validateCode(code: string): Promise<ValidationResult> {
     try {
       const parts = code.split(':');
       if (parts.length !== 4) {
@@ -77,8 +90,34 @@ export class TicketQrService {
           reason: 'Code expired',
         };
       }
-      return { valid: true, expired: false, ticketId };
-    } catch {
+
+      // Fetch ticket details for additional validation
+      const ticket = await this.ticketRepository.findOne({
+        where: { id: ticketId },
+        relations: ['event', 'currentOwner'],
+      });
+
+      if (!ticket) {
+        return { valid: false, expired: false, reason: 'Ticket not found' };
+      }
+
+      // Check if ticket is still active
+      if (ticket.status !== TicketStatus.ACTIVE) {
+        return { valid: false, expired: false, reason: 'Ticket is not active' };
+      }
+
+      return {
+        valid: true,
+        expired: false,
+        ticketId,
+        ticket: {
+          id: ticket.id,
+          status: ticket.status,
+          eventId: ticket.event?.id,
+          currentOwnerId: ticket.currentOwner?.id,
+        },
+      };
+    } catch (e) {
       return { valid: false, expired: false, reason: 'Validation error' };
     }
   }

@@ -24,6 +24,6 @@ export class User {
   @CreateDateColumn()
   createdAt: Date;
 
-  @OneToMany(() => Ticket, (ticket) => ticket.owner)
+  @OneToMany(() => Ticket, (ticket) => ticket.currentOwner)
   ownedTickets?: Ticket[];
 }
