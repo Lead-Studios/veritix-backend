@@ -34,7 +34,11 @@ export class RevenueSharingService {
    */
   async defineRevenueSplit(
     eventId: string,
-    splits: { stakeholderId: string; shareType: RevenueShareType; shareValue: number }[],
+    splits: {
+      stakeholderId: string;
+      shareType: RevenueShareType;
+      shareValue: number;
+    }[],
   ): Promise<RevenueShareRule[]> {
     // First, deactivate existing rules for this event
     await this.revenueShareRuleRepository.update(
@@ -43,7 +47,7 @@ export class RevenueSharingService {
     );
 
     // Create new rules
-    const rules = splits.map(split => {
+    const rules = splits.map((split) => {
       const rule = new RevenueShareRule();
       rule.event = { id: eventId } as Event;
       rule.stakeholder = { id: split.stakeholderId } as User;
@@ -59,9 +63,12 @@ export class RevenueSharingService {
   /**
    * Calculate revenue distribution based on defined rules
    */
-  async calculateRevenueDistribution(eventId: string, totalRevenue: number): Promise<RevenueBreakdown> {
+  async calculateRevenueDistribution(
+    eventId: string,
+    totalRevenue: number,
+  ): Promise<RevenueBreakdown> {
     const rules = await this.revenueShareRuleRepository.find({
-      where: { 
+      where: {
         event: { id: eventId },
         isActive: true,
       },
@@ -73,7 +80,7 @@ export class RevenueSharingService {
 
     for (const rule of rules) {
       let amount = 0;
-      
+
       if (rule.shareType === RevenueShareType.PERCENTAGE) {
         amount = (totalRevenue * rule.shareValue) / 100;
       } else if (rule.shareType === RevenueShareType.FIXED_AMOUNT) {
@@ -115,15 +122,23 @@ export class RevenueSharingService {
   /**
    * Distribute revenue automatically after ticket sales
    */
-  async distributeRevenue(eventId: string, totalRevenue: number): Promise<RevenueBreakdown> {
-    this.logger.log(`Distributing revenue for event ${eventId}, total: $${totalRevenue}`);
-    
-    const breakdown = await this.calculateRevenueDistribution(eventId, totalRevenue);
-    
+  async distributeRevenue(
+    eventId: string,
+    totalRevenue: number,
+  ): Promise<RevenueBreakdown> {
+    this.logger.log(
+      `Distributing revenue for event ${eventId}, total: $${totalRevenue}`,
+    );
+
+    const breakdown = await this.calculateRevenueDistribution(
+      eventId,
+      totalRevenue,
+    );
+
     // In a real implementation, this would integrate with a payment system
     // to actually transfer funds to stakeholders
     this.logger.log(`Revenue distribution completed for event ${eventId}`);
-    
+
     return breakdown;
   }
 
@@ -134,7 +149,7 @@ export class RevenueSharingService {
     // This would typically retrieve actual sales data from the database
     // For now, we'll return a mock response
     const mockTotalRevenue = 10000; // This would come from actual sales data
-    
+
     return this.calculateRevenueDistribution(eventId, mockTotalRevenue);
   }
 }

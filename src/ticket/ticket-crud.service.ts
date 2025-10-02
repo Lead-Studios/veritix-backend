@@ -1,17 +1,36 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Ticket, TicketStatus } from './ticket.entity';
 import { Event } from '../modules/event/event.entity';
 import { User } from '../user/user.entity';
-import { CreateTicketDto, CreateTicketStatusInput } from './dto/create-ticket.dto';
-import { UpdateTicketDto, UpdateTicketStatusInput } from './dto/update-ticket.dto';
+import {
+  CreateTicketDto,
+  CreateTicketStatusInput,
+} from './dto/create-ticket.dto';
+import {
+  UpdateTicketDto,
+  UpdateTicketStatusInput,
+} from './dto/update-ticket.dto';
 
-function mapInputToStatus(input?: CreateTicketStatusInput | UpdateTicketStatusInput): TicketStatus {
-  if (!input || input === CreateTicketStatusInput.VALID || input === UpdateTicketStatusInput.VALID) {
+function mapInputToStatus(
+  input?: CreateTicketStatusInput | UpdateTicketStatusInput,
+): TicketStatus {
+  if (
+    !input ||
+    input === CreateTicketStatusInput.VALID ||
+    input === UpdateTicketStatusInput.VALID
+  ) {
     return TicketStatus.ACTIVE;
   }
-  if (input === CreateTicketStatusInput.USED || input === UpdateTicketStatusInput.USED) {
+  if (
+    input === CreateTicketStatusInput.USED ||
+    input === UpdateTicketStatusInput.USED
+  ) {
     return TicketStatus.USED;
   }
   if (
@@ -72,11 +91,16 @@ export class TicketCrudService {
 
       // Prevent setting TRANSFERRED via PATCH: use dedicated transfer flow
       if (newStatus === TicketStatus.TRANSFERRED) {
-        throw new BadRequestException('Use transfer endpoint to transfer tickets');
+        throw new BadRequestException(
+          'Use transfer endpoint to transfer tickets',
+        );
       }
 
       // Basic lifecycle: ACTIVE -> USED is allowed; USED cannot revert to ACTIVE
-      if (ticket.status === TicketStatus.USED && newStatus === TicketStatus.ACTIVE) {
+      if (
+        ticket.status === TicketStatus.USED &&
+        newStatus === TicketStatus.ACTIVE
+      ) {
         throw new BadRequestException('Cannot revert a used ticket to active');
       }
 

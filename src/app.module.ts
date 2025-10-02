@@ -50,8 +50,14 @@ import { AbuseLogService } from './abuse-log/abuse-log.service';
         storage: ThrottlerStorage,
         reflector: Reflector,
         abuseLogService: AbuseLogService,
-      ) => new LoggingThrottlerGuard(options, storage, reflector, abuseLogService),
-      inject: ['THROTTLER_OPTIONS', ThrottlerStorage, Reflector, AbuseLogService],
+      ) =>
+        new LoggingThrottlerGuard(options, storage, reflector, abuseLogService),
+      inject: [
+        'THROTTLER_OPTIONS',
+        ThrottlerStorage,
+        Reflector,
+        AbuseLogService,
+      ],
     },
   ],
   controllers: [AppController],

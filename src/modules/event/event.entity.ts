@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  OneToMany,
+} from 'typeorm';
 import { User } from '../../user/user.entity';
 import { RevenueShareRule } from '../../modules/revenue-sharing/revenue-sharing.entity';
 import { Ticket } from '../../ticket/ticket.entity';
@@ -41,14 +47,12 @@ export class Event {
   @Column({ type: 'int', default: 3 })
   maxTransfersPerTicket: number;
 
-  @ManyToOne(() => User, user => user.id, { eager: true })
+  @ManyToOne(() => User, (user) => user.id, { eager: true })
   organizer: User;
 
-
-  @OneToMany(() => RevenueShareRule, rule => rule.event)
+  @OneToMany(() => RevenueShareRule, (rule) => rule.event)
   revenueShareRules: RevenueShareRule[];
 
   @OneToMany(() => Ticket, (ticket) => ticket.event)
   tickets: Ticket[];
 }
-

@@ -38,7 +38,10 @@ export class TicketQrService {
   }
 
   private sign(payload: string): string {
-    return crypto.createHmac('sha256', this.getSecret()).update(payload).digest('hex');
+    return crypto
+      .createHmac('sha256', this.getSecret())
+      .update(payload)
+      .digest('hex');
   }
 
   private buildCodeString(ticketId: string, ts: number): string {
@@ -75,7 +78,12 @@ export class TicketQrService {
       const age = now - ts;
       const expiry = this.getExpirySeconds();
       if (age > expiry) {
-        return { valid: false, expired: true, ticketId, reason: 'Code expired' };
+        return {
+          valid: false,
+          expired: true,
+          ticketId,
+          reason: 'Code expired',
+        };
       }
 
       // Fetch ticket details for additional validation

@@ -72,14 +72,16 @@ export class EventService {
     organizer: User,
   ): Promise<Event> {
     const event = await this.findOne(id, organizer);
-    
+
     // Validate max resale price if provided
     if (antiScalpingDto.maxResalePrice !== undefined) {
       if (antiScalpingDto.maxResalePrice < 0) {
         throw new ForbiddenException('Max resale price must be non-negative');
       }
       if (antiScalpingDto.maxResalePrice < event.ticketPrice) {
-        throw new ForbiddenException('Max resale price cannot be less than original ticket price');
+        throw new ForbiddenException(
+          'Max resale price cannot be less than original ticket price',
+        );
       }
     }
 
@@ -93,7 +95,9 @@ export class EventService {
     // Validate max transfers per ticket if provided
     if (antiScalpingDto.maxTransfersPerTicket !== undefined) {
       if (antiScalpingDto.maxTransfersPerTicket < 0) {
-        throw new ForbiddenException('Max transfers per ticket must be non-negative');
+        throw new ForbiddenException(
+          'Max transfers per ticket must be non-negative',
+        );
       }
     }
 

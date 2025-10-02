@@ -66,4 +66,3 @@ export class Ticket {
   @UpdateDateColumn()
   updatedAt: Date;
 }
-

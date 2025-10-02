@@ -1,4 +1,9 @@
-import { Injectable, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Ticket, TicketStatus } from './ticket.entity';
@@ -20,14 +25,18 @@ export class TransferService {
     private userRepository: Repository<User>,
   ) {}
 
-  async transferTicket(transferDto: TransferTicketDto, fromUserId: string): Promise<TicketTransfer> {
-    const { ticketId, toUserId, transferPrice, transferType, reason } = transferDto;
-    
+  async transferTicket(
+    transferDto: TransferTicketDto,
+    fromUserId: string,
+  ): Promise<TicketTransfer> {
+    const { ticketId, toUserId, transferPrice, transferType, reason } =
+      transferDto;
+
     return this.ticketRepository.manager.transaction(async (em) => {
       const ticketRepo = em.getRepository(Ticket);
       const transferRepo = em.getRepository(TicketTransfer);
       const userRepo = em.getRepository(User);
-      
+
       // Lock ticket row to prevent race conditions
       const ticket = await ticketRepo.findOne({
         where: { id: ticketId },
@@ -60,18 +69,23 @@ export class TransferService {
 
       // Check if transfers are allowed for this event
       if (!event.allowTransfers) {
-        throw new BadRequestException('Transfers are not allowed for this event');
+        throw new BadRequestException(
+          'Transfers are not allowed for this event',
+        );
       }
 
       // Check transfer cooldown
       if (ticket.lastTransferDate) {
         const cooldownMs = event.transferCooldownHours * 60 * 60 * 1000;
-        const timeSinceLastTransfer = Date.now() - ticket.lastTransferDate.getTime();
-        
+        const timeSinceLastTransfer =
+          Date.now() - ticket.lastTransferDate.getTime();
+
         if (timeSinceLastTransfer < cooldownMs) {
-          const remainingCooldown = Math.ceil((cooldownMs - timeSinceLastTransfer) / (60 * 60 * 1000));
+          const remainingCooldown = Math.ceil(
+            (cooldownMs - timeSinceLastTransfer) / (60 * 60 * 1000),
+          );
           throw new BadRequestException(
-            `Transfer cooldown active. Please wait ${remainingCooldown} more hours before transferring again.`
+            `Transfer cooldown active. Please wait ${remainingCooldown} more hours before transferring again.`,
           );
         }
       }
@@ -79,7 +93,7 @@ export class TransferService {
       // Check maximum transfers per ticket
       if (ticket.transferCount >= event.maxTransfersPerTicket) {
         throw new BadRequestException(
-          `Maximum number of transfers (${event.maxTransfersPerTicket}) reached for this ticket`
+          `Maximum number of transfers (${event.maxTransfersPerTicket}) reached for this ticket`,
         );
       }
 
@@ -90,10 +104,13 @@ export class TransferService {
         if (transferPrice === undefined) {
           throw new BadRequestException('transferPrice is required for RESALE');
         }
-        if (event.maxResalePrice !== null && event.maxResalePrice !== undefined) {
+        if (
+          event.maxResalePrice !== null &&
+          event.maxResalePrice !== undefined
+        ) {
           if (Number(effectivePrice) > Number(event.maxResalePrice)) {
             throw new BadRequestException(
-              `Resale price cannot exceed the maximum allowed price of $${Number(event.maxResalePrice).toFixed(2)}`
+              `Resale price cannot exceed the maximum allowed price of $${Number(event.maxResalePrice).toFixed(2)}`,
             );
           }
         }
@@ -147,16 +164,16 @@ export class TransferService {
 
   async getUserTicketTransfers(userId: string): Promise<TicketTransfer[]> {
     return this.transferRepository.find({
-      where: [
-        { fromUser: { id: userId } },
-        { toUser: { id: userId } }
-      ],
+      where: [{ fromUser: { id: userId } }, { toUser: { id: userId } }],
       relations: ['ticket', 'fromUser', 'toUser'],
       order: { transferDate: 'DESC' },
     });
   }
 
-  async validateTransferEligibility(ticketId: string, userId: string): Promise<{
+  async validateTransferEligibility(
+    ticketId: string,
+    userId: string,
+  ): Promise<{
     canTransfer: boolean;
     reason?: string;
     cooldownRemaining?: number;
@@ -171,32 +188,47 @@ export class TransferService {
     }
 
     if (ticket.currentOwner.id !== userId) {
-      return { canTransfer: false, reason: 'You can only transfer tickets you own' };
+      return {
+        canTransfer: false,
+        reason: 'You can only transfer tickets you own',
+      };
     }
 
     if (ticket.status !== TicketStatus.ACTIVE) {
-      return { canTransfer: false, reason: 'Ticket is not in a transferable state' };
+      return {
+        canTransfer: false,
+        reason: 'Ticket is not in a transferable state',
+      };
     }
 
     const event = ticket.event;
     if (!event.allowTransfers) {
-      return { canTransfer: false, reason: 'Transfers are not allowed for this event' };
+      return {
+        canTransfer: false,
+        reason: 'Transfers are not allowed for this event',
+      };
     }
 
     if (ticket.transferCount >= event.maxTransfersPerTicket) {
-      return { canTransfer: false, reason: `Maximum transfers (${event.maxTransfersPerTicket}) reached` };
+      return {
+        canTransfer: false,
+        reason: `Maximum transfers (${event.maxTransfersPerTicket}) reached`,
+      };
     }
 
     if (ticket.lastTransferDate) {
       const cooldownMs = event.transferCooldownHours * 60 * 60 * 1000;
-      const timeSinceLastTransfer = Date.now() - ticket.lastTransferDate.getTime();
-      
+      const timeSinceLastTransfer =
+        Date.now() - ticket.lastTransferDate.getTime();
+
       if (timeSinceLastTransfer < cooldownMs) {
-        const remainingCooldown = Math.ceil((cooldownMs - timeSinceLastTransfer) / (60 * 60 * 1000));
-        return { 
-          canTransfer: false, 
+        const remainingCooldown = Math.ceil(
+          (cooldownMs - timeSinceLastTransfer) / (60 * 60 * 1000),
+        );
+        return {
+          canTransfer: false,
           reason: 'Transfer cooldown active',
-          cooldownRemaining: remainingCooldown
+          cooldownRemaining: remainingCooldown,
         };
       }
     }
@@ -204,4 +236,3 @@ export class TransferService {
     return { canTransfer: true };
   }
 }
-

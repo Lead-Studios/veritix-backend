@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  OneToMany,
+} from 'typeorm';
 import { TestTicket } from './test-ticket.entity';
 import { User } from 'src/user/user.entity';
 
@@ -40,7 +46,7 @@ export class TestEvent {
   @Column({ type: 'int', default: 3 })
   maxTransfersPerTicket: number;
 
-  @ManyToOne(() => User, user => user.id, { eager: true })
+  @ManyToOne(() => User, (user) => user.id, { eager: true })
   organizer: User;
 
   @OneToMany(() => TestTicket, (ticket) => ticket.event)

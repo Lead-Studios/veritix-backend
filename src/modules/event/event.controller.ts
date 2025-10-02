@@ -1,4 +1,13 @@
-import { Controller, Post, Get, Patch, Param, Body, Request, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Patch,
+  Param,
+  Body,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { EventService } from './event.service';
 import { CreateEventDto } from './dto/create-event.dto';
@@ -30,21 +39,35 @@ export class EventController {
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateEventDto: UpdateEventDto, @Request() req: any) {
+  async update(
+    @Param('id') id: string,
+    @Body() updateEventDto: UpdateEventDto,
+    @Request() req: any,
+  ) {
     return this.eventService.update(id, updateEventDto, req.user as User);
   }
 
   @Patch(':id/anti-scalping')
   @ApiOperation({ summary: 'Update anti-scalping settings for an event' })
   @ApiParam({ name: 'id', description: 'Event ID' })
-  @ApiResponse({ status: 200, description: 'Anti-scalping settings updated successfully' })
-  @ApiResponse({ status: 403, description: 'Only event organizers can update settings' })
+  @ApiResponse({
+    status: 200,
+    description: 'Anti-scalping settings updated successfully',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Only event organizers can update settings',
+  })
   @ApiResponse({ status: 404, description: 'Event not found' })
   async updateAntiScalpingSettings(
     @Param('id') id: string,
     @Body() antiScalpingDto: UpdateEventAntiScalpingDto,
     @Request() req: any,
   ) {
-    return this.eventService.updateAntiScalpingSettings(id, antiScalpingDto, req.user as User);
+    return this.eventService.updateAntiScalpingSettings(
+      id,
+      antiScalpingDto,
+      req.user as User,
+    );
   }
 }

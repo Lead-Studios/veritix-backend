@@ -2,9 +2,14 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { TicketController } from './ticket.controller';
 import { TicketCrudService } from './ticket-crud.service';
 import { TicketQrService } from './ticket-qr.service';
-import { CreateTicketDto, CreateTicketStatusInput } from './dto/create-ticket.dto';
-import { UpdateTicketDto, UpdateTicketStatusInput } from './dto/update-ticket.dto';
-
+import {
+  CreateTicketDto,
+  CreateTicketStatusInput,
+} from './dto/create-ticket.dto';
+import {
+  UpdateTicketDto,
+  UpdateTicketStatusInput,
+} from './dto/update-ticket.dto';
 
 describe('TicketController', () => {
   let controller: TicketController;
@@ -72,7 +77,11 @@ describe('TicketController', () => {
   });
 
   it('validates QR and returns ok', async () => {
-    qr.validateCode.mockReturnValue({ valid: true, expired: false, ticketId: 't1' });
+    qr.validateCode.mockReturnValue({
+      valid: true,
+      expired: false,
+      ticketId: 't1',
+    });
     const res = await controller.validateTicketQr({ code: 'c' });
     expect(res).toEqual({ status: 'ok', ticketId: 't1' });
   });

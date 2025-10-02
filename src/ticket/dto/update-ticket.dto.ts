@@ -8,7 +8,11 @@ export enum UpdateTicketStatusInput {
 }
 
 export class UpdateTicketDto {
-  @ApiProperty({ description: 'Update status', enum: UpdateTicketStatusInput, required: false })
+  @ApiProperty({
+    description: 'Update status',
+    enum: UpdateTicketStatusInput,
+    required: false,
+  })
   @IsOptional()
   @IsEnum(UpdateTicketStatusInput)
   status?: UpdateTicketStatusInput;

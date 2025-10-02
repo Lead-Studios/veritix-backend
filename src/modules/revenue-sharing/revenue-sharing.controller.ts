@@ -1,13 +1,22 @@
 import { Controller, Get, Post, Param, Body, Logger } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
-import { RevenueSharingService, RevenueBreakdown } from './revenue-sharing.service';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiBody,
+} from '@nestjs/swagger';
+import {
+  RevenueSharingService,
+  RevenueBreakdown,
+} from './revenue-sharing.service';
 import { RevenueShareRule, RevenueShareType } from './revenue-sharing.entity';
 
 class DefineRevenueSplitDto {
-  splits: { 
-    stakeholderId: string; 
-    shareType: RevenueShareType; 
-    shareValue: number 
+  splits: {
+    stakeholderId: string;
+    shareType: RevenueShareType;
+    shareValue: number;
   }[];
 }
 
@@ -22,7 +31,10 @@ export class RevenueSharingController {
   @ApiOperation({ summary: 'Define revenue split rules for an event' })
   @ApiParam({ name: 'eventId', description: 'Event ID' })
   @ApiBody({ type: DefineRevenueSplitDto })
-  @ApiResponse({ status: 201, description: 'Revenue split rules defined successfully' })
+  @ApiResponse({
+    status: 201,
+    description: 'Revenue split rules defined successfully',
+  })
   async defineRevenueSplit(
     @Param('eventId') eventId: string,
     @Body() dto: DefineRevenueSplitDto,
@@ -32,7 +44,9 @@ export class RevenueSharingController {
   }
 
   @Post('events/:eventId/distribute')
-  @ApiOperation({ summary: 'Distribute revenue automatically after ticket sales' })
+  @ApiOperation({
+    summary: 'Distribute revenue automatically after ticket sales',
+  })
   @ApiParam({ name: 'eventId', description: 'Event ID' })
   @ApiResponse({ status: 200, description: 'Revenue distributed successfully' })
   async distributeRevenue(
@@ -46,7 +60,10 @@ export class RevenueSharingController {
   @Get('events/:eventId/breakdown')
   @ApiOperation({ summary: 'Get revenue breakdown for dashboard' })
   @ApiParam({ name: 'eventId', description: 'Event ID' })
-  @ApiResponse({ status: 200, description: 'Revenue breakdown retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Revenue breakdown retrieved successfully',
+  })
   async getRevenueBreakdown(
     @Param('eventId') eventId: string,
   ): Promise<RevenueBreakdown> {
