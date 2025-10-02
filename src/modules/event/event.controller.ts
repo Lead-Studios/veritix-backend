@@ -3,9 +3,9 @@ import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { EventService } from './event.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
-import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { UpdateEventAntiScalpingDto } from '../../ticket/dto/update-event-anti-scalping.dto';
 import { User } from '../../user/user.entity';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @UseGuards(JwtAuthGuard)
 @Controller('events')

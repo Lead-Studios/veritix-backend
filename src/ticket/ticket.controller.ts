@@ -73,13 +73,13 @@ export class TicketController {
   @ApiResponse({ status: 200, description: 'Validation result' })
   async validateTicketQr(@Body() dto: ValidateQrDto) {
     const result = this.ticketQrService.validateCode(dto.code);
-    if (!result.valid) {
+    if (!(await result).valid) {
       // Explicitly reject expired codes per acceptance criteria
-      throw new BadRequestException(result.reason ?? 'Invalid code');
+      throw new BadRequestException((await result).reason ?? 'Invalid code');
     }
     return {
       status: 'ok',
-      ticketId: result.ticketId,
+      ticketId: (await result).ticketId,
     };
 
   }

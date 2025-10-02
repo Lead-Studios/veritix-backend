@@ -47,7 +47,6 @@ export class Event {
 
   @OneToMany(() => RevenueShareRule, rule => rule.event)
   revenueShareRules: RevenueShareRule[];
-}
 
   @OneToMany(() => Ticket, (ticket) => ticket.event)
   tickets: Ticket[];

@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
-import { User } from '../../user/user.entity';
 import { TestTicket } from './test-ticket.entity';
+import { User } from 'src/user/user.entity';
 
 @Entity()
 export class TestEvent {
