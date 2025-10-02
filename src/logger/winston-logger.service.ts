@@ -20,7 +20,8 @@ export class WinstonLoggerService implements LoggerService {
     this.level = this.config.get<string>('logging.level') ?? 'info';
     this.external = {
       enabled: Boolean(this.config.get<boolean>('logging.external.enabled')),
-      provider: this.config.get<string>('logging.external.provider') ?? 'generic',
+      provider:
+        this.config.get<string>('logging.external.provider') ?? 'generic',
       url: this.config.get<string>('logging.external.url'),
       token: this.config.get<string>('logging.external.token'),
     };
@@ -36,7 +37,11 @@ export class WinstonLoggerService implements LoggerService {
     });
   }
 
-  private async streamExternal(level: string, message: any, meta?: Record<string, any>) {
+  private async streamExternal(
+    level: string,
+    message: any,
+    meta?: Record<string, any>,
+  ) {
     if (!this.external.enabled || !this.external.url) return;
     try {
       const provider = this.external.provider ?? 'generic';
@@ -46,7 +51,14 @@ export class WinstonLoggerService implements LoggerService {
           streams: [
             {
               stream: { level, service: 'veritix-backend' },
-              values: [[tsNs, typeof message === 'string' ? message : JSON.stringify({ message, meta })]],
+              values: [
+                [
+                  tsNs,
+                  typeof message === 'string'
+                    ? message
+                    : JSON.stringify({ message, meta }),
+                ],
+              ],
             },
           ],
         };
@@ -56,13 +68,16 @@ export class WinstonLoggerService implements LoggerService {
         });
       } else if (provider === 'datadog') {
         const payload = {
-          message: typeof message === 'string' ? message : JSON.stringify(message),
+          message:
+            typeof message === 'string' ? message : JSON.stringify(message),
           status: level,
           service: 'veritix-backend',
           ...meta,
         };
         await axios.post(String(this.external.url), payload, {
-          headers: this.external.token ? { 'DD-API-KEY': String(this.external.token) } : undefined,
+          headers: this.external.token
+            ? { 'DD-API-KEY': String(this.external.token) }
+            : undefined,
           timeout: 2000,
         });
       } else {
@@ -75,42 +90,65 @@ export class WinstonLoggerService implements LoggerService {
           provider,
         };
         await axios.post(String(this.external.url), payload, {
-          headers: this.external.token ? { Authorization: `Bearer ${this.external.token}` } : undefined,
+          headers: this.external.token
+            ? { Authorization: `Bearer ${this.external.token}` }
+            : undefined,
           timeout: 2000,
         });
       }
     } catch (err) {
       // Avoid recursive logging on external failures; use console logger directly
-      this.logger.warn('Failed to stream external log', { error: (err as Error)?.message });
+      this.logger.warn('Failed to stream external log', {
+        error: (err as Error)?.message,
+      });
     }
   }
 
   log(message: any, contextOrMeta?: string | Record<string, any>) {
-    const meta = typeof contextOrMeta === 'string' ? { context: contextOrMeta } : contextOrMeta;
+    const meta =
+      typeof contextOrMeta === 'string'
+        ? { context: contextOrMeta }
+        : contextOrMeta;
     this.logger.info(message, meta);
     void this.streamExternal('info', message, meta);
   }
 
-  error(message: any, traceOrMeta?: string | Record<string, any>, context?: string) {
-    const meta = typeof traceOrMeta === 'object' && traceOrMeta !== null ? traceOrMeta : { context, trace: traceOrMeta };
+  error(
+    message: any,
+    traceOrMeta?: string | Record<string, any>,
+    context?: string,
+  ) {
+    const meta =
+      typeof traceOrMeta === 'object' && traceOrMeta !== null
+        ? traceOrMeta
+        : { context, trace: traceOrMeta };
     this.logger.error(message, meta);
     void this.streamExternal('error', message, meta);
   }
 
   warn(message: any, contextOrMeta?: string | Record<string, any>) {
-    const meta = typeof contextOrMeta === 'string' ? { context: contextOrMeta } : contextOrMeta;
+    const meta =
+      typeof contextOrMeta === 'string'
+        ? { context: contextOrMeta }
+        : contextOrMeta;
     this.logger.warn(message, meta);
     void this.streamExternal('warn', message, meta);
   }
 
   debug(message: any, contextOrMeta?: string | Record<string, any>) {
-    const meta = typeof contextOrMeta === 'string' ? { context: contextOrMeta } : contextOrMeta;
+    const meta =
+      typeof contextOrMeta === 'string'
+        ? { context: contextOrMeta }
+        : contextOrMeta;
     this.logger.debug(message, meta);
     void this.streamExternal('debug', message, meta);
   }
 
   verbose(message: any, contextOrMeta?: string | Record<string, any>) {
-    const meta = typeof contextOrMeta === 'string' ? { context: contextOrMeta } : contextOrMeta;
+    const meta =
+      typeof contextOrMeta === 'string'
+        ? { context: contextOrMeta }
+        : contextOrMeta;
     this.logger.verbose(message, meta);
     void this.streamExternal('verbose', message, meta);
   }

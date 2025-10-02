@@ -1,4 +1,11 @@
-import { IsString, IsNumber, IsOptional, IsEnum, Min, IsUUID } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsOptional,
+  IsEnum,
+  Min,
+  IsUUID,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { TransferType } from '../ticket-transfer.entity';
 
@@ -11,7 +18,10 @@ export class TransferTicketDto {
   @IsUUID()
   toUserId: string;
 
-  @ApiProperty({ description: 'Price for the transfer (for resale)', required: false })
+  @ApiProperty({
+    description: 'Price for the transfer (for resale)',
+    required: false,
+  })
   @IsOptional()
   @IsNumber()
   @Min(0)
@@ -26,4 +36,3 @@ export class TransferTicketDto {
   @IsString()
   reason?: string;
 }
-

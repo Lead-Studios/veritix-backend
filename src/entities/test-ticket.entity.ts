@@ -6,8 +6,8 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { User } from '../../user/user.entity';
 import { TestEvent } from './test-event.entity';
+import { User } from 'src/user/user.entity';
 
 export enum TicketStatus {
   ACTIVE = 'active',
@@ -54,7 +54,6 @@ export class TestTicket {
 
   @ManyToOne(() => TestEvent, { eager: true })
   event: TestEvent;
-
 
   @CreateDateColumn()
   createdAt: Date;

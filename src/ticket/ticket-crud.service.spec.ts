@@ -5,10 +5,15 @@ import { TicketCrudService } from './ticket-crud.service';
 import { Ticket, TicketStatus } from './ticket.entity';
 import { Event } from '../modules/event/event.entity';
 import { User } from '../user/user.entity';
-import { CreateTicketDto, CreateTicketStatusInput } from './dto/create-ticket.dto';
-import { UpdateTicketDto, UpdateTicketStatusInput } from './dto/update-ticket.dto';
+import {
+  CreateTicketDto,
+  CreateTicketStatusInput,
+} from './dto/create-ticket.dto';
+import {
+  UpdateTicketDto,
+  UpdateTicketStatusInput,
+} from './dto/update-ticket.dto';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-
 
 describe('TicketCrudService', () => {
   let service: TicketCrudService;
@@ -75,8 +80,12 @@ describe('TicketCrudService', () => {
 
       const result = await service.create(dto);
 
-      expect(eventRepo.findOne).toHaveBeenCalledWith({ where: { id: 'event-1' } });
-      expect(userRepo.findOne).toHaveBeenCalledWith({ where: { id: 'user-1' } });
+      expect(eventRepo.findOne).toHaveBeenCalledWith({
+        where: { id: 'event-1' },
+      });
+      expect(userRepo.findOne).toHaveBeenCalledWith({
+        where: { id: 'user-1' },
+      });
       expect(ticketRepo.create).toHaveBeenCalled();
       expect(ticketRepo.save).toHaveBeenCalledWith(created);
       expect(result.status).toBe(TicketStatus.ACTIVE);
@@ -88,7 +97,10 @@ describe('TicketCrudService', () => {
     });
 
     it('throws when owner does not exist', async () => {
-      (eventRepo.findOne as jest.Mock).mockResolvedValue({ id: 'event-1', ticketPrice: 10 } as Event);
+      (eventRepo.findOne as jest.Mock).mockResolvedValue({
+        id: 'event-1',
+        ticketPrice: 10,
+      } as Event);
       (userRepo.findOne as jest.Mock).mockResolvedValue(null);
       await expect(service.create(dto)).rejects.toThrow(BadRequestException);
     });
@@ -96,7 +108,9 @@ describe('TicketCrudService', () => {
 
   describe('findOne', () => {
     it('returns the ticket when found', async () => {
-      (ticketRepo.findOne as jest.Mock).mockResolvedValue({ id: 't1' } as Ticket);
+      (ticketRepo.findOne as jest.Mock).mockResolvedValue({
+        id: 't1',
+      } as Ticket);
       const res = await service.findOne('t1');
       expect(ticketRepo.findOne).toHaveBeenCalledWith({
         where: { id: 't1' },
@@ -128,15 +142,21 @@ describe('TicketCrudService', () => {
       jest.spyOn(service, 'findOne').mockResolvedValue(existing);
 
       const dto: UpdateTicketDto = { status: UpdateTicketStatusInput.VALID };
-      await expect(service.update('t1', dto)).rejects.toThrow(BadRequestException);
+      await expect(service.update('t1', dto)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('prevents setting TRANSFERRED via PATCH', async () => {
       const existing: Ticket = { id: 't1', status: TicketStatus.ACTIVE } as any;
       jest.spyOn(service, 'findOne').mockResolvedValue(existing);
 
-      const dto: UpdateTicketDto = { status: UpdateTicketStatusInput.TRANSFERRED };
-      await expect(service.update('t1', dto)).rejects.toThrow(BadRequestException);
+      const dto: UpdateTicketDto = {
+        status: UpdateTicketStatusInput.TRANSFERRED,
+      };
+      await expect(service.update('t1', dto)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 });

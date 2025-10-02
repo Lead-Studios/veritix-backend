@@ -25,14 +25,20 @@ export class TransferController {
   @Get('ticket/:ticketId/history')
   @ApiOperation({ summary: 'Get transfer history for a specific ticket' })
   @ApiParam({ name: 'ticketId', description: 'Ticket ID' })
-  @ApiResponse({ status: 200, description: 'Transfer history retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Transfer history retrieved successfully',
+  })
   async getTicketTransferHistory(@Param('ticketId') ticketId: string) {
     return this.transferService.getTicketTransferHistory(ticketId);
   }
 
   @Get('user/my-transfers')
   @ApiOperation({ summary: 'Get all transfers for the current user' })
-  @ApiResponse({ status: 200, description: 'User transfers retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'User transfers retrieved successfully',
+  })
   async getUserTicketTransfers(@Request() req: any) {
     const userId = req.user?.id || req.user?.sub; // Adjust based on your auth setup
     return this.transferService.getUserTicketTransfers(userId);
@@ -41,7 +47,10 @@ export class TransferController {
   @Get('ticket/:ticketId/eligibility')
   @ApiOperation({ summary: 'Check if a ticket is eligible for transfer' })
   @ApiParam({ name: 'ticketId', description: 'Ticket ID' })
-  @ApiResponse({ status: 200, description: 'Transfer eligibility checked successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Transfer eligibility checked successfully',
+  })
   async checkTransferEligibility(
     @Param('ticketId') ticketId: string,
     @Request() req: any,

@@ -90,7 +90,10 @@ describe('RevenueSharingService', () => {
 
       mockRevenueShareRuleRepository.find.mockResolvedValue(mockRules);
 
-      const result = await service.calculateRevenueDistribution(eventId, totalRevenue);
+      const result = await service.calculateRevenueDistribution(
+        eventId,
+        totalRevenue,
+      );
 
       expect(result.totalRevenue).toBe(totalRevenue);
       expect(result.distributions).toHaveLength(2);

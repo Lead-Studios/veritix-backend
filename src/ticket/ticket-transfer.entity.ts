@@ -19,7 +19,9 @@ export class TicketTransfer {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Ticket, (ticket) => ticket.transfers, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Ticket, (ticket) => ticket.transfers, {
+    onDelete: 'CASCADE',
+  })
   ticket: Ticket;
 
   @ManyToOne(() => User, { eager: true })
@@ -44,4 +46,3 @@ export class TicketTransfer {
   @CreateDateColumn()
   transferDate: Date;
 }
-

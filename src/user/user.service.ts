@@ -36,7 +36,9 @@ export class UserService {
     });
     const savedUser = await this.userRepo.save(user);
     // For AuthService compatibility, return user with password field
-    return { ...savedUser, password: savedUser.passwordHash } as User & { password: string };
+    return { ...savedUser, password: savedUser.passwordHash } as User & {
+      password: string;
+    };
   }
 
   async update(id: string, dto: UpdateUserDto): Promise<User> {

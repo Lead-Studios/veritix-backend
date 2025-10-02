@@ -11,9 +11,7 @@ import { User } from '../user/user.entity';
 import { TicketCrudService } from './ticket-crud.service';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Ticket, TicketTransfer, Event, User]),
-  ],
+  imports: [TypeOrmModule.forFeature([Ticket, TicketTransfer, Event, User])],
   providers: [TicketQrService, TransferService, TicketCrudService],
   controllers: [TicketController, TransferController],
   exports: [TicketQrService, TransferService, TicketCrudService],

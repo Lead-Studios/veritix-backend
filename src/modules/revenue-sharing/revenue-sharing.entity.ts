@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { Event } from '../event/event.entity';
 import { User } from '../../user/user.entity';
 
@@ -12,10 +19,10 @@ export class RevenueShareRule {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Event, event => event.id, { eager: true })
+  @ManyToOne(() => Event, (event) => event.id, { eager: true })
   event: Event;
 
-  @ManyToOne(() => User, user => user.id, { eager: true })
+  @ManyToOne(() => User, (user) => user.id, { eager: true })
   stakeholder: User;
 
   @Column({
