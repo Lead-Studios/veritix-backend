@@ -1,50 +1,71 @@
-import { plainToClass } from "class-transformer";
-import { IsString, IsNumber, validateSync } from "class-validator";
-import { Transform } from "class-transformer";
+import { plainToInstance, Transform } from 'class-transformer';
+import {
+  IsString,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  validateSync,
+} from 'class-validator';
 
-class EnvironmentVariables {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  @IsString()
-  DB_HOST: string;
-
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  @Transform(({ value }) => Number(value))
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+export class EnvironmentVariables {
   @IsNumber()
-  DB_PORT: number;
+  @IsOptional()
+  @Transform(({ value }) => parseInt(String(value), 10))
+  PORT?: number;
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   @IsString()
-  DB_USERNAME: string;
+  @IsNotEmpty()
+  DB_URL: string;
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   @IsString()
-  DB_PASSWORD: string;
-
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  @IsString()
+  @IsNotEmpty()
   JWT_SECRET: string;
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   @IsString()
-  JWT_EXPIRATION: string;
+  @IsNotEmpty()
+  STELLAR_KEYS: string;
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  @IsNumber()
+  @IsOptional()
+  @Transform(({ value }) => parseInt(String(value), 10))
+  QR_EXPIRY_SECONDS?: number;
+
   @IsString()
-  CONTRACT_ADDRESS: string;
+  @IsOptional()
+  QR_SECRET?: string;
+
+  // Logging configuration
+  @IsString()
+  @IsOptional()
+  LOG_LEVEL?: string;
+
+  @IsString()
+  @IsOptional()
+  LOG_EXTERNAL_PROVIDER?: string;
+
+  @IsString()
+  @IsOptional()
+  LOG_EXTERNAL_URL?: string;
+
+  @IsString()
+  @IsOptional()
+  LOG_EXTERNAL_TOKEN?: string;
+
+  @IsString()
+  @IsOptional()
+  LOG_EXTERNAL_ENABLED?: string;
 }
 
 export function validate(config: Record<string, unknown>) {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-  const validatedConfig = plainToClass(EnvironmentVariables, config);
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-  const errors = validateSync(validatedConfig);
+  const validatedConfig = plainToInstance(EnvironmentVariables, config, {
+    enableImplicitConversion: true,
+  });
+  const errors = validateSync(validatedConfig, {
+    skipMissingProperties: false,
+  });
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   if (errors.length > 0) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    throw new Error(`Environment validation failed: ${errors.toString()}`);
+    throw new Error(errors.toString());
   }
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return validatedConfig;
 }
