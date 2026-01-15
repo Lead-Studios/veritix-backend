@@ -23,12 +23,10 @@ Key responsibilities include:
 - Reporting & analytics  
 - Integration with other Veritix clients (Web, Mobile)  
 
----
 
 
 ## Repository Contents
-
-```
+---
 
 veritix-backend/
 ├── src/
@@ -47,9 +45,8 @@ veritix-backend/
 ├── tsconfig.json
 └── README.md
 
-````
-
 ---
+
 
 ## Getting Started
 
