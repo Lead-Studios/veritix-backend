@@ -1,26 +1,88 @@
-import { Controller } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  Query,
+  ParseUUIDPipe,
+} from '@nestjs/common';
+import { EventsService } from './events.service';
+import { CreateEventDto } from './dto/create-event.dto';
+import { UpdateEventDto } from './dto/update-event.dto';
+import { EventStatus } from '../enums/event-status.enum';
+import { User } from '../user/user.entity';
 
-/**
- * Events Controller for VeriTix
- *
- * This controller handles event-related HTTP endpoints.
- * Currently a placeholder as per architectural requirements
- * (no business logic in controllers).
- *
- * Future endpoints to be implemented:
- * - POST /events - Create new event (organizer)
- * - GET /events - List events (public with filters)
- * - GET /events/:id - Get event by ID
- * - PATCH /events/:id - Update event (owner only)
- * - DELETE /events/:id - Delete event (owner only)
- * - POST /events/:id/publish - Publish event (owner only)
- * - POST /events/:id/cancel - Cancel event (owner only)
- *
- * Note: Endpoint implementations will be added when the
- * event management features are implemented.
- */
 @Controller('events')
 export class EventsController {
-  // Endpoint implementations will be added in future issues
-  // No business logic in controllers - per architectural requirements
+  constructor(private readonly eventsService: EventsService) {}
+
+  // -------------------------------
+  // GET ALL EVENTS
+  // -------------------------------
+  @Get()
+  async getAll(
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ) {
+    // For simplicity, we just return all events; you can add filters
+    return this.eventsService.findAll();
+  }
+
+  // -------------------------------
+  // GET EVENT BY ID
+  // -------------------------------
+  @Get(':id')
+  async getById(@Param('id', ParseUUIDPipe) id: string) {
+    return this.eventsService.getEventById(id);
+  }
+
+  // -------------------------------
+  // CREATE EVENT
+  // -------------------------------
+  @Post()
+  async create(
+    @Body() dto: CreateEventDto,
+    @Body('user') user: User, // In real app, use @Req() + auth guard
+  ) {
+    return this.eventsService.createEvent(dto, user);
+  }
+
+  // -------------------------------
+  // UPDATE EVENT
+  // -------------------------------
+  @Patch(':id')
+  async update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateEventDto,
+    @Body('user') user: User, // replace with real user from AuthGuard
+  ) {
+    return this.eventsService.updateEvent(id, dto, user);
+  }
+
+  // -------------------------------
+  // CHANGE STATUS
+  // -------------------------------
+  @Patch(':id/status')
+  async changeStatus(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body('status') status: EventStatus,
+    @Body('user') user: User,
+  ) {
+    return this.eventsService.changeStatus(id, status, user);
+  }
+
+  // -------------------------------
+  // DELETE EVENT
+  // -------------------------------
+  @Delete(':id')
+  async delete(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body('user') user: User,
+  ) {
+    const success = await this.eventsService.deleteEvent(id, user);
+    return { success };
+  }
 }
