@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { UserModule } from './user/user.module';
 
 // Core domain modules
 import { AuthModule } from './auth/auth.module';
@@ -32,6 +33,9 @@ import { ContactModule } from './contact/contact.module';
  * - Explicit cross-module communication via exports
  */
 @Module({
+
+  imports: [UserModule],
+=======
   imports: [
     // Authentication foundation - provides guards, decorators, and auth service
     AuthModule,
@@ -51,6 +55,7 @@ import { ContactModule } from './contact/contact.module';
     // Contact handling - user inquiries and support
     ContactModule,
   ],
+
   controllers: [AppController],
   providers: [AppService],
 })
