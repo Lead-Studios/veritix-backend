@@ -12,6 +12,7 @@ import * as fuzzball from "fuzzball";
 import { CategoryService } from "src/category/category.service";
 import { UpdateEventDto } from "./dto/update-event.dto";
 import { EventStatus } from "src/common/enums/event-status.enum";
+import { applyEventStatusChange } from "./lifecycle/event.lifecycle";
 
 @Injectable()
 export class EventsService {
@@ -268,4 +269,17 @@ export class EventsService {
 
     return this.eventRepository.save(event);
   }
+
+  async changeStatus(
+  id: string,
+  nextStatus: EventStatus,
+  metadata?: any,
+): Promise<Event> {
+  const event = await this.getEventById(id);
+
+  applyEventStatusChange(event, nextStatus, metadata);
+
+  return this.eventRepository.save(event);
+}
+
 }

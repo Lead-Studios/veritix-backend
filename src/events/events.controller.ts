@@ -31,6 +31,7 @@ import { Roles } from "security/decorators/roles.decorator";
 import { UserRole } from "src/common/enums/users-roles.enum";
 import { Event } from "./entities/event.entity";
 import { EventStatus } from "../common/enums/event-status.enum";
+import { ChangeEventStatusDto } from "./dto/change-event-status.dto";
 
 @ApiTags("Events")
 @ApiBearerAuth()
@@ -378,4 +379,13 @@ export class EventsController {
   ) {
     return this.eventsService.postpone(id, postponementDetails);
   }
+
+  @Patch(':id/status')
+changeStatus(
+  @Param('id') id: string,
+  @Body() dto: ChangeEventStatusDto,
+) {
+  return this.eventsService.changeStatus(id, dto.status, dto);
+}
+
 }
