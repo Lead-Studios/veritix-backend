@@ -1,61 +1,41 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { UserModule } from './user/user.module';
-
-// Core domain modules
 import { AuthModule } from './auth/auth.module';
-import { UsersModule } from './users/users.module';
-import { EventsModule } from './events/events.module';
-import { TicketsModule } from './tickets/tickets.module';
-import { VerificationModule } from './verification/verification.module';
-import { ContactModule } from './contact/contact.module';
+import databaseConfig from './config/database-config';
+import appConfig from './config/app.config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
-/**
- * Root Application Module for VeriTix Backend
- *
- * This module serves as the entry point for the VeriTix ticketing system.
- * It imports and registers all core domain modules.
- *
- * Modules:
- * - AuthModule: Authentication and authorization foundation
- * - UsersModule: User identity and profile management
- * - EventsModule: Event lifecycle management
- * - TicketsModule: Ticket and ticket type management
- * - VerificationModule: Ticket verification at events
- * - ContactModule: Contact inquiry handling
- *
- * Architecture:
- * - Each module follows NestJS best practices
- * - Services contain domain logic
- * - Controllers are structural placeholders (no business logic)
- * - Guards and decorators provide reusable auth concerns
- * - Explicit cross-module communication via exports
- */
 @Module({
-
-  imports: [UserModule],
-
   imports: [
-    // Authentication foundation - provides guards, decorators, and auth service
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [appConfig, databaseConfig],
+    }),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        type: configService.get<'postgres'>('database.type'),
+        url: configService.get<string>('database.url'),
+        host: configService.get<string>('database.host'),
+        port: configService.get<number>('database.port'),
+        username: configService.get<string>('database.username'),
+        password: configService.get<string>('database.password'),
+        database: configService.get<string>('database.database'),
+        synchronize: configService.get<boolean>('database.synchronize'),
+        autoLoadEntities: true,
+        ssl: true,
+        extra: {
+          ssl: {
+            rejectUnauthorized: false,
+          },
+        },
+      }),
+    }),
     AuthModule,
-
-    // User identity management - provides user service for ownership verification
-    UsersModule,
-
-    // Event management - event CRUD and lifecycle
-    EventsModule,
-
-    // Ticket management - tickets and ticket types
-    TicketsModule,
-
-    // Ticket verification - check-in and verification operations
-    VerificationModule,
-
-    // Contact handling - user inquiries and support
-    ContactModule,
   ],
-
   controllers: [AppController],
   providers: [AppService],
 })

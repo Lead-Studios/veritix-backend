@@ -1,50 +1,31 @@
 import { Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
-import { AuthenticatedGuard } from './guards/authenticated.guard';
-import { RolesGuard } from './guards/roles.guard';
-import { OwnershipGuard } from './guards/ownership.guard';
+import { UserHelper } from './helper/user-helper';
+import { JwtHelper } from './helper/jwt-helper';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { User } from './entities/user.entity';
+import { JwtModule } from '@nestjs/jwt';
+import { RolesGuard } from './guard/roles.guard';
+import { PassportModule } from '@nestjs/passport';
+import { JwtStrategy } from './strategy/jwt.strategy';
+import { EmailService } from './helper/email-sender';
 
-/**
- * Authentication Module for VeriTix
- *
- * This module provides the authentication and authorization foundation for
- * the VeriTix ticketing system. It includes:
- *
- * - **Guards**: AuthenticatedGuard, RolesGuard, OwnershipGuard
- * - **Decorators**: @Authenticated(), @Roles(), @Ownership(), @Public(), @CurrentUser()
- * - **Service**: AuthService for authentication logic
- * - **Types**: AuthenticatedUser, AuthenticationStrategy interfaces
- *
- * The module is designed for extensibility, allowing future integration of:
- * - JWT-based authentication
- * - Wallet/blockchain-based authentication (Stellar/Soroban)
- * - OAuth providers
- *
- * Usage:
- * ```typescript
- * // In app.module.ts
- * @Module({
- *   imports: [AuthModule],
- * })
- * export class AppModule {}
- *
- * // In a controller
- * @Controller('events')
- * export class EventsController {
- *   @Authenticated()
- *   @Get()
- *   getEvents(@CurrentUser() user: AuthenticatedUser) { ... }
- *
- *   @RequireOwnership({ resourceType: 'event', ownerField: 'organizerId' })
- *   @Patch(':id')
- *   updateEvent() { ... }
- * }
- * ```
- */
 @Module({
+  imports: [
+    TypeOrmModule.forFeature([User]),
+    JwtModule.register({}),
+    PassportModule,
+  ],
   controllers: [AuthController],
-  providers: [AuthService, AuthenticatedGuard, RolesGuard, OwnershipGuard],
-  exports: [AuthService, AuthenticatedGuard, RolesGuard, OwnershipGuard],
+  providers: [
+    AuthService,
+    UserHelper,
+    JwtHelper,
+    JwtStrategy,
+    RolesGuard,
+    EmailService,
+  ],
+  exports: [AuthService, RolesGuard],
 })
 export class AuthModule {}

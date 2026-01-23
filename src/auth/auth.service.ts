@@ -1,110 +1,361 @@
-import { Injectable } from '@nestjs/common';
 import {
-  AuthenticatedUser,
-  AuthenticationStrategy,
-  TokenPayload,
-} from './types/auth.types';
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { CreateUserDto } from './dto/create-user.dto';
+import { LoginUserDto } from './dto/login-user.dto';
+import { User } from './entities/user.entity';
+import { Repository } from 'typeorm';
+import { UserHelper } from './helper/user-helper';
+import { InjectRepository } from '@nestjs/typeorm';
+import { UserMessages } from './helper/user-messages';
+import { UserRole } from './common/enum/user-role-enum';
+import { JwtHelper } from './helper/jwt-helper';
+import moment from 'moment';
+import { VerifyOtpDto } from './dto/verify-otp.dto';
+import { SendPasswordResetOtpDto } from './dto/send-password-reset-otp.dto';
+import { ResendOtpDto } from './dto/resend-otp.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
-/**
- * Authentication Service for VeriTix
- *
- * This service provides the core authentication logic and acts as the primary
- * interface for authentication operations. It is designed to be extensible
- * for different authentication strategies (JWT, wallet-based, OAuth, etc.).
- *
- * Note: This is a foundational structure. Actual authentication logic
- * (token generation, password validation, etc.) will be implemented
- * when specific authentication providers are integrated.
- */
 @Injectable()
 export class AuthService {
-  private strategies: Map<string, AuthenticationStrategy> = new Map();
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    private readonly userHelper: UserHelper,
+    private readonly jwtHelper: JwtHelper,
+  ) {}
 
-  /**
-   * Registers an authentication strategy.
-   * @param name - The name/identifier for the strategy
-   * @param strategy - The strategy implementation
-   */
-  registerStrategy(name: string, strategy: AuthenticationStrategy): void {
-    this.strategies.set(name, strategy);
-  }
+  async createUser(createUserDto: CreateUserDto) {
+    const existingUser = await this.userRepository.findOne({
+      where: { email: createUserDto.email },
+    });
 
-  /**
-   * Validates credentials using the specified strategy.
-   * @param strategyName - The name of the strategy to use
-   * @param credentials - The credentials to validate
-   * @returns Promise resolving to the authenticated user or null
-   */
-  async validateWithStrategy(
-    strategyName: string,
-    credentials: unknown,
-  ): Promise<AuthenticatedUser | null> {
-    const strategy = this.strategies.get(strategyName);
-
-    if (!strategy) {
-      return null;
+    if (existingUser) {
+      throw new ConflictException(UserMessages.EMAIL_ALREADY_EXIST);
     }
 
-    return strategy.validate(credentials);
-  }
+    const validPassword = this.userHelper.isValidPassword(
+      createUserDto.password,
+    );
+    if (!validPassword) {
+      throw new ConflictException(UserMessages.IS_VALID_PASSWORD);
+    }
+    const hashedPassword = await this.userHelper.hashPassword(
+      createUserDto.password,
+    );
+    const verificationCode = this.userHelper.generateVerificationCode();
+    const expiration = moment().add(10, 'minutes').toDate();
+    const newUser = this.userRepository.create({
+      email: createUserDto.email,
+      fullName: createUserDto.fullName,
+      password: hashedPassword,
+      role: UserRole.SUBSCRIBER,
+      verificationCode: verificationCode,
+      verificationCodeExpiresAt: expiration,
+      isVerified: false,
+    });
+    await this.userRepository.save(newUser);
+    // await this.emailService.sendVerificationEmail(
+    //   createUserDto.email,
+    //   verificationCode,
+    //   createUserDto.fullName,
+    // );
 
-  /**
-   * Validates a user's credentials.
-   * Placeholder for future implementation.
-   *
-   * @param _credentials - The user credentials to validate
-   * @returns Promise resolving to the authenticated user or null
-   */
-  validateUser(_credentials: unknown): Promise<AuthenticatedUser | null> {
-    // TODO: Implement when authentication providers are integrated
-    // This will typically validate password/token and return user
-    return Promise.resolve(null);
-  }
-
-  /**
-   * Extracts user information from a token payload.
-   * Placeholder for JWT integration.
-   *
-   * @param payload - The token payload
-   * @returns The authenticated user extracted from the payload
-   */
-  extractUserFromPayload(payload: TokenPayload): AuthenticatedUser {
     return {
-      id: payload.sub,
-      email: payload.email,
-      roles: payload.roles || [],
+      message: UserMessages.USER_CREATED_SUCCESSFULLY,
     };
   }
 
-  /**
-   * Checks if a user has a specific role.
-   * @param user - The authenticated user
-   * @param role - The role to check
-   * @returns Boolean indicating if the user has the role
-   */
-  hasRole(user: AuthenticatedUser, role: string): boolean {
-    return user.roles?.includes(role) ?? false;
+  async createAdminUser(createUserDto: CreateUserDto) {
+    const existingUser = await this.userRepository.findOne({
+      where: { email: createUserDto.email },
+    });
+
+    if (existingUser) {
+      throw new ConflictException(UserMessages.EMAIL_ALREADY_EXIST);
+    }
+
+    const validPassword = this.userHelper.isValidPassword(
+      createUserDto.password,
+    );
+    if (!validPassword) {
+      throw new ConflictException(UserMessages.IS_VALID_PASSWORD);
+    }
+    const hashedPassword = await this.userHelper.hashPassword(
+      createUserDto.password,
+    );
+    const newUser = this.userRepository.create({
+      email: createUserDto.email,
+      fullName: createUserDto.fullName,
+      password: hashedPassword,
+      role: UserRole.ADMIN,
+    });
+    await this.userRepository.save(newUser);
+    return {
+      message: UserMessages.USER_CREATED_SUCCESSFULLY,
+    };
   }
 
-  /**
-   * Checks if a user has any of the specified roles.
-   * @param user - The authenticated user
-   * @param roles - The roles to check
-   * @returns Boolean indicating if the user has any of the roles
-   */
-  hasAnyRole(user: AuthenticatedUser, roles: string[]): boolean {
-    if (!user.roles) return false;
-    return roles.some((role) => user.roles!.includes(role));
+  async verifyOtp(verifyOtpDto: VerifyOtpDto) {
+    const { email, otp } = verifyOtpDto;
+
+    if (!email) {
+      throw new BadRequestException(UserMessages.EMAIL_REQUIRED);
+    }
+
+    if (!otp) {
+      throw new BadRequestException(UserMessages.OTP_REQUIRED);
+    }
+
+    const user = await this.userRepository.findOne({ where: { email } });
+
+    if (!user) {
+      throw new UnauthorizedException(UserMessages.USER_NOT_FOUND);
+    }
+
+    if (user.verificationCode !== otp) {
+      throw new UnauthorizedException(UserMessages.INVALID_OTP);
+    }
+
+    if (
+      !user.verificationCodeExpiresAt ||
+      user.verificationCodeExpiresAt < new Date()
+    ) {
+      throw new UnauthorizedException(UserMessages.OTP_EXPIRED);
+    }
+
+    user.isVerified = true;
+    user.verificationCode = '';
+    user.verificationCodeExpiresAt = undefined;
+
+    await this.userRepository.save(user);
+
+    const tokens = this.jwtHelper.generateTokens(user);
+
+    return {
+      message: UserMessages.VERIFY_OTP_SUCCESS,
+      user: this.userHelper.formatUserResponse(user),
+      tokens: tokens,
+    };
   }
 
-  /**
-   * Checks if a user has all of the specified roles.
-   * @param user - The authenticated user
-   * @param roles - The roles to check
-   * @returns Boolean indicating if the user has all of the roles
-   */
-  hasAllRoles(user: AuthenticatedUser, roles: string[]): boolean {
-    if (!user.roles) return false;
-    return roles.every((role) => user.roles!.includes(role));
+  async resendVerificationOtp(email: string) {
+    try {
+      if (!email) {
+        throw new BadRequestException(UserMessages.EMAIL_REQUIRED);
+      }
+
+      const user = await this.userRepository.findOne({ where: { email } });
+      if (!user) {
+        throw new NotFoundException(UserMessages.USER_NOT_FOUND);
+      }
+
+      const verificationCode = this.userHelper.generateVerificationCode();
+
+      user.verificationCode = verificationCode;
+      user.verificationCodeExpiresAt = moment().add(10, 'minutes').toDate();
+      await this.userRepository.save(user);
+
+      // await this.emailService.sendVerificationEmail(
+      //   user.email,
+      //   verificationCode,
+      //   user.fullName,
+      // );
+
+      return { message: UserMessages.OTP_SENT };
+    } catch (error) {
+      throw new InternalServerErrorException(
+        error || 'Error resending verification code',
+      );
+    }
+  }
+
+  async login(loginUserDto: LoginUserDto) {
+    const user = await this.userRepository.findOne({
+      where: { email: loginUserDto.email },
+    });
+    if (
+      !user ||
+      !(await this.userHelper.verifyPassword(
+        loginUserDto.password,
+        user.password,
+      ))
+    ) {
+      throw new UnauthorizedException(UserMessages.INVALID_CREDENTIALS);
+    }
+
+    if (!user.isVerified) {
+      await this.resendVerificationOtp(loginUserDto.email);
+      return {
+        message: UserMessages.EMAIL_NOT_VERIFIED,
+        user: this.userHelper.formatUserResponse(user),
+      };
+    }
+    const tokens = this.jwtHelper.generateTokens(user);
+    return {
+      user: this.userHelper.formatUserResponse(user),
+      tokens: tokens,
+    };
+  }
+  async refreshToken(refreshToken: string) {
+    const validatedRefreshToken =
+      this.jwtHelper.validateRefreshToken(refreshToken);
+    const userId = Number(validatedRefreshToken);
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+    if (!user) {
+      throw new UnauthorizedException(UserMessages.INVALID_REFRESH_TOKEN);
+    }
+    const accessToken = this.jwtHelper.generateAccessToken(user);
+    return { accessToken };
+  }
+  async retrieveUserById(userId: number) {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+    if (!user) {
+      throw new UnauthorizedException('User not found.');
+    }
+    const result = this.userHelper.formatUserResponse(user);
+    return result;
+  }
+
+  async requestResetPasswordOtp(
+    sendPasswordResetOtpDto: SendPasswordResetOtpDto,
+  ) {
+    if (!sendPasswordResetOtpDto.email) {
+      throw new BadRequestException(UserMessages.EMAIL_REQUIRED);
+    }
+
+    const user = await this.userRepository.findOne({
+      where: { email: sendPasswordResetOtpDto.email },
+    });
+
+    if (!user) {
+      throw new NotFoundException(UserMessages.USER_NOT_FOUND);
+    }
+
+    const otp = this.userHelper.generateVerificationCode();
+
+    user.passwordResetCode = otp;
+    user.passwordResetCodeExpiresAt = moment().add(10, 'minutes').toDate();
+    await this.userRepository.save(user);
+
+    // await this.emailService.sendPasswordResetEmail(
+    //   user.email,
+    //   otp,
+    //   user.fullName,
+    // );
+
+    return { message: UserMessages.OTP_SENT };
+  }
+
+  async resendResetPasswordVerificationOtp(resendOtpDto: ResendOtpDto) {
+    try {
+      if (!resendOtpDto.email) {
+        throw new BadRequestException(UserMessages.EMAIL_REQUIRED);
+      }
+
+      const user = await this.userRepository.findOne({
+        where: { email: resendOtpDto.email },
+      });
+      if (!user) {
+        throw new NotFoundException(UserMessages.USER_NOT_FOUND);
+      }
+
+      const otp = this.userHelper.generateVerificationCode();
+
+      user.passwordResetCode = otp;
+      user.passwordResetCodeExpiresAt = moment().add(10, 'minutes').toDate();
+      await this.userRepository.save(user);
+
+      // await this.emailService.sendPasswordResetEmail(
+      //   user.email,
+      //   otp,
+      //   user.fullName,
+      // );
+
+      return { message: UserMessages.OTP_SENT };
+    } catch (error) {
+      throw new InternalServerErrorException(
+        error || 'Error resending verification code',
+      );
+    }
+  }
+
+  async verifyResetPasswordOtp(verifyOtpDto: VerifyOtpDto) {
+    if (!verifyOtpDto.email) {
+      throw new BadRequestException(UserMessages.EMAIL_REQUIRED);
+    }
+
+    if (!verifyOtpDto.otp) {
+      throw new BadRequestException(UserMessages.OTP_REQUIRED);
+    }
+
+    const user = await this.userRepository.findOne({
+      where: { email: verifyOtpDto.email },
+    });
+
+    if (!user) {
+      throw new NotFoundException(UserMessages.USER_NOT_FOUND);
+    }
+
+    if (user.passwordResetCode !== verifyOtpDto.otp) {
+      throw new UnauthorizedException(UserMessages.INVALID_OTP);
+    }
+
+    if (
+      !user.passwordResetCodeExpiresAt ||
+      (user.passwordResetCodeExpiresAt instanceof Date &&
+        user.passwordResetCodeExpiresAt < new Date())
+    ) {
+      throw new UnauthorizedException(UserMessages.OTP_EXPIRED);
+    }
+
+    await this.userRepository.save(user);
+
+    return { message: UserMessages.OTP_VERIFIED };
+  }
+
+  async resetPassword(resetPasswordDto: ResetPasswordDto) {
+    const { otp, newPassword, confirmNewPassword } = resetPasswordDto;
+
+    const user = await this.userRepository.findOneBy({
+      passwordResetCode: otp,
+    });
+
+    if (!user) {
+      throw new NotFoundException(UserMessages.USER_NOT_FOUND);
+    }
+
+    if (
+      !user.passwordResetCodeExpiresAt ||
+      user.passwordResetCodeExpiresAt < new Date()
+    ) {
+      throw new UnauthorizedException(UserMessages.OTP_EXPIRED);
+    }
+
+    if (!this.userHelper.isValidPassword(newPassword)) {
+      throw new BadRequestException(UserMessages.IS_VALID_PASSWORD);
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      throw new BadRequestException(UserMessages.PASSWORDS_DO_NOT_MATCH);
+    }
+    user.password = await this.userHelper.hashPassword(newPassword);
+    user.passwordResetCode = undefined;
+    user.passwordResetCodeExpiresAt = undefined;
+
+    await this.userRepository.save(user);
+
+    return {
+      message: UserMessages.PASSWORDS_RESET_SUCCESSFUL,
+    };
   }
 }
