@@ -1,4 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, DeleteDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  DeleteDateColumn,
+} from 'typeorm';
 import { EventStatus } from '../../enums/event-status.enum';
 
 @Entity()
@@ -29,4 +34,5 @@ export class Event {
 
   @DeleteDateColumn()
   deletedAt?: Date;
+  ticketTypes: any;
 }
