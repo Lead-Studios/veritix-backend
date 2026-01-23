@@ -1,162 +1,102 @@
-import { Injectable } from '@nestjs/common';
-import {
-  Event,
-  EventSummary,
-  EventStatus,
-  CreateEventData,
-  UpdateEventData,
-  EventFilterOptions,
-} from './interfaces/event.interface';
+import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Event } from './entities/event.entity';
+import { EventStatus } from '../enums/event-status.enum';
+import { applyEventStatusChange } from './lifecycle/event.lifecycle';
+import { CreateEventDto } from './dto/create-event.dto';
+import { UpdateEventDto } from './dto/update-event.dto';
+import { User } from '../user/user.entity';
 
-/**
- * Events Service for VeriTix
- *
- * This service handles event lifecycle management and provides methods
- * for event-related operations. It serves as the domain logic layer
- * for event management.
- *
- * Note: This is a foundational structure with placeholder methods.
- * Actual database operations will be implemented when the data layer
- * is integrated.
- */
 @Injectable()
 export class EventsService {
-  /**
-   * Retrieves an event by its unique identifier.
-   * @param _id - The event's unique identifier
-   * @returns Promise resolving to the event or null if not found
-   */
-  findById(_id: string): Promise<Event | null> {
-    // TODO: Implement database query
-    // return this.eventRepository.findOne({ where: { id } });
-    return Promise.resolve(null);
+  constructor(
+    @InjectRepository(Event)
+    private readonly eventRepository: Repository<Event>,
+  ) {}
+
+  // -------------------------------
+  // CREATE EVENT
+  // -------------------------------
+  async createEvent(dto: CreateEventDto, user: User): Promise<Event> {
+    const event = this.eventRepository.create({
+      title: dto.title,
+      description: dto.description,
+      eventDate: new Date(dto.startDate),
+      eventClosingDate: new Date(dto.endDate),
+      capacity: dto.capacity,
+      status: EventStatus.DRAFT,
+    });
+
+    const saved = await this.eventRepository.save(event);
+
+    // Assign ownership
+    user.ownedEventIds.push(saved.id);
+
+    return saved;
   }
 
-  /**
-   * Retrieves all events with optional filtering.
-   * @param _filters - Optional filter criteria
-   * @returns Promise resolving to array of events
-   */
-  findAll(_filters?: EventFilterOptions): Promise<Event[]> {
-    // TODO: Implement database query with filters
-    // return this.eventRepository.find({ where: filters });
-    return Promise.resolve([]);
+  // -------------------------------
+  // UPDATE EVENT
+  // -------------------------------
+  async updateEvent(id: string, dto: UpdateEventDto, user: User): Promise<Event> {
+    const event = await this.getEventById(id);
+
+    if (!user.ownedEventIds.includes(event.id)) {
+      throw new ForbiddenException('Only owner can update this event');
+    }
+
+    Object.assign(event, {
+      title: dto.title ?? event.title,
+      description: dto.description ?? event.description,
+      eventDate: dto.startDate ? new Date(dto.startDate) : event.eventDate,
+      eventClosingDate: dto.endDate ? new Date(dto.endDate) : event.eventClosingDate,
+      capacity: dto.capacity ?? event.capacity,
+    });
+
+    return this.eventRepository.save(event);
   }
 
-  /**
-   * Retrieves events by organizer ID.
-   * @param _organizerId - The organizer's user ID
-   * @returns Promise resolving to array of events
-   */
-  findByOrganizer(_organizerId: string): Promise<Event[]> {
-    // TODO: Implement database query
-    // return this.eventRepository.find({ where: { organizerId } });
-    return Promise.resolve([]);
+  // -------------------------------
+  // CHANGE STATUS
+  // -------------------------------
+  async changeStatus(id: string, newStatus: EventStatus, user: User): Promise<Event> {
+    const event = await this.getEventById(id);
+
+    if (!user.ownedEventIds.includes(event.id)) {
+      throw new ForbiddenException('Only owner can change status');
+    }
+
+    applyEventStatusChange(event, newStatus);
+
+    return this.eventRepository.save(event);
   }
 
-  /**
-   * Creates a new event.
-   * @param _data - The event creation data
-   * @returns Promise resolving to the created event
-   */
-  create(_data: CreateEventData): Promise<Event> {
-    // TODO: Implement event creation
-    // const event = this.eventRepository.create({
-    //   ...data,
-    //   status: EventStatus.DRAFT,
-    // });
-    // return this.eventRepository.save(event);
-    return Promise.reject(new Error('Not implemented'));
+  // -------------------------------
+  // GET EVENT BY ID
+  // -------------------------------
+  async getEventById(id: string): Promise<Event> {
+    const event = await this.eventRepository.findOneBy({ id });
+    if (!event) throw new NotFoundException('Event not found');
+    return event;
   }
 
-  /**
-   * Updates an existing event.
-   * @param _id - The event's unique identifier
-   * @param _data - The update data
-   * @returns Promise resolving to the updated event
-   */
-  update(_id: string, _data: UpdateEventData): Promise<Event | null> {
-    // TODO: Implement event update
-    // await this.eventRepository.update(id, data);
-    // return this.findById(id);
-    return Promise.resolve(null);
+  // -------------------------------
+  // DELETE EVENT
+  // -------------------------------
+ async deleteEvent(id: string, user: User): Promise<boolean> {
+  const event = await this.getEventById(id);
+
+  if (!user.ownedEventIds.includes(event.id)) {
+    throw new ForbiddenException('Only owner can delete this event');
   }
 
-  /**
-   * Publishes an event (changes status to PUBLISHED).
-   * @param id - The event's unique identifier
-   * @returns Promise resolving to the updated event
-   */
-  publish(id: string): Promise<Event | null> {
-    return this.update(id, { status: EventStatus.PUBLISHED });
-  }
+  const result = await this.eventRepository.delete(id);
+  return (result.affected ?? 0) > 0;
+}
+async findAll(): Promise<Event[]> {
+  return this.eventRepository.find();
+}
 
-  /**
-   * Cancels an event (changes status to CANCELLED).
-   * @param id - The event's unique identifier
-   * @returns Promise resolving to the updated event
-   */
-  cancel(id: string): Promise<Event | null> {
-    return this.update(id, { status: EventStatus.CANCELLED });
-  }
 
-  /**
-   * Marks an event as completed.
-   * @param id - The event's unique identifier
-   * @returns Promise resolving to the updated event
-   */
-  complete(id: string): Promise<Event | null> {
-    return this.update(id, { status: EventStatus.COMPLETED });
-  }
-
-  /**
-   * Deletes an event.
-   * @param _id - The event's unique identifier
-   * @returns Promise resolving to boolean indicating success
-   */
-  delete(_id: string): Promise<boolean> {
-    // TODO: Implement event deletion
-    // const result = await this.eventRepository.delete(id);
-    // return result.affected > 0;
-    return Promise.resolve(false);
-  }
-
-  /**
-   * Checks if a user is the owner/organizer of an event.
-   * @param eventId - The event's unique identifier
-   * @param userId - The user's unique identifier
-   * @returns Promise resolving to boolean indicating ownership
-   */
-  async isOwner(eventId: string, userId: string): Promise<boolean> {
-    const event = await this.findById(eventId);
-    return event?.organizerId === userId;
-  }
-
-  /**
-   * Gets event summaries for list views.
-   * @param filters - Optional filter criteria
-   * @returns Promise resolving to array of event summaries
-   */
-  async getSummaries(filters?: EventFilterOptions): Promise<EventSummary[]> {
-    const events = await this.findAll(filters);
-    return events.map((event) => ({
-      id: event.id,
-      title: event.title,
-      venue: event.venue,
-      startDate: event.startDate,
-      status: event.status,
-      coverImage: event.coverImage,
-      organizerId: event.organizerId,
-    }));
-  }
-
-  /**
-   * Checks if an event exists.
-   * @param id - The event's unique identifier
-   * @returns Promise resolving to boolean indicating existence
-   */
-  async exists(id: string): Promise<boolean> {
-    const event = await this.findById(id);
-    return event !== null;
-  }
 }

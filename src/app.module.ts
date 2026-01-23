@@ -35,7 +35,7 @@ import { ContactModule } from './contact/contact.module';
 @Module({
 
   imports: [UserModule],
-=======
+
   imports: [
     // Authentication foundation - provides guards, decorators, and auth service
     AuthModule,
