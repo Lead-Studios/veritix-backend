@@ -6,7 +6,7 @@ import { EventStatus } from '../enums/event-status.enum';
 import { applyEventStatusChange } from './lifecycle/event.lifecycle';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
-import { User } from '../user/user.entity';
+import { User } from '../auth/entities/user.entity';
 
 @Injectable()
 export class EventsService {
@@ -22,16 +22,13 @@ export class EventsService {
     const event = this.eventRepository.create({
       title: dto.title,
       description: dto.description,
-      eventDate: new Date(dto.startDate),
-      eventClosingDate: new Date(dto.endDate),
+      eventDate: new Date(dto.eventDate),
+      eventClosingDate: new Date(dto.eventClosingDate),
       capacity: dto.capacity,
       status: EventStatus.DRAFT,
     });
 
     const saved = await this.eventRepository.save(event);
-
-    // Assign ownership
-    user.ownedEventIds.push(saved.id);
 
     return saved;
   }
@@ -42,15 +39,11 @@ export class EventsService {
   async updateEvent(id: string, dto: UpdateEventDto, user: User): Promise<Event> {
     const event = await this.getEventById(id);
 
-    if (!user.ownedEventIds.includes(event.id)) {
-      throw new ForbiddenException('Only owner can update this event');
-    }
-
     Object.assign(event, {
       title: dto.title ?? event.title,
       description: dto.description ?? event.description,
-      eventDate: dto.startDate ? new Date(dto.startDate) : event.eventDate,
-      eventClosingDate: dto.endDate ? new Date(dto.endDate) : event.eventClosingDate,
+      eventDate: dto.eventDate ? new Date(dto.eventDate) : event.eventDate,
+      eventClosingDate: dto.eventClosingDate ? new Date(dto.eventClosingDate) : event.eventClosingDate,
       capacity: dto.capacity ?? event.capacity,
     });
 
@@ -62,10 +55,6 @@ export class EventsService {
   // -------------------------------
   async changeStatus(id: string, newStatus: EventStatus, user: User): Promise<Event> {
     const event = await this.getEventById(id);
-
-    if (!user.ownedEventIds.includes(event.id)) {
-      throw new ForbiddenException('Only owner can change status');
-    }
 
     applyEventStatusChange(event, newStatus);
 
@@ -86,10 +75,6 @@ export class EventsService {
   // -------------------------------
  async deleteEvent(id: string, user: User): Promise<boolean> {
   const event = await this.getEventById(id);
-
-  if (!user.ownedEventIds.includes(event.id)) {
-    throw new ForbiddenException('Only owner can delete this event');
-  }
 
   const result = await this.eventRepository.delete(id);
   return (result.affected ?? 0) > 0;
