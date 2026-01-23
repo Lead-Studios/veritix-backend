@@ -1,4 +1,6 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Body, Post } from '@nestjs/common';
+import { ContactService } from './contact.service';
+import { CreateContactMessageDto } from './dto/create-contact-message.dto';
 
 /**
  * Contact Controller for VeriTix
@@ -27,6 +29,13 @@ import { Controller } from '@nestjs/common';
  */
 @Controller('contact')
 export class ContactController {
+  constructor(private readonly contactService: ContactService) {}
+
   // Endpoint implementations will be added in future issues
   // No business logic in controllers - per architectural requirements
+  @Post()
+  async submit(@Body() dto: CreateContactMessageDto) {
+    await this.contactService.create(dto);
+    return { success: true };
+  }
 }

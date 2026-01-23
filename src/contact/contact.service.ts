@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import {
   ContactInquiry,
   ContactSummary,
@@ -7,6 +9,8 @@ import {
   UpdateContactData,
   ContactFilterOptions,
 } from './interfaces/contact.interface';
+import { CreateContactMessageDto } from './dto/create-contact-message.dto';
+import { ContactMessage } from './entities/contact-message.entity';
 
 /**
  * Contact Service for VeriTix
@@ -20,6 +24,16 @@ import {
  */
 @Injectable()
 export class ContactService {
+  constructor(
+    @InjectRepository(ContactMessage)
+    private readonly contactRepo: Repository<ContactMessage>,
+  ) {}
+
+  async create(dto: CreateContactMessageDto): Promise<ContactMessage> {
+    const message = this.contactRepo.create(dto);
+    return this.contactRepo.save(message);
+  }
+
   /**
    * Submits a new contact inquiry.
    * @param _data - The contact submission data
