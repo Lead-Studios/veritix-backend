@@ -3,8 +3,11 @@ import {
   PrimaryGeneratedColumn,
   Column,
   DeleteDateColumn,
+  OneToMany,
 } from 'typeorm';
 import { EventStatus } from '../../enums/event-status.enum';
+import { TicketType } from '../../tickets/entities/ticket-type.entity';
+import { Ticket } from '../../tickets/entities/ticket.entity';
 
 @Entity()
 export class Event {
@@ -34,5 +37,10 @@ export class Event {
 
   @DeleteDateColumn()
   deletedAt?: Date;
-  ticketTypes: any;
+
+  @OneToMany(() => TicketType, (tt) => tt.event)
+  ticketTypes: TicketType[];
+
+  @OneToMany(() => Ticket, (t) => t.event)
+  tickets: Ticket[];
 }

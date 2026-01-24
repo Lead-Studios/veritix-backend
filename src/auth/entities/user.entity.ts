@@ -2,11 +2,13 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { UserRole } from '../common/enum/user-role-enum';
 import { Exclude } from 'class-transformer';
+import { Ticket } from '../../tickets/entities/ticket.entity';
 
 @Entity()
 export class User {
@@ -44,4 +46,7 @@ export class User {
   createdAt: Date;
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @OneToMany(() => Ticket, (t) => t.owner)
+  tickets: Ticket[];
 }
