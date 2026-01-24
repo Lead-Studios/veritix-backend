@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
 import { TicketsService } from './tickets.service';
 import { TicketsController } from './tickets.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Ticket } from './entities/ticket.entity';
+import { TicketType } from './entities/ticket-type.entity';
 
 /**
  * Tickets Module for VeriTix
@@ -38,6 +41,7 @@ import { TicketsController } from './tickets.controller';
  * ```
  */
 @Module({
+  imports: [TypeOrmModule.forFeature([Ticket, TicketType])],
   controllers: [TicketsController],
   providers: [TicketsService],
   exports: [TicketsService],
