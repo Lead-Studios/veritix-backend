@@ -2,38 +2,50 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
-import databaseConfig from './config/database-config';
-import appConfig from './config/app.config';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import databaseConfig from './config/database-config';
+import appConfig from './config/app.config';
+
 @Module({
   imports: [
+    // Global configuration
     ConfigModule.forRoot({
       isGlobal: true,
       load: [appConfig, databaseConfig],
     }),
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        type: configService.get<'postgres'>('database.type'),
-        url: configService.get<string>('database.url'),
-        host: configService.get<string>('database.host'),
-        port: configService.get<number>('database.port'),
-        username: configService.get<string>('database.username'),
-        password: configService.get<string>('database.password'),
-        database: configService.get<string>('database.database'),
-        synchronize: configService.get<boolean>('database.synchronize'),
-        autoLoadEntities: true,
-        ssl: true,
-        extra: {
-          ssl: {
-            rejectUnauthorized: false,
-          },
-        },
-      }),
-    }),
+
+    // Database connection (PostgreSQL)
+  TypeOrmModule.forRootAsync({
+  imports: [ConfigModule],
+  inject: [ConfigService],
+ useFactory: (configService: ConfigService) => {
+  const host = configService.get('database.host');
+  const port = configService.get('database.port');
+  const username = configService.get('database.username');
+  const database = configService.get('database.database');
+
+  console.log('DB HOST:', host);
+  console.log('DB PORT:', port);
+  console.log('DB USER:', username);
+  console.log('DB NAME:', database);
+
+  return {
+    type: 'postgres',
+    host,
+    port,
+    username,
+    password: configService.get('database.password'),
+    database,
+    synchronize: false,
+    autoLoadEntities: true,
+  };
+},
+
+}),
+
+
     AuthModule,
   ],
   controllers: [AppController],
