@@ -170,9 +170,8 @@ export class TicketService {
       throw new BadRequestException('Ticket is already refunded');
     }
 
-    if (ticket.status !== TicketStatus.REFUNDED) {
-      await this.ticketTypeService.releaseTickets(ticket.ticketTypeId, 1);
-    }
+    // Release ticket back to inventory
+    await this.ticketTypeService.releaseTickets(ticket.ticketTypeId, 1);
 
     ticket.status = TicketStatus.REFUNDED;
     ticket.refundedAt = new Date();

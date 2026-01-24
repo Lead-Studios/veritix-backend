@@ -13,7 +13,7 @@ import { EventsService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { EventStatus } from '../enums/event-status.enum';
-import { User } from '../user/user.entity';
+import { User } from '../auth/entities/user.entity';
 
 @Controller('events')
 export class EventsController {
