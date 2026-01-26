@@ -4,6 +4,8 @@ import { TicketsController } from './tickets.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Ticket } from './entities/ticket.entity';
 import { TicketType } from './entities/ticket-type.entity';
+import { BlockchainModule } from '../blockchain/blockchain.module';
+import { TicketBlockchainHelper } from './helpers/ticket-blockchain.helper';
 
 /**
  * Tickets Module for VeriTix
@@ -41,9 +43,9 @@ import { TicketType } from './entities/ticket-type.entity';
  * ```
  */
 @Module({
-  imports: [TypeOrmModule.forFeature([Ticket, TicketType])],
+  imports: [TypeOrmModule.forFeature([Ticket, TicketType]), BlockchainModule],
   controllers: [TicketsController],
-  providers: [TicketsService],
-  exports: [TicketsService],
+  providers: [TicketsService, TicketBlockchainHelper],
+  exports: [TicketsService, TicketBlockchainHelper],
 })
 export class TicketsModule {}

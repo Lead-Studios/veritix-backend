@@ -1,6 +1,10 @@
 import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { EventsService } from './events.service';
 import { EventsController } from './events.controller';
+import { BlockchainModule } from '../blockchain/blockchain.module';
+import { EventBlockchainHelper } from './helpers/event-blockchain.helper';
+import { Event } from './entities/event.entity';
 
 /**
  * Events Module for VeriTix
@@ -37,8 +41,9 @@ import { EventsController } from './events.controller';
  * ```
  */
 @Module({
+  imports: [TypeOrmModule.forFeature([Event]), BlockchainModule],
   controllers: [EventsController],
-  providers: [EventsService],
-  exports: [EventsService],
+  providers: [EventsService, EventBlockchainHelper],
+  exports: [EventsService, EventBlockchainHelper],
 })
 export class EventsModule {}

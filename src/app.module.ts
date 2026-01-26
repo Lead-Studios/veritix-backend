@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { BlockchainModule } from './blockchain/blockchain.module';
 
 import databaseConfig from './config/database-config';
 import appConfig from './config/app.config';
@@ -47,6 +48,14 @@ import appConfig from './config/app.config';
 
 
     AuthModule,
+    // Blockchain module for future blockchain anchoring and verification
+    BlockchainModule.register({
+      isGlobal: true,
+      config: {
+        provider: 'STELLAR',
+        enabled: false, // Disabled until Stellar integration is implemented
+      },
+    }),
   ],
   controllers: [AppController],
   providers: [AppService],
