@@ -13,6 +13,7 @@ import { Event } from '../../events/entities/event.entity';
 import { User } from '../../auth/entities/user.entity';
 import { TicketType } from './ticket-type.entity';
 import { TicketVerificationStatus } from '../enums/ticket-verification-status.enum';
+import { BlockchainAnchorStatus } from '../../blockchain/enums';
 
 @Entity()
 @Index(['ownerId'])
@@ -85,8 +86,48 @@ export class Ticket {
   @Column({ type: 'int', default: 0 })
   transferCount: number;
 
+  // =====================================
+  // BLOCKCHAIN ANCHORING FIELDS
+  // These fields enable blockchain integration without tight coupling
+  // =====================================
+
   /**
-   * Future blockchain anchor reference (tx hash / token id / etc.)
+   * Blockchain anchor hash for ticket verification
+   * null = not anchored, string = anchored to blockchain
+   */
+  @Column('varchar', { length: 255, nullable: true })
+  blockchainAnchorHash: string | null;
+
+  /**
+   * Blockchain transaction ID for this ticket
+   */
+  @Column('varchar', { length: 255, nullable: true })
+  blockchainTransactionId: string | null;
+
+  /**
+   * Status of blockchain anchoring operation
+   */
+  @Column({
+    type: 'enum',
+    enum: BlockchainAnchorStatus,
+    nullable: true,
+  })
+  blockchainStatus: BlockchainAnchorStatus | null;
+
+  /**
+   * Timestamp when ticket was anchored to blockchain
+   */
+  @Column({ type: 'timestamp', nullable: true })
+  blockchainAnchoredAt: Date | null;
+
+  /**
+   * Last time blockchain anchor was verified
+   */
+  @Column({ type: 'timestamp', nullable: true })
+  blockchainVerifiedAt: Date | null;
+
+  /**
+   * Legacy: Future blockchain anchor reference (tx hash / token id / etc.)
    * No blockchain logic implemented.
    */
   @Column('varchar', { length: 150, nullable: true })
