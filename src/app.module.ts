@@ -5,6 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BlockchainModule } from './blockchain/blockchain.module';
+import { UsersModule } from './users/users.module';
 
 import databaseConfig from './config/database-config';
 import appConfig from './config/app.config';
@@ -18,34 +19,32 @@ import appConfig from './config/app.config';
     }),
 
     // Database connection (PostgreSQL)
-  TypeOrmModule.forRootAsync({
-  imports: [ConfigModule],
-  inject: [ConfigService],
- useFactory: (configService: ConfigService) => {
-  const host = configService.get('database.host');
-  const port = configService.get('database.port');
-  const username = configService.get('database.username');
-  const database = configService.get('database.database');
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const host = configService.get('database.host');
+        const port = configService.get('database.port');
+        const username = configService.get('database.username');
+        const database = configService.get('database.database');
 
-  console.log('DB HOST:', host);
-  console.log('DB PORT:', port);
-  console.log('DB USER:', username);
-  console.log('DB NAME:', database);
+        console.log('DB HOST:', host);
+        console.log('DB PORT:', port);
+        console.log('DB USER:', username);
+        console.log('DB NAME:', database);
 
-  return {
-    type: 'postgres',
-    host,
-    port,
-    username,
-    password: configService.get('database.password'),
-    database,
-    synchronize: false,
-    autoLoadEntities: true,
-  };
-},
-
-}),
-
+        return {
+          type: 'postgres',
+          host,
+          port,
+          username,
+          password: configService.get('database.password'),
+          database,
+          synchronize: false,
+          autoLoadEntities: true,
+        };
+      },
+    }),
 
     AuthModule,
     // Blockchain module for future blockchain anchoring and verification
@@ -56,6 +55,7 @@ import appConfig from './config/app.config';
         enabled: false, // Disabled until Stellar integration is implemented
       },
     }),
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
