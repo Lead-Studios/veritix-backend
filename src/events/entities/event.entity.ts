@@ -9,8 +9,8 @@ import {
 } from 'typeorm';
 import { EventStatus } from '../../enums/event-status.enum';
 import { BlockchainAnchorStatus } from '../../blockchain/enums';
-import { TicketType } from '../../tickets/entities/ticket-type.entity';
-import { Ticket } from '../../tickets/entities/ticket.entity';
+import { TicketType } from '../../tickets-inventory/entities/ticket-type.entity';
+import { Ticket } from '../../tickets-inventory/entities/ticket.entity';
 
 @Entity()
 export class Event {
