@@ -6,6 +6,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BlockchainModule } from './blockchain/blockchain.module';
 import { UsersModule } from './users/users.module';
+import { TicketsModule } from './tickets-inventory/tickets.module';
 
 import databaseConfig from './config/database-config';
 import appConfig from './config/app.config';
@@ -56,6 +57,7 @@ import appConfig from './config/app.config';
       },
     }),
     UsersModule,
+    TicketsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
