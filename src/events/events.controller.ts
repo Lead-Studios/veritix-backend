@@ -8,81 +8,84 @@ import {
   Body,
   Query,
   ParseUUIDPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { EventsService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { EventStatus } from '../enums/event-status.enum';
+import { UserRole } from '../auth/common/enum/user-role-enum';
 import { User } from '../auth/entities/user.entity';
+import { JwtAuthGuard } from 'src/auth/guard/jwt.auth.guard';
+import { Roles } from 'src/auth/decorators/roles.decorators';
+import { CurrentUser } from 'src/auth/decorators/current.user.decorators';
+import { RolesGuard } from 'src/auth/guard/roles.guard';
 
 @Controller('events')
 export class EventsController {
   constructor(private readonly eventsService: EventsService) {}
 
   // -------------------------------
-  // GET ALL EVENTS
+  // PUBLIC ENDPOINTS
   // -------------------------------
+
   @Get()
   async getAll(
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
-    // For simplicity, we just return all events; you can add filters
-    return this.eventsService.findAll();
+    return this.eventsService.findAll({ page, limit });
   }
 
-  // -------------------------------
-  // GET EVENT BY ID
-  // -------------------------------
   @Get(':id')
   async getById(@Param('id', ParseUUIDPipe) id: string) {
     return this.eventsService.getEventById(id);
   }
 
   // -------------------------------
-  // CREATE EVENT
+  // PROTECTED ENDPOINTS
   // -------------------------------
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ORGANIZER, UserRole.ADMIN)
   @Post()
   async create(
     @Body() dto: CreateEventDto,
-    @Body('user') user: User, // In real app, use @Req() + auth guard
+    @CurrentUser() user: User,
   ) {
     return this.eventsService.createEvent(dto, user);
   }
 
-  // -------------------------------
-  // UPDATE EVENT
-  // -------------------------------
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ORGANIZER, UserRole.ADMIN)
   @Patch(':id')
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateEventDto,
-    @Body('user') user: User, // replace with real user from AuthGuard
+    @CurrentUser() user: User,
   ) {
     return this.eventsService.updateEvent(id, dto, user);
   }
 
-  // -------------------------------
-  // CHANGE STATUS
-  // -------------------------------
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ORGANIZER, UserRole.ADMIN)
   @Patch(':id/status')
   async changeStatus(
     @Param('id', ParseUUIDPipe) id: string,
     @Body('status') status: EventStatus,
-    @Body('user') user: User,
+    @CurrentUser() user: User,
   ) {
     return this.eventsService.changeStatus(id, status, user);
   }
 
-  // -------------------------------
-  // DELETE EVENT
-  // -------------------------------
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ORGANIZER, UserRole.ADMIN)
   @Delete(':id')
   async delete(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body('user') user: User,
+    @CurrentUser() user: User,
   ) {
-    const success = await this.eventsService.deleteEvent(id, user);
-    return { success };
+    await this.eventsService.deleteEvent(id, user);
+    return { message: 'Event deleted successfully' };
   }
 }
