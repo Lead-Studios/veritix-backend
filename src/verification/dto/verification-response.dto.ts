@@ -1,5 +1,3 @@
-import { IsString, IsOptional, IsBoolean, IsUUID, IsNumber, IsEnum } from 'class-validator';
-import { Type } from 'class-transformer';
 import { VerificationStatus } from '../interfaces/verification.interface';
 
 export class VerificationResponseDto {
