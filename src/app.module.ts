@@ -10,6 +10,7 @@ import { TicketsModule } from './tickets-inventory/tickets.module';
 
 import databaseConfig from './config/database-config';
 import appConfig from './config/app.config';
+import { OrdersModule } from './orders/orders.module';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import appConfig from './config/app.config';
     }),
     UsersModule,
     TicketsModule,
+    OrdersModule
   ],
   controllers: [AppController],
   providers: [AppService],
