@@ -14,6 +14,7 @@ import { v4 as uuidv4 } from "uuid";
 import { TicketPurchase } from "../entities/ticket-pruchase";
 import { UsersService } from "src/users/users.service";
 import { TicketService } from "../tickets.service";
+import { PriceService } from "../../stellar/price.service";
 
 @Injectable()
 export class TicketPurchaseService {
@@ -30,6 +31,7 @@ export class TicketPurchaseService {
 
     private userServices: UsersService,
     private ticketServices: TicketService,
+    private priceService: PriceService,
   ) {}
 
   async purchaseTickets(
@@ -54,6 +56,9 @@ export class TicketPurchaseService {
 
     // Calculate total price
     const totalPrice = ticket.price * createTicketPurchaseDto.ticketQuantity;
+
+    // Convert USD to XLM using the price service
+    const totalAmountXLM = await this.priceService.convertUSDToXLM(totalPrice);
 
     // Process payment first
     const paymentSuccessful = await this.paymentService.processPayment(
@@ -89,6 +94,7 @@ export class TicketPurchaseService {
       ticket,
       ticketQuantity: createTicketPurchaseDto.ticketQuantity,
       totalPrice,
+      totalAmountXLM,
       billingDetails: createTicketPurchaseDto.billingDetails,
       addressDetails: createTicketPurchaseDto.addressDetails,
     });
