@@ -39,6 +39,16 @@ export class VerifyTicketDto {
   longitude?: string;
 }
 
+export class CheckInDto {
+  @IsString()
+  @Length(1, 100)
+  ticketCode: string;
+
+  @IsOptional()
+  @IsUUID()
+  verifierId?: string;
+}
+
 export class BulkVerifyTicketsDto {
   @IsString()
   @Length(1, 100, { each: true })
