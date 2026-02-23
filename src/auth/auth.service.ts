@@ -20,6 +20,7 @@ import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { SendPasswordResetOtpDto } from './dto/send-password-reset-otp.dto';
 import { ResendOtpDto } from './dto/resend-otp.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { sendEmail } from '../config/email/email.service';
 
 @Injectable()
 export class AuthService {
@@ -60,11 +61,18 @@ export class AuthService {
       isVerified: false,
     });
     await this.userRepository.save(newUser);
-    // await this.emailService.sendVerificationEmail(
-    //   createUserDto.email,
-    //   verificationCode,
-    //   createUserDto.fullName,
-    // );
+    await sendEmail(
+      createUserDto.email,
+      'Verify Your Account',
+      'verification-email',
+      {
+        fullName: createUserDto.fullName,
+        otp1: verificationCode[0],
+        otp2: verificationCode[1],
+        otp3: verificationCode[2],
+        otp4: verificationCode[3],
+      },
+    );
 
     return {
       message: UserMessages.USER_CREATED_SUCCESSFULLY,
@@ -161,11 +169,13 @@ export class AuthService {
       user.verificationCodeExpiresAt = moment().add(10, 'minutes').toDate();
       await this.userRepository.save(user);
 
-      // await this.emailService.sendVerificationEmail(
-      //   user.email,
-      //   verificationCode,
-      //   user.fullName,
-      // );
+      await sendEmail(user.email, 'Verify Your Account', 'verification-email', {
+        fullName: user.fullName,
+        otp1: verificationCode[0],
+        otp2: verificationCode[1],
+        otp3: verificationCode[2],
+        otp4: verificationCode[3],
+      });
 
       return { message: UserMessages.OTP_SENT };
     } catch (error) {
@@ -247,11 +257,13 @@ export class AuthService {
     user.passwordResetCodeExpiresAt = moment().add(10, 'minutes').toDate();
     await this.userRepository.save(user);
 
-    // await this.emailService.sendPasswordResetEmail(
-    //   user.email,
-    //   otp,
-    //   user.fullName,
-    // );
+    await sendEmail(user.email, 'Password Reset OTP', 'reset-password-email', {
+      fullName: user.fullName,
+      otp1: otp[0],
+      otp2: otp[1],
+      otp3: otp[2],
+      otp4: otp[3],
+    });
 
     return { message: UserMessages.OTP_SENT };
   }
@@ -275,11 +287,13 @@ export class AuthService {
       user.passwordResetCodeExpiresAt = moment().add(10, 'minutes').toDate();
       await this.userRepository.save(user);
 
-      // await this.emailService.sendPasswordResetEmail(
-      //   user.email,
-      //   otp,
-      //   user.fullName,
-      // );
+      await sendEmail(user.email, 'Password Reset OTP', 'reset-password-email', {
+        fullName: user.fullName,
+        otp1: otp[0],
+        otp2: otp[1],
+        otp3: otp[2],
+        otp4: otp[3],
+      });
 
       return { message: UserMessages.OTP_SENT };
     } catch (error) {

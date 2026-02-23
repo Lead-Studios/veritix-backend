@@ -4,13 +4,16 @@ import {
   Column,
   DeleteDateColumn,
   OneToMany,
+  ManyToOne, JoinColumn, Index,
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { EventStatus } from '../../enums/event-status.enum';
 import { BlockchainAnchorStatus } from '../../blockchain/enums';
-import { TicketType } from '../../tickets/entities/ticket-type.entity';
-import { Ticket } from '../../tickets/entities/ticket.entity';
+import { TicketType } from '../../tickets-inventory/entities/ticket-type.entity';
+import { Ticket } from '../../tickets-inventory/entities/ticket.entity';
+import { User } from '../../auth/entities/user.entity';
+
 
 @Entity()
 export class Event {
@@ -86,4 +89,17 @@ export class Event {
 
   @OneToMany(() => Ticket, (t) => t.event)
   tickets: Ticket[];
+
+  @Index()
+  @Column({ type: 'uuid', nullable: true })
+  organizerId: string | null;
+
+  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'organizerId' })
+  organizer: User | null;
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }
