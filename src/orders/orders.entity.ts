@@ -28,6 +28,15 @@ export class Order {
   @Column({ type: 'timestamptz', name: 'expires_at' })
   expiresAt: Date;
 
+  @Column({ type: 'varchar', nullable: true, name: 'stellar_tx_hash' })
+  stellarTxHash: string;
+
+  @Column({ type: 'varchar', nullable: true, name: 'refund_tx_hash' })
+  refundTxHash: string;
+
+  @Column({ type: 'varchar', nullable: true, name: 'buyer_stellar_address' })
+  buyerStellarAddress: string;
+
   @OneToMany(() => OrderItem, (item) => item.order, { cascade: true })
   items: OrderItem[];
 
