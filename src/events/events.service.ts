@@ -8,10 +8,8 @@ import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { User } from '../auth/entities/user.entity';
 import { UserRole } from 'src/auth/common/enum/user-role-enum';
-interface FindAllOptions {
-  page?: number;
-  limit?: number;
-}
+import { EventQueryDto } from './dto/event-query.dto';
+import { PaginatedEventsResponseDto } from './dto/paginated-events-response.dto';
 
 @Injectable()
 export class EventsService {
@@ -84,15 +82,86 @@ export class EventsService {
     const result = await this.eventRepository.delete(id);
     return (result.affected ?? 0) > 0;
   }
-  async findAll(options?: FindAllOptions) {
+  async findAll(queryDto: EventQueryDto, includeAll: boolean = false): Promise<PaginatedEventsResponseDto> {
     const query = this.eventRepository.createQueryBuilder('event');
 
-    if (options?.page && options?.limit) {
-      const skip = (options.page - 1) * options.limit;
-      query.skip(skip).take(options.limit);
+    // 1. apply public default filters
+    if (!includeAll) {
+      query.andWhere('event.isArchived = :isArchived', { isArchived: false });
+      query.andWhere('event.status != :status', { status: EventStatus.CANCELLED });
     }
 
-    return query.getMany();
+    // 2. Full-text search
+    if (queryDto.search) {
+      query.andWhere(
+        '(event.title ILIKE :search OR event.description ILIKE :search)',
+        { search: `%${queryDto.search}%` },
+      );
+    }
+
+    // 3. Status filter
+    if (queryDto.status) {
+      query.andWhere('event.status = :statusFilter', { statusFilter: queryDto.status });
+    }
+
+    // 4. Location filters
+    if (queryDto.city) {
+      query.andWhere('event.city ILIKE :city', { city: `%${queryDto.city}%` });
+    }
+    if (queryDto.countryCode) {
+      query.andWhere('event.countryCode = :countryCode', { countryCode: queryDto.countryCode });
+    }
+    if (queryDto.isVirtual !== undefined) {
+      query.andWhere('event.isVirtual = :isVirtual', { isVirtual: queryDto.isVirtual });
+    }
+
+    // 5. Date range
+    if (queryDto.dateFrom) {
+      query.andWhere('event.eventDate >= :dateFrom', { dateFrom: queryDto.dateFrom });
+    }
+    if (queryDto.dateTo) {
+      query.andWhere('event.eventDate <= :dateTo', { dateTo: queryDto.dateTo });
+    }
+
+    // 6. Price range
+    if (queryDto.minTicketPrice !== undefined || queryDto.maxTicketPrice !== undefined) {
+      query.innerJoin('event.ticketTypes', 'ticketType');
+
+      if (queryDto.minTicketPrice !== undefined) {
+        query.andWhere('ticketType.price >= :minTicketPrice', { minTicketPrice: queryDto.minTicketPrice });
+      }
+      if (queryDto.maxTicketPrice !== undefined) {
+        query.andWhere('ticketType.price <= :maxTicketPrice', { maxTicketPrice: queryDto.maxTicketPrice });
+      }
+    }
+
+    // 7. Tags filter
+    if (queryDto.tags && queryDto.tags.length > 0) {
+      // Postgres ARRAY contains @>
+      query.andWhere('event.tags @> ARRAY[:...tags]::text[]', { tags: queryDto.tags });
+    }
+
+    // 8. Sorting
+    const sortBy = queryDto.sortBy || 'eventDate';
+    const sortOrder = queryDto.sortOrder || 'ASC';
+    query.orderBy(`event.${sortBy}`, sortOrder as 'ASC' | 'DESC');
+
+    // 9. Pagination
+    const page = queryDto.page || 1;
+    const limit = queryDto.limit || 10;
+    const skip = (page - 1) * limit;
+
+    query.skip(skip).take(limit);
+
+    const [data, total] = await query.getManyAndCount();
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
 }
