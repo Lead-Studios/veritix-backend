@@ -20,6 +20,7 @@ import { Receipt } from "./entities/receipt.entity";
 import { StripeModule } from "../payment/stripe.module";
 import { PaymentModule } from '../payment/payment.module';
 import { PromoCodeModule } from "src/promo-code/promo-code.module";
+import { StellarModule } from "../stellar/stellar.module";
 
 @Module({
   imports: [
@@ -36,7 +37,8 @@ import { PromoCodeModule } from "src/promo-code/promo-code.module";
     EventsModule,
     StripeModule,
     PaymentModule,
-    PromoCodeModule
+    PromoCodeModule,
+    StellarModule,
   ],
   controllers: [TicketController, TicketPurchaseController],
   providers: [

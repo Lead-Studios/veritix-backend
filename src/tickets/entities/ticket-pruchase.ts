@@ -31,6 +31,9 @@ import {
   
     @Column('decimal', { precision: 10, scale: 2 })
     totalPrice: number;
+
+    @Column('decimal', { precision: 20, scale: 7, nullable: true })
+    totalAmountXLM: number;
   
     @Column('jsonb')
     billingDetails: {

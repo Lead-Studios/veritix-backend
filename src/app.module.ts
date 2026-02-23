@@ -29,6 +29,7 @@ import { ConferenceGalleryModule } from "./conference-gallery/conference-gallery
 import { JwtStrategy } from "../security/strategies/jwt.strategy";
 import { PromoCodeModule } from './promo-code/promo-code.module';
 import { WebhookModule } from "./webhook/webhook.module";
+import { StellarModule } from "./stellar/stellar.module";
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -76,6 +77,7 @@ import { WebhookModule } from "./webhook/webhook.module";
     ConferenceGalleryModule,
     PromoCodeModule,
     AuditLogModule,
+    StellarModule,
   ],
   controllers: [AppController],
   providers: [AppService, PdfService, JwtStrategy],
