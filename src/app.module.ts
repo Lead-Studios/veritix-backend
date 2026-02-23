@@ -7,7 +7,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { BlockchainModule } from './blockchain/blockchain.module';
 import { UsersModule } from './users/users.module';
 import { TicketsModule } from './tickets-inventory/tickets.module';
-
+import { EventsModule } from './events/events.module';
+import { VerificationModule } from './verification/verification.module';
+import { ContactModule } from './contact/contact.module';
 import databaseConfig from './config/database-config';
 import appConfig from './config/app.config';
 
@@ -58,6 +60,9 @@ import appConfig from './config/app.config';
     }),
     UsersModule,
     TicketsModule,
+    EventsModule,           // ← Add here
+    VerificationModule,     // ← Add here
+    ContactModule, 
   ],
   controllers: [AppController],
   providers: [AppService],
