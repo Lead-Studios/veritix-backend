@@ -12,6 +12,7 @@ import { VerificationModule } from './verification/verification.module';
 import { ContactModule } from './contact/contact.module';
 import databaseConfig from './config/database-config';
 import appConfig from './config/app.config';
+import { OrdersModule } from './orders/orders.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import appConfig from './config/app.config';
     }),
     UsersModule,
     TicketsModule,
+    OrdersModule
     EventsModule,           // ← Add here
     VerificationModule,     // ← Add here
     ContactModule, 
