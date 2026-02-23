@@ -7,13 +7,18 @@ import { applyEventStatusChange } from './lifecycle/event.lifecycle';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { User } from '../auth/entities/user.entity';
+import { UserRole } from 'src/auth/common/enum/user-role-enum';
+interface FindAllOptions {
+  page?: number;
+  limit?: number;
+}
 
 @Injectable()
 export class EventsService {
   constructor(
     @InjectRepository(Event)
     private readonly eventRepository: Repository<Event>,
-  ) {}
+  ) { }
 
   // -------------------------------
   // CREATE EVENT
@@ -36,20 +41,20 @@ export class EventsService {
   // -------------------------------
   // UPDATE EVENT
   // -------------------------------
-  async updateEvent(id: string, dto: UpdateEventDto, user: User): Promise<Event> {
-    const event = await this.getEventById(id);
+  async updateEvent(id: string, dto: UpdateEventDto, user: User) {
+    const event = await this.eventRepository.findOne({ where: { id } });
+    if (!event) throw new NotFoundException('Event not found');
 
-    Object.assign(event, {
-      title: dto.title ?? event.title,
-      description: dto.description ?? event.description,
-      eventDate: dto.eventDate ? new Date(dto.eventDate) : event.eventDate,
-      eventClosingDate: dto.eventClosingDate ? new Date(dto.eventClosingDate) : event.eventClosingDate,
-      capacity: dto.capacity ?? event.capacity,
-    });
+    const isAdmin = user.role === UserRole.ADMIN;
 
+    const isOwner = event.organizerId === user.id;
+    if (!isAdmin && !isOwner) {
+      throw new ForbiddenException('You do not have permission to update this event');
+    }
+
+    Object.assign(event, dto);
     return this.eventRepository.save(event);
   }
-
   // -------------------------------
   // CHANGE STATUS
   // -------------------------------
@@ -73,15 +78,21 @@ export class EventsService {
   // -------------------------------
   // DELETE EVENT
   // -------------------------------
- async deleteEvent(id: string, user: User): Promise<boolean> {
-  const event = await this.getEventById(id);
+  async deleteEvent(id: string, user: User): Promise<boolean> {
+    const event = await this.getEventById(id);
 
-  const result = await this.eventRepository.delete(id);
-  return (result.affected ?? 0) > 0;
-}
-async findAll(): Promise<Event[]> {
-  return this.eventRepository.find();
-}
+    const result = await this.eventRepository.delete(id);
+    return (result.affected ?? 0) > 0;
+  }
+  async findAll(options?: FindAllOptions) {
+    const query = this.eventRepository.createQueryBuilder('event');
 
+    if (options?.page && options?.limit) {
+      const skip = (options.page - 1) * options.limit;
+      query.skip(skip).take(options.limit);
+    }
+
+    return query.getMany();
+  }
 
 }
