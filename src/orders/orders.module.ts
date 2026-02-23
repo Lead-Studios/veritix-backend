@@ -5,7 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 import orderConfig from './order.config';
 import { OrdersScheduler } from './orders.scheduler';
 import { TicketModule } from 'src/ticket-verification/ticket.module';
-import { Order } from './orders.entity';
+import { Order, OrderItem } from './orders.entity';
 
 /**
  * OrdersModule
@@ -28,7 +28,7 @@ import { Order } from './orders.entity';
  */
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Order]),
+    TypeOrmModule.forFeature([Order, OrderItem]),
     ConfigModule.forFeature(orderConfig),
     TicketModule,
   ],
