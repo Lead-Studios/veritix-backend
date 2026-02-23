@@ -30,4 +30,9 @@ export class Order {
 
   @OneToMany(() => OrderItem, (item) => item.order, { cascade: true })
   items: OrderItem[];
+
+  /** Convenience: true if the order window has lapsed and it is still PENDING. */
+  isExpired(): boolean {
+    return this.status === OrderStatus.PENDING && new Date() >= this.expiresAt;
+  }
 }
