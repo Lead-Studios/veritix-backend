@@ -1,65 +1,103 @@
 import {
   Body,
   Controller,
+  Delete,
+  ForbiddenException,
   Get,
   HttpCode,
   HttpStatus,
   Param,
   ParseUUIDPipe,
-  Patch,
   Post,
-  Request,
   UseGuards,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { OrdersService } from './orders.service';
 import { CreateOrderInput } from './dto/order.dto';
 import { JwtAuthGuard } from 'src/auth/guard/jwt.auth.guard';
+import { RolesGuard } from 'src/auth/guard/roles.guard';
+import { Roles } from 'src/auth/decorators/roles.decorators';
+import { CurrentUser } from 'src/auth/decorators/current.user.decorators';
+import { UserRole } from 'src/auth/common/enum/user-role-enum';
+import { User } from 'src/auth/entities/user.entity';
 import { Order } from './orders.entity';
+import { StellarConfig } from 'src/stellar/stellar.config';
 
 /**
  * OrdersController
  *
  * All routes require a valid JWT. The authenticated user's ID is read from
- * `req.user.id` so users can only act on their own orders.
+ * the CurrentUser decorator so users can only act on their own orders.
  *
  * Route summary:
- *   POST   /orders              → createOrder
- *   GET    /orders/me           → findByUser (current user)
- *   GET    /orders/:id          → findById
- *   PATCH  /orders/:id/cancel   → cancelOrder
+ *   POST   /orders       → createOrder (SUBSCRIBER role required)
+ *   GET    /orders/my    → findMyOrders (current user)
+ *   GET    /orders/:id   → findById (owner or ADMIN only)
+ *   DELETE /orders/:id   → cancelOrder (owner or ADMIN only)
  */
 @Controller('orders')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) {}
+  constructor(
+    private readonly ordersService: OrdersService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Post()
+  @Roles(UserRole.SUBSCRIBER)
   @HttpCode(HttpStatus.CREATED)
   async createOrder(
-    @Request() req: { user: { id: string } },
+    @CurrentUser() user: User,
     @Body() body: { eventId: string; items: { ticketTypeId: string; quantity: number }[] },
   ) {
     const input: CreateOrderInput = {
-      userId: req.user.id,
+      userId: user.id,
       eventId: body.eventId,
       items: body.items,
     };
-    return this.ordersService.createOrder(input);
+    const result = await this.ordersService.createOrder(input);
+    
+    const stellarConfig = this.configService.get<StellarConfig>('stellar');
+    
+    return {
+      ...result.order,
+      destinationAddress: stellarConfig?.platformAddress,
+      memo: result.stellarMemo,
+      amountXLM: result.order.totalAmountXLM,
+    };
   }
 
-  @Get('me')
-  async findMyOrders(@Request() req: { user: { id: string } }): Promise<Order[]> {
-    return this.ordersService.findByUser(req.user.id);
+  @Get('my')
+  async findMyOrders(@CurrentUser() user: User): Promise<Order[]> {
+    return this.ordersService.findByUser(user.id);
   }
 
   @Get(':id')
-  async findById(@Param('id', ParseUUIDPipe) id: string): Promise<Order> {
-    return this.ordersService.findById(id);
+  async findById(
+    @CurrentUser() user: User,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<Order> {
+    const order = await this.ordersService.findById(id);
+    
+    if (order.userId !== user.id && user.role !== UserRole.ADMIN) {
+      throw new ForbiddenException('You do not have permission to view this order');
+    }
+    
+    return order;
   }
 
-  @Patch(':id/cancel')
+  @Delete(':id')
   @HttpCode(HttpStatus.OK)
-  async cancelOrder(@Param('id', ParseUUIDPipe) id: string): Promise<Order> {
+  async cancelOrder(
+    @CurrentUser() user: User,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<Order> {
+    const order = await this.ordersService.findById(id);
+    
+    if (order.userId !== user.id && user.role !== UserRole.ADMIN) {
+      throw new ForbiddenException('You do not have permission to cancel this order');
+    }
+    
     return this.ordersService.cancelOrder(id);
   }
 }
