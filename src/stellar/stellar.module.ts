@@ -1,10 +1,25 @@
-import { Module } from '@nestjs/common';
-import { StellarService } from './stellar.service';
+import { Module, OnModuleInit } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { StellarService } from './stellar.service';
+import { Order } from '../orders/orders.entity';
+import { StellarCursor } from './entities/stellar-cursor.entity';
+import { TicketsModule } from '../tickets-inventory/tickets.module';
 
 @Module({
-    imports: [ConfigModule],
-    providers: [StellarService],
-    exports: [StellarService],
+  imports: [
+    ConfigModule,
+    TypeOrmModule.forFeature([Order, StellarCursor]),
+    TicketsModule,
+  ],
+  providers: [StellarService],
+  exports: [StellarService],
 })
-export class StellarModule { }
+export class StellarModule implements OnModuleInit {
+  constructor(private readonly stellarService: StellarService) { }
+
+  async onModuleInit() {
+    // Start the payment listener when the module initializes
+    await this.stellarService.listenForPayments();
+  }
+}
