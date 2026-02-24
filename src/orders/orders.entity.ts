@@ -56,6 +56,12 @@ export class Order {
   @Column({ type: 'varchar', length: 64, name: 'stellar_tx_hash', nullable: true })
   stellarTxHash: string | null;
 
+  @Column({ type: 'varchar', nullable: true, name: 'refund_tx_hash' })
+  refundTxHash: string | null;
+
+  @Column({ type: 'varchar', nullable: true, name: 'buyer_stellar_address' })
+  buyerStellarAddress: string | null;
+
   @Column({ type: 'jsonb', nullable: true })
   metadata: Record<string, any> | null;
 

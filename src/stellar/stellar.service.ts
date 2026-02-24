@@ -7,15 +7,19 @@ import { Order } from '../orders/orders.entity';
 import { OrderStatus } from '../orders/enums/order-status.enum';
 import { TicketService } from '../tickets-inventory/services/ticket.service';
 import { TicketTypeService } from '../tickets-inventory/services/ticket-type.service';
-import { sendEmail } from '../config/email/email.service';
 import { StellarCursor } from './entities/stellar-cursor.entity';
 import { StellarConfig, defaultStellarConfig } from './stellar.config';
 
+/**
+ * StellarService
+ * Handles communication with the Stellar blockchain, including listening for payments
+ * and making outbound refund payments.
+ */
 @Injectable()
 export class StellarService implements OnModuleDestroy {
   private readonly logger = new Logger(StellarService.name);
   private readonly config: StellarConfig;
-  private server: StellarSdk.Horizon.Server;
+  public server: StellarSdk.Horizon.Server; // Public for testing purposes
   private streamCloseFunction: (() => void) | null = null;
   private retryCount = 0;
   private isShuttingDown = false;
@@ -37,6 +41,9 @@ export class StellarService implements OnModuleDestroy {
       platformAddress:
         this.configService.get<string>('STELLAR_PLATFORM_ADDRESS') ||
         defaultStellarConfig.platformAddress,
+      horizonUrl:
+        this.configService.get<string>('blockchain.horizonUrl') ||
+        defaultStellarConfig.horizonUrl,
     };
 
     if (!this.config.platformAddress) {
@@ -54,6 +61,83 @@ export class StellarService implements OnModuleDestroy {
       this.logger.log('Closing Stellar payment stream...');
       this.streamCloseFunction();
       this.streamCloseFunction = null;
+    }
+  }
+
+  /**
+   * Send a refund payment in XLM to the destination address
+   * @param destinationAddress Originating wallet address
+   * @param amountXLM Amount in XLM to refund
+   * @param orderId Internal order reference mapping the refund
+   * @returns The transaction hash of the successful payment
+   */
+  async sendRefund(
+    destinationAddress: string,
+    amountXLM: number,
+    orderId: string,
+  ): Promise<string> {
+    const secretKey = this.configService.get<string>('stellarSecretKey');
+    if (!secretKey) {
+      throw new Error('STELLAR_SECRET_KEY is not configured on the platform');
+    }
+
+    const sourceKeypair = StellarSdk.Keypair.fromSecret(secretKey);
+    const sourcePublicKey = sourceKeypair.publicKey();
+
+    let retries = 0;
+    const maxRetries = 1;
+
+    while (true) {
+      try {
+        // Load account to get sequence number
+        const account = await this.server.loadAccount(sourcePublicKey);
+
+        let fee: string = StellarSdk.BASE_FEE;
+        try {
+          // Use minimum base fee if available
+          const feeStats = await this.server.feeStats();
+          fee = feeStats.last_ledgers_base_fee_stats.min.toString();
+        } catch (e) {
+          this.logger.warn(
+            'Could not fetch fee stats, defaulting to standard BASE_FEE',
+          );
+        }
+
+        const transaction = new StellarSdk.TransactionBuilder(account, {
+          fee,
+          networkPassphrase: this.config.networkPassphrase,
+        })
+          .addOperation(
+            StellarSdk.Operation.payment({
+              destination: destinationAddress,
+              asset: StellarSdk.Asset.native(),
+              amount: amountXLM.toString(),
+            }),
+          )
+          .addMemo(StellarSdk.Memo.text(`Ref-${orderId}`.substring(0, 28))) // Max 28 bytes
+          .setTimeout(30)
+          .build();
+
+        transaction.sign(sourceKeypair);
+
+        const response = await this.server.submitTransaction(transaction);
+        this.logger.log(`Refund transaction successful: ${response.hash}`);
+        return response.hash;
+      } catch (error: any) {
+        if (error?.response?.status === 429 && retries < maxRetries) {
+          this.logger.warn(
+            'RATE_LIMIT_EXCEEDED from Horizon. Retrying in 2 seconds...',
+          );
+          retries++;
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+          continue;
+        }
+
+        this.logger.error(
+          `Failed to submit stellar refund: ${error?.message || error}`,
+        );
+        throw error;
+      }
     }
   }
 
@@ -135,7 +219,8 @@ export class StellarService implements OnModuleDestroy {
       const memo = await this.extractMemo(txHash);
 
       this.logger.log(
-        `Received payment: ${amount} XLM, memo: ${memo || 'none'}, tx: ${txHash}`,
+        `Received payment: ${amount} XLM, memo: ${memo || 'none'
+        }, tx: ${txHash}`,
       );
 
       // Check for duplicate transaction (idempotency)
@@ -175,9 +260,7 @@ export class StellarService implements OnModuleDestroy {
       });
 
       if (!order) {
-        this.logger.warn(
-          `No order found for memo: ${memo}, tx: ${txHash}`,
-        );
+        this.logger.warn(`No order found for memo: ${memo}, tx: ${txHash}`);
         await this.saveCursor(payment.paging_token);
         return;
       }
@@ -201,8 +284,11 @@ export class StellarService implements OnModuleDestroy {
    */
   private async extractMemo(txHash: string): Promise<string | null> {
     try {
-      const transaction = await this.server.transactions().transaction(txHash).call();
-      
+      const transaction = await this.server
+        .transactions()
+        .transaction(txHash)
+        .call();
+
       if (!transaction.memo || transaction.memo_type === 'none') {
         return null;
       }
@@ -323,19 +409,6 @@ export class StellarService implements OnModuleDestroy {
     this.logger.log(
       `Sending confirmation email for order ${order.id} to user ${order.userId}`,
     );
-
-    // Example email sending (requires user email lookup)
-    // const user = await this.userService.findById(order.userId);
-    // await sendEmail(
-    //   user.email,
-    //   'Payment Confirmed - Your Tickets',
-    //   'payment-confirmation',
-    //   {
-    //     orderId: order.id,
-    //     amount: order.totalAmountXLM.toString(),
-    //     ticketCount: order.items.reduce((sum, item) => sum + item.quantity, 0).toString(),
-    //   },
-    // );
   }
 
   /**

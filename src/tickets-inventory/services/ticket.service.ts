@@ -8,6 +8,9 @@ import { Ticket, TicketStatus } from '../entities/ticket.entity';
 import { CreateTicketDto } from '../dto/create-ticket.dto';
 import { TicketResponseDto } from '../dto/ticket.response.dto';
 import { TicketTypeService } from './ticket-type.service';
+import { StellarService } from '../../stellar/stellar.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Order } from '../../orders/orders.entity';
 
 @Injectable()
 export class TicketService {
@@ -15,8 +18,12 @@ export class TicketService {
   private readonly ticketTypeService: TicketTypeService;
 
   constructor(
+    @InjectRepository(Ticket)
     ticketRepository: Repository<Ticket>,
     ticketTypeService: TicketTypeService,
+    @InjectRepository(Order)
+    private readonly orderRepository: Repository<Order>,
+    private readonly stellarService: StellarService,
   ) {
     this.ticketRepository = ticketRepository;
     this.ticketTypeService = ticketTypeService;
@@ -168,6 +175,31 @@ export class TicketService {
 
     if (ticket.status === TicketStatus.REFUNDED) {
       throw new BadRequestException('Ticket is already refunded');
+    }
+
+    // Process refund on Stellar if it was a Stellar payment
+    if (ticket.orderReference) {
+      const order = await this.orderRepository.findOne({ where: { id: ticket.orderReference } });
+      if (order && order.stellarTxHash) {
+        try {
+          const refundAmount = ticket.ticketType.price; // Refund only this ticket's price
+          const destination = order.buyerStellarAddress || 'UNKNOWN'; // Needs actual buyer address
+
+          if (destination === 'UNKNOWN') {
+            throw new BadRequestException('Cannot refund: buyerStellarAddress not set on the Order');
+          }
+
+          const refundHash = await this.stellarService.sendRefund(
+            destination,
+            refundAmount, // Make sure ticketType.price is available
+            order.id
+          );
+          order.refundTxHash = refundHash;
+          await this.orderRepository.save(order);
+        } catch (error) {
+          throw new BadRequestException(`Stellar refund failed: ${error.message}`);
+        }
+      }
     }
 
     // Release ticket back to inventory

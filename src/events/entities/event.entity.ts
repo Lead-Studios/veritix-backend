@@ -41,6 +41,21 @@ export class Event {
   @Column({ default: false })
   isArchived: boolean;
 
+  @Column({ type: 'varchar', nullable: true })
+  venue: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  city: string;
+
+  @Column({ type: 'varchar', length: 2, nullable: true })
+  countryCode: string;
+
+  @Column({ type: 'text', array: true, default: '{}' })
+  tags: string[];
+
+  @Column({ default: false })
+  isVirtual: boolean;
+
   @DeleteDateColumn()
   deletedAt?: Date;
 
