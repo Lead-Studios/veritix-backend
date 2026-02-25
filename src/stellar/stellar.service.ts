@@ -219,7 +219,8 @@ export class StellarService implements OnModuleDestroy {
       const memo = await this.extractMemo(txHash);
 
       this.logger.log(
-        `Received payment: ${amount} XLM, memo: ${memo || 'none'
+        `Received payment: ${amount} XLM, memo: ${
+          memo || 'none'
         }, tx: ${txHash}`,
       );
 
@@ -482,6 +483,56 @@ export class StellarService implements OnModuleDestroy {
     } catch (error) {
       this.logger.error('Failed to save cursor to database', error);
     }
+  }
+
+  // -----------------------------------------------------------------------
+  // Payment address / memo helpers (Issue requirement)
+  // -----------------------------------------------------------------------
+
+  /**
+   * Returns the network passphrase for the configured Stellar network.
+   * Defaults to testnet unless STELLAR_NETWORK=mainnet is explicitly set.
+   */
+  getNetworkPassphrase(): string {
+    const network =
+      this.configService.get<string>('STELLAR_NETWORK') ?? 'testnet';
+    return network === 'mainnet'
+      ? StellarSdk.Networks.PUBLIC
+      : StellarSdk.Networks.TESTNET;
+  }
+
+  /**
+   * Produces a short, unique, reproducible memo from the order ID.
+   * Uses the first 8 characters of the UUID (after stripping dashes).
+   */
+  generateMemo(orderId: string): string {
+    return orderId.replace(/-/g, '').substring(0, 8).toUpperCase();
+  }
+
+  /**
+   * Returns the platform's Stellar receiving address and a unique memo
+   * derived from the order ID so the frontend knows where to send payment.
+   */
+  getPaymentAddress(orderId: string): {
+    destinationAddress: string;
+    memo: string;
+    network: string;
+  } {
+    const destinationAddress =
+      this.configService.get<string>('STELLAR_RECEIVING_ADDRESS') ||
+      this.config.platformAddress;
+
+    if (!destinationAddress) {
+      throw new Error(
+        'STELLAR_RECEIVING_ADDRESS is not configured on the platform',
+      );
+    }
+
+    return {
+      destinationAddress,
+      memo: this.generateMemo(orderId),
+      network: this.configService.get<string>('STELLAR_NETWORK') ?? 'testnet',
+    };
   }
 
   /**

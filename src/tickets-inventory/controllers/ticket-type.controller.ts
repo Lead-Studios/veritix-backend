@@ -8,11 +8,13 @@ import {
   Body,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { TicketTypeService } from '../services/ticket-type.service';
 import { CreateTicketTypeDto } from '../dto/create-ticket-type.dto';
 import { UpdateTicketTypeDto } from '../dto/update-ticket-type.dto';
 import { TicketTypeResponseDto } from '../dto/ticket-type.response.dto';
+import { JwtAuthGuard } from '../../auth/guard/jwt.auth.guard';
 
 @Controller('events/:eventId/ticket-types')
 export class TicketTypeController {
@@ -24,6 +26,7 @@ export class TicketTypeController {
    */
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @UseGuards(JwtAuthGuard)
   async create(
     @Param('eventId') eventId: string,
     @Body() createTicketTypeDto: CreateTicketTypeDto,
@@ -36,8 +39,19 @@ export class TicketTypeController {
    * GET /events/:eventId/ticket-types
    */
   @Get()
-  async findByEvent(eventId: string): Promise<TicketTypeResponseDto[]> {
+  async findByEvent(
+    @Param('eventId') eventId: string,
+  ): Promise<TicketTypeResponseDto[]> {
     return this.ticketTypeService.findByEvent(eventId);
+  }
+
+  /**
+   * Get inventory summary for an event
+   * GET /events/:eventId/ticket-types/summary/inventory
+   */
+  @Get('summary/inventory')
+  async getInventorySummary(@Param('eventId') eventId: string): Promise<any> {
+    return this.ticketTypeService.getInventorySummary(eventId);
   }
 
   /**
@@ -45,7 +59,10 @@ export class TicketTypeController {
    * GET /events/:eventId/ticket-types/:id
    */
   @Get(':id')
-  async findById(id: string): Promise<TicketTypeResponseDto> {
+  async findById(
+    @Param('eventId') eventId: string,
+    @Param('id') id: string,
+  ): Promise<TicketTypeResponseDto> {
     return this.ticketTypeService.findById(id);
   }
 
@@ -54,8 +71,10 @@ export class TicketTypeController {
    * PUT /events/:eventId/ticket-types/:id
    */
   @Put(':id')
+  @UseGuards(JwtAuthGuard)
   async update(
-    id: string,
+    @Param('eventId') eventId: string,
+    @Param('id') id: string,
     @Body() updateTicketTypeDto: UpdateTicketTypeDto,
   ): Promise<TicketTypeResponseDto> {
     return this.ticketTypeService.update(id, updateTicketTypeDto);
@@ -67,16 +86,11 @@ export class TicketTypeController {
    */
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(id: string): Promise<void> {
+  @UseGuards(JwtAuthGuard)
+  async delete(
+    @Param('eventId') eventId: string,
+    @Param('id') id: string,
+  ): Promise<void> {
     return this.ticketTypeService.delete(id);
-  }
-
-  /**
-   * Get inventory summary for an event
-   * GET /events/:eventId/ticket-types/summary
-   */
-  @Get('summary/inventory')
-  async getInventorySummary(eventId: string): Promise<any> {
-    return this.ticketTypeService.getInventorySummary(eventId);
   }
 }

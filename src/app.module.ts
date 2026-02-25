@@ -11,10 +11,11 @@ import { EventsModule } from './events/events.module';
 import { VerificationModule } from './verification/verification.module';
 import { ContactModule } from './contact/contact.module';
 import databaseConfig from './config/database-config';
-import appConfig from './config/app.config';
+import appConfig, { appConfigValidationSchema } from './config/app.config';
 import { OrdersModule } from './orders/orders.module';
 import { StellarModule } from './stellar/stellar.module';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -22,6 +23,8 @@ import { ThrottlerModule } from '@nestjs/throttler';
     ConfigModule.forRoot({
       isGlobal: true,
       load: [appConfig, databaseConfig],
+      validationSchema: appConfigValidationSchema,
+      validationOptions: { allowUnknown: true, abortEarly: false },
     }),
     ThrottlerModule.forRoot([
       {
@@ -73,7 +76,8 @@ import { ThrottlerModule } from '@nestjs/throttler';
     EventsModule, // ← Add here
     VerificationModule, // ← Add here
     ContactModule,
-    StellarModule, // ← Stellar payment listener
+    StellarModule,
+    AdminModule, // ← Stellar payment listener
   ],
   controllers: [AppController],
   providers: [AppService],

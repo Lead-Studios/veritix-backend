@@ -3,36 +3,20 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 
 import orderConfig from './order.config';
+import { OrdersService } from './orders.service';
 import { OrdersScheduler } from './orders.scheduler';
 import { TicketModule } from 'src/ticket-verification/ticket.module';
-import { Order, OrderItem } from './orders.entity';
+import { Order } from './orders.entity';
+import { StellarModule } from '../stellar/stellar.module';
 
-/**
- * OrdersModule
- *
- * Registers `OrdersScheduler` as a provider so @nestjs/schedule picks up
- * its @Cron decorators automatically once ScheduleModule.forRoot() is in
- * AppModule.
- *
- * AppModule wiring required:
- * ```ts
- * @Module({
- *   imports: [
- *     ScheduleModule.forRoot(),   // ← must be present exactly once
- *     ConfigModule.forRoot({ load: [orderConfig], isGlobal: true }),
- *     OrdersModule,
- *   ],
- * })
- * export class AppModule {}
- * ```
- */
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Order, OrderItem]),
+    TypeOrmModule.forFeature([Order]),
     ConfigModule.forFeature(orderConfig),
     TicketModule,
+    StellarModule,
   ],
-  providers: [OrdersScheduler],
-  exports: [OrdersScheduler],
+  providers: [OrdersService, OrdersScheduler],
+  exports: [OrdersService, OrdersScheduler],
 })
 export class OrdersModule {}

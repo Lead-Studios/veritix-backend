@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { DataSource, Repository } from 'typeorm';
-import { randomBytes } from 'crypto';
 import {
   CreateOrderInput,
   CreateOrderResult,
@@ -13,6 +12,7 @@ import { OrderConfig } from './order.config';
 import { Order, OrderItem } from './orders.entity';
 import { TicketTypeService } from 'src/tickets-inventory/services/ticket-type.service';
 import { OrderStatus } from './enums/order-status.enum';
+import { StellarService } from '../stellar/stellar.service';
 
 @Injectable()
 export class OrdersService {
@@ -25,6 +25,7 @@ export class OrdersService {
     private readonly ticketTypeService: TicketTypeService,
     private readonly config: ConfigService,
     private readonly dataSource: DataSource,
+    private readonly stellarService: StellarService,
   ) {}
 
   // ------------------------------------------------------------------
@@ -50,7 +51,10 @@ export class OrdersService {
     const { userId, eventId, items } = input;
 
     if (!items || items.length === 0) {
-      throw new OrderError('Order must contain at least one item', OrderErrorCode.EMPTY_ORDER);
+      throw new OrderError(
+        'Order must contain at least one item',
+        OrderErrorCode.EMPTY_ORDER,
+      );
     }
 
     for (const item of items) {
@@ -65,31 +69,28 @@ export class OrdersService {
     // Load ticket types and validate inventory before opening a transaction.
     const ticketTypes = await Promise.all(
       items.map((item) =>
-        this.ticketTypeService
-          .findById(item.ticketTypeId)
-          .then((tt) => {
-            if (!tt) {
-              throw new OrderError(
-                `TicketType ${item.ticketTypeId} not found`,
-                OrderErrorCode.TICKET_TYPE_NOT_FOUND,
-              );
-            }
-            if (tt.totalQuantity < item.quantity) {
-              throw new OrderError(
-                `Insufficient inventory for ticketType ${item.ticketTypeId}: ` +
-                  `requested ${item.quantity}, available ${tt.totalQuantity}`,
-                OrderErrorCode.INSUFFICIENT_INVENTORY,
-              );
-            }
-            return tt;
-          }),
+        this.ticketTypeService.findById(item.ticketTypeId).then((tt) => {
+          if (!tt) {
+            throw new OrderError(
+              `TicketType ${item.ticketTypeId} not found`,
+              OrderErrorCode.TICKET_TYPE_NOT_FOUND,
+            );
+          }
+          if (tt.totalQuantity < item.quantity) {
+            throw new OrderError(
+              `Insufficient inventory for ticketType ${item.ticketTypeId}: ` +
+                `requested ${item.quantity}, available ${tt.totalQuantity}`,
+              OrderErrorCode.INSUFFICIENT_INVENTORY,
+            );
+          }
+          return tt;
+        }),
       ),
     );
 
     const expiryMinutes =
       this.config.get<OrderConfig>('order')?.expiryMinutes ?? 15;
     const expiresAt = new Date(Date.now() + expiryMinutes * 60 * 1_000);
-    const stellarMemo = this.generateMemo();
 
     // Compute totals from snapshotted prices.
     let totalAmountXLM = 0;
@@ -113,6 +114,7 @@ export class OrdersService {
     // Run everything inside a transaction so a failed reservation rolls back
     // the order row automatically.
     const order = await this.dataSource.transaction(async (manager) => {
+      // Create a placeholder order first to get the UUID
       const savedOrder = await manager.save(
         manager.create(Order, {
           userId,
@@ -120,13 +122,18 @@ export class OrdersService {
           status: OrderStatus.PENDING,
           totalAmountXLM,
           totalAmountUSD,
-          stellarMemo,
+          stellarMemo: '', // Will be updated immediately after ID is generated
           expiresAt,
           paidAt: null,
           stellarTxHash: null,
           metadata: null,
         }),
       );
+
+      // Derive memo from the real order UUID via StellarService
+      const stellarMemo = this.stellarService.generateMemo(savedOrder.id);
+      await manager.update(Order, savedOrder.id, { stellarMemo });
+      savedOrder.stellarMemo = stellarMemo;
 
       const itemEntities = orderItems.map((item) =>
         manager.create(OrderItem, { ...item, orderId: savedOrder.id }),
@@ -145,12 +152,23 @@ export class OrdersService {
       return savedOrder;
     });
 
+    // Build the Stellar payment instruction for the frontend
+    const { destinationAddress, memo, network } =
+      this.stellarService.getPaymentAddress(order.id);
+
     this.logger.log(
       `Order ${order.id} created for user ${userId} — ` +
-        `${items.length} item(s), ${totalAmountXLM} XLM, memo=${stellarMemo}`,
+        `${items.length} item(s), ${totalAmountXLM} XLM, memo=${order.stellarMemo}`,
     );
 
-    return { order, stellarMemo };
+    return {
+      order,
+      stellarMemo: order.stellarMemo,
+      destinationAddress,
+      memo,
+      amountXLM: totalAmountXLM,
+      network,
+    };
   }
 
   async findById(orderId: string): Promise<Order> {
@@ -160,7 +178,10 @@ export class OrdersService {
     });
 
     if (!order) {
-      throw new OrderError(`Order ${orderId} not found`, OrderErrorCode.ORDER_NOT_FOUND);
+      throw new OrderError(
+        `Order ${orderId} not found`,
+        OrderErrorCode.ORDER_NOT_FOUND,
+      );
     }
 
     return order;
@@ -205,13 +226,5 @@ export class OrdersService {
 
     this.logger.log(`Order ${orderId} manually cancelled`);
     return order;
-  }
-
-  /**
-   * Generate a Stellar-compatible memo (≤ 28 chars, URL-safe).
-   * Format: VTX-<10 random hex chars>  e.g. "VTX-3f9a2b1c4d"
-   */
-  private generateMemo(): string {
-    return `VTX-${randomBytes(5).toString('hex')}`;
   }
 }
