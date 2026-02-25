@@ -10,6 +10,14 @@ import {
   ParseUUIDPipe,
   UseGuards,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { EventsService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
@@ -24,9 +32,10 @@ import { EventQueryDto } from './dto/event-query.dto';
 import { OptionalJwtAuthGuard } from 'src/auth/guard/optional-jwt.auth.guard';
 import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 
+@ApiTags('Events')
 @Controller('events')
 export class EventsController {
-  constructor(private readonly eventsService: EventsService) { }
+  constructor(private readonly eventsService: EventsService) {}
 
   // -------------------------------
   // PUBLIC ENDPOINTS
@@ -34,6 +43,23 @@ export class EventsController {
 
   @UseGuards(OptionalJwtAuthGuard)
   @Get()
+  @ApiOperation({
+    summary: 'List all published events (admins can include all statuses)',
+  })
+  @ApiQuery({
+    name: 'includeAll',
+    required: false,
+    type: Boolean,
+    description: 'Include all event statuses (admin only)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Paginated list of events returned',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden – only admins can use includeAll',
+  })
   async getAll(
     @Query() query: EventQueryDto,
     @Query('includeAll') includeAllStr?: string,
@@ -41,7 +67,6 @@ export class EventsController {
   ) {
     let includeAll = includeAllStr === 'true';
 
-    // Restrict includeAll to ADMIN
     if (includeAll) {
       if (!user || user.role !== UserRole.ADMIN) {
         throw new ForbiddenException('Only admins can query with includeAll');
@@ -54,6 +79,10 @@ export class EventsController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get a single event by ID' })
+  @ApiParam({ name: 'id', type: String, description: 'Event UUID' })
+  @ApiResponse({ status: 200, description: 'Event returned successfully' })
+  @ApiResponse({ status: 404, description: 'Event not found' })
   async getById(@Param('id', ParseUUIDPipe) id: string) {
     return this.eventsService.getEventById(id);
   }
@@ -65,16 +94,33 @@ export class EventsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ORGANIZER, UserRole.ADMIN)
   @Post()
-  async create(
-    @Body() dto: CreateEventDto,
-    @CurrentUser() user: User,
-  ) {
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Create a new event (organizer or admin only)' })
+  @ApiResponse({ status: 201, description: 'Event created successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid input data' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden – organizer or admin role required',
+  })
+  async create(@Body() dto: CreateEventDto, @CurrentUser() user: User) {
     return this.eventsService.createEvent(dto, user);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ORGANIZER, UserRole.ADMIN)
   @Patch(':id')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Update an event (organizer or admin only)' })
+  @ApiParam({ name: 'id', type: String, description: 'Event UUID' })
+  @ApiResponse({ status: 200, description: 'Event updated successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid input data' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden – must be event owner or admin',
+  })
+  @ApiResponse({ status: 404, description: 'Event not found' })
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateEventDto,
@@ -86,6 +132,16 @@ export class EventsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ORGANIZER, UserRole.ADMIN)
   @Patch(':id/status')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Change the status of an event (organizer or admin only)',
+  })
+  @ApiParam({ name: 'id', type: String, description: 'Event UUID' })
+  @ApiResponse({ status: 200, description: 'Event status updated' })
+  @ApiResponse({ status: 400, description: 'Invalid status transition' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'Event not found' })
   async changeStatus(
     @Param('id', ParseUUIDPipe) id: string,
     @Body('status') status: EventStatus,
@@ -97,6 +153,16 @@ export class EventsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ORGANIZER, UserRole.ADMIN)
   @Delete(':id')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Delete an event (organizer or admin only)' })
+  @ApiParam({ name: 'id', type: String, description: 'Event UUID' })
+  @ApiResponse({ status: 200, description: 'Event deleted successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden – must be event owner or admin',
+  })
+  @ApiResponse({ status: 404, description: 'Event not found' })
   async delete(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: User,

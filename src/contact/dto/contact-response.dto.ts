@@ -1,6 +1,18 @@
-import { IsString, IsOptional, IsEnum, IsUUID, IsEmail, IsNumber, IsDateString } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsEnum,
+  IsUUID,
+  IsEmail,
+  IsNumber,
+  IsDateString,
+} from 'class-validator';
 import { Type } from 'class-transformer';
-import { ContactCategory, ContactStatus } from '../interfaces/contact.interface';
+import {
+  ContactCategory,
+  ContactStatus,
+} from '../interfaces/contact.interface';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class ContactResponseDto {
   id: string;
@@ -59,27 +71,32 @@ export class ContactResponseDto {
 }
 
 export class ContactSummaryDto {
+  @ApiProperty()
   id: string;
 
+  @ApiProperty()
   name: string;
 
+  @ApiProperty()
   email: string;
 
+  @ApiProperty()
   subject: string;
 
-  category: ContactCategory;
+  @ApiProperty()
+  category: string;
 
-  status: ContactStatus;
+  @ApiProperty()
+  status: string;
 
+  @ApiProperty({ required: false })
   priority?: string;
 
+  @ApiProperty()
   createdAt: Date;
 
+  @ApiProperty({ required: false })
   respondedAt?: Date;
-
-  assignedTo?: string;
-
-  assignedStaffName?: string;
 }
 
 export class UserSummaryDto {
