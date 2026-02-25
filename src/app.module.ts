@@ -14,6 +14,7 @@ import databaseConfig from './config/database-config';
 import appConfig from './config/app.config';
 import { OrdersModule } from './orders/orders.module';
 import { StellarModule } from './stellar/stellar.module';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
@@ -22,7 +23,13 @@ import { StellarModule } from './stellar/stellar.module';
       isGlobal: true,
       load: [appConfig, databaseConfig],
     }),
-
+    ThrottlerModule.forRoot([
+      {
+        name: 'default',
+        ttl: 60_000, // 1 minute in milliseconds
+        limit: 60,
+      },
+    ]),
     // Database connection (PostgreSQL)
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -63,10 +70,10 @@ import { StellarModule } from './stellar/stellar.module';
     UsersModule,
     TicketsModule,
     OrdersModule,
-    EventsModule,           // ← Add here
-    VerificationModule,     // ← Add here
+    EventsModule, // ← Add here
+    VerificationModule, // ← Add here
     ContactModule,
-    StellarModule,          // ← Stellar payment listener
+    StellarModule, // ← Stellar payment listener
   ],
   controllers: [AppController],
   providers: [AppService],

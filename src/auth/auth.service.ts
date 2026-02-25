@@ -8,7 +8,6 @@ import {
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
-import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import { UserHelper } from './helper/user-helper';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -21,6 +20,9 @@ import { SendPasswordResetOtpDto } from './dto/send-password-reset-otp.dto';
 import { ResendOtpDto } from './dto/resend-otp.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { sendEmail } from '../config/email/email.service';
+import { UpdateProfileDto } from 'src/users/dto/user-profile.dto';
+import { UserResponseDto } from 'src/users/dto/user-response.dto';
+import { User } from 'src/users/entities/event.entity';
 
 @Injectable()
 export class AuthService {
@@ -147,7 +149,7 @@ export class AuthService {
 
     return {
       message: UserMessages.VERIFY_OTP_SUCCESS,
-      user: this.userHelper.formatUserResponse(user),
+      user: this.userHelper.mapToResponseDto(user),
       tokens: tokens,
     };
   }
@@ -203,21 +205,22 @@ export class AuthService {
       await this.resendVerificationOtp(loginUserDto.email);
       return {
         message: UserMessages.EMAIL_NOT_VERIFIED,
-        user: this.userHelper.formatUserResponse(user),
+        user: this.userHelper.mapToResponseDto(user),
       };
     }
     const tokens = this.jwtHelper.generateTokens(user);
     return {
-      user: this.userHelper.formatUserResponse(user),
+      user: this.userHelper.mapToResponseDto(user),
       tokens: tokens,
     };
   }
+
   async refreshToken(refreshToken: string) {
     const validatedRefreshToken =
       this.jwtHelper.validateRefreshToken(refreshToken);
     const userId = Number(validatedRefreshToken);
     const user = await this.userRepository.findOne({
-      where: { id: userId },
+      where: { id: String(userId) },
     });
     if (!user) {
       throw new UnauthorizedException(UserMessages.INVALID_REFRESH_TOKEN);
@@ -225,16 +228,54 @@ export class AuthService {
     const accessToken = this.jwtHelper.generateAccessToken(user);
     return { accessToken };
   }
+
   async retrieveUserById(userId: number) {
     const user = await this.userRepository.findOne({
-      where: { id: userId },
+      where: { id: String(userId) },
     });
     if (!user) {
       throw new UnauthorizedException('User not found.');
     }
-    const result = this.userHelper.formatUserResponse(user);
-    return result;
+    return this.userHelper.mapToResponseDto(user);
   }
+
+  // ─── Profile update ────────────────────────────────────────────────────────
+
+  /**
+   * Update only the safe profile fields for the authenticated user.
+   * Email, password, and role cannot be changed via this method.
+   */
+  async updateProfile(
+    userId: string,
+    dto: UpdateProfileDto,
+  ): Promise<UserResponseDto> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException(UserMessages.USER_NOT_FOUND);
+    }
+
+    // Explicitly pick only the allowed profile fields so that
+    // even if UpdateProfileDto validation is bypassed, no sensitive
+    // field (email, password, role) can be overwritten.
+    const allowedFields: (keyof UpdateProfileDto)[] = [
+      'phone',
+      'avatarUrl',
+      'bio',
+      'country',
+      'stellarWalletAddress',
+    ];
+
+    for (const field of allowedFields) {
+      if (dto[field] !== undefined) {
+        (user as Record<string, unknown>)[field] = dto[field];
+      }
+    }
+
+    const updated = await this.userRepository.save(user);
+    return this.userHelper.mapToResponseDto(updated);
+  }
+
+  // ─── Password reset flow ────────────────────────────────────────────────────
 
   async requestResetPasswordOtp(
     sendPasswordResetOtpDto: SendPasswordResetOtpDto,
@@ -287,13 +328,18 @@ export class AuthService {
       user.passwordResetCodeExpiresAt = moment().add(10, 'minutes').toDate();
       await this.userRepository.save(user);
 
-      await sendEmail(user.email, 'Password Reset OTP', 'reset-password-email', {
-        fullName: user.fullName,
-        otp1: otp[0],
-        otp2: otp[1],
-        otp3: otp[2],
-        otp4: otp[3],
-      });
+      await sendEmail(
+        user.email,
+        'Password Reset OTP',
+        'reset-password-email',
+        {
+          fullName: user.fullName,
+          otp1: otp[0],
+          otp2: otp[1],
+          otp3: otp[2],
+          otp4: otp[3],
+        },
+      );
 
       return { message: UserMessages.OTP_SENT };
     } catch (error) {

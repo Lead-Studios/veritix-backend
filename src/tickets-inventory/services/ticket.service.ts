@@ -2,18 +2,21 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
+  Logger,
 } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { Ticket, TicketStatus } from '../entities/ticket.entity';
 import { CreateTicketDto } from '../dto/create-ticket.dto';
 import { TicketResponseDto } from '../dto/ticket.response.dto';
 import { TicketTypeService } from './ticket-type.service';
+import { QRService } from '../qr.service';
 import { StellarService } from '../../stellar/stellar.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Order } from '../../orders/orders.entity';
 
 @Injectable()
 export class TicketService {
+  private readonly logger = new Logger(TicketService.name);
   private readonly ticketRepository: Repository<Ticket>;
   private readonly ticketTypeService: TicketTypeService;
 
@@ -24,10 +27,12 @@ export class TicketService {
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
     private readonly stellarService: StellarService,
+    private readonly qrService: QRService,
   ) {
     this.ticketRepository = ticketRepository;
     this.ticketTypeService = ticketTypeService;
   }
+
   async createTickets(
     eventId: string,
     createTicketDto: CreateTicketDto,
@@ -54,6 +59,7 @@ export class TicketService {
       quantity,
     );
 
+    // Persist tickets first so each gets its auto-generated qrCode UUID
     const tickets = Array.from({ length: quantity }, () =>
       this.ticketRepository.create({
         ...createTicketDto,
@@ -63,7 +69,31 @@ export class TicketService {
     );
 
     const saved = await this.ticketRepository.save(tickets);
-    return saved.map((t) => this.mapToResponseDto(t));
+
+    // Generate QR code images after save so we have the actual qrCode value.
+    // Failures are non-fatal — we log and leave qrCodeImage null so ticket
+    // creation is never blocked by an image-generation issue.
+    const withQR = await Promise.all(
+      saved.map(async (ticket) => {
+        try {
+          ticket.qrCodeImage = await this.qrService.generateQRDataURI(
+            ticket.qrCode,
+          );
+        } catch (err) {
+          this.logger.error(
+            `QR generation failed for ticket ${ticket.id}: ${
+              (err as Error).message
+            }`,
+            (err as Error).stack,
+          );
+          ticket.qrCodeImage = null;
+        }
+        return ticket;
+      }),
+    );
+
+    const finalSaved = await this.ticketRepository.save(withQR);
+    return finalSaved.map((t) => this.mapToResponseDto(t));
   }
 
   async findById(id: string): Promise<TicketResponseDto> {
@@ -179,25 +209,31 @@ export class TicketService {
 
     // Process refund on Stellar if it was a Stellar payment
     if (ticket.orderReference) {
-      const order = await this.orderRepository.findOne({ where: { id: ticket.orderReference } });
+      const order = await this.orderRepository.findOne({
+        where: { id: ticket.orderReference },
+      });
       if (order && order.stellarTxHash) {
         try {
-          const refundAmount = ticket.ticketType.price; // Refund only this ticket's price
-          const destination = order.buyerStellarAddress || 'UNKNOWN'; // Needs actual buyer address
+          const refundAmount = ticket.ticketType.price;
+          const destination = order.buyerStellarAddress || 'UNKNOWN';
 
           if (destination === 'UNKNOWN') {
-            throw new BadRequestException('Cannot refund: buyerStellarAddress not set on the Order');
+            throw new BadRequestException(
+              'Cannot refund: buyerStellarAddress not set on the Order',
+            );
           }
 
           const refundHash = await this.stellarService.sendRefund(
             destination,
-            refundAmount, // Make sure ticketType.price is available
-            order.id
+            refundAmount,
+            order.id,
           );
           order.refundTxHash = refundHash;
           await this.orderRepository.save(order);
         } catch (error) {
-          throw new BadRequestException(`Stellar refund failed: ${error.message}`);
+          throw new BadRequestException(
+            `Stellar refund failed: ${(error as Error).message}`,
+          );
         }
       }
     }
@@ -238,6 +274,7 @@ export class TicketService {
     return {
       id: ticket.id,
       qrCode: ticket.qrCode,
+      qrCodeImage: ticket.qrCodeImage ?? null,
       status: ticket.status,
       orderReference: ticket.orderReference,
       attendeeEmail: ticket.attendeeEmail,

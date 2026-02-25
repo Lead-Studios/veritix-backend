@@ -1,53 +1,58 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { VerificationStatus } from '../interfaces/verification.interface';
 
 export class VerificationResponseDto {
-  status: VerificationStatus;
+  @ApiProperty({ example: 'VERIFIED' })
+  status: any;
 
+  @ApiProperty()
   isValid: boolean;
 
+  @ApiProperty()
   message: string;
 
+  @ApiPropertyOptional({ type: () => VerifiedTicketInfoDto })
   ticket?: VerifiedTicketInfoDto;
 
+  @ApiProperty({ type: String, format: 'date-time' })
   verifiedAt: Date;
 
+  @ApiPropertyOptional()
   verifiedBy?: string;
 
+  @ApiPropertyOptional()
   deviceInfo?: string;
 
+  @ApiPropertyOptional()
   location?: string;
 
+  @ApiPropertyOptional()
   latitude?: string;
 
+  @ApiPropertyOptional()
   longitude?: string;
 }
-
 export class VerifiedTicketInfoDto {
-  ticketId: string;
+  @ApiProperty() ticketId: string;
+  @ApiProperty() ticketCode: string;
+  @ApiProperty() eventId: string;
+  @ApiProperty() eventTitle: string;
+  @ApiProperty() ticketTypeName: string;
 
-  ticketCode: string;
+  @ApiPropertyOptional() holderName?: string;
+  @ApiPropertyOptional() seatInfo?: string;
 
-  eventId: string;
+  @ApiProperty() purchasePrice: number;
+  @ApiProperty() purchaseCurrency: string;
 
-  eventTitle: string;
-
-  ticketTypeName: string;
-
-  holderName?: string;
-
-  seatInfo?: string;
-
-  purchasePrice: number;
-
-  purchaseCurrency: string;
-
+  @ApiPropertyOptional({ type: String, format: 'date-time' })
   purchasedAt?: Date;
 
+  @ApiProperty({ type: String, format: 'date-time' })
   eventDate: Date;
 
-  eventVenue?: string;
-
-  eventCity?: string;
+  @ApiPropertyOptional() eventVenue?: string;
+  @ApiPropertyOptional() eventCity?: string;
 }
 
 export class VerificationLogResponseDto {
@@ -122,16 +127,26 @@ export class VerificationStatsDto {
 }
 
 export class BulkVerificationResponseDto {
+  @ApiProperty()
   totalProcessed: number;
 
+  @ApiProperty()
   successful: number;
 
+  @ApiProperty()
   failed: number;
 
+  @ApiProperty({
+    type: () => [VerificationResponseDto],
+  })
   results: VerificationResponseDto[];
 
+  @ApiProperty({
+    type: () => [VerificationErrorDto],
+  })
   errors: VerificationErrorDto[];
 
+  @ApiProperty({ type: String, format: 'date-time' })
   processedAt: Date;
 }
 

@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { User } from '../entities/user.entity';
 import * as bcrypt from 'bcrypt';
+import { UserResponseDto } from 'src/users/dto/user-response.dto';
+import { User } from 'src/users/entities/event.entity';
+
 @Injectable()
 export class UserHelper {
   public async verifyPassword(
@@ -14,14 +16,33 @@ export class UserHelper {
     return bcrypt.hash(password, 10);
   }
 
-  public formatUserResponse(user: User) {
+  /**
+   * Maps a User entity to a safe response DTO that excludes all
+   * sensitive fields (password, verificationCode, passwordResetCode, etc.).
+   */
+  public mapToResponseDto(user: User): UserResponseDto {
     return {
       id: user.id,
       email: user.email,
       fullName: user.fullName,
       role: user.role,
       isVerified: user.isVerified,
+      phone: user.phone ?? null,
+      avatarUrl: user.avatarUrl ?? null,
+      bio: user.bio ?? null,
+      country: user.country ?? null,
+      stellarWalletAddress: user.stellarWalletAddress ?? null,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
     };
+  }
+
+  /**
+   * @deprecated Use mapToResponseDto instead — this omits new profile fields.
+   * Kept temporarily so existing callers (login, verifyOtp) compile without changes.
+   */
+  public formatUserResponse(user: User) {
+    return this.mapToResponseDto(user);
   }
 
   public isValidPassword(password: string) {
