@@ -1,68 +1,47 @@
-import { IsString, IsNumber, IsOptional, IsEnum, Min, Max, Length, IsBoolean, IsArray } from 'class-validator';
-import { Type } from 'class-transformer';
-
-export class EventResponseDto {
-  id: string;
-
-  title: string;
-
-  description: string;
-
-  eventDate: Date;
-
-  eventClosingDate: Date;
-
-  capacity: number;
-
-  status: string;
-
-  isArchived: boolean;
-
-  venue?: string;
-
-  address?: string;
-
-  city?: string;
-
-  countryCode?: string;
-
-  imageUrl?: string;
-
-  tags?: string[];
-
-  isVirtual?: boolean;
-
-  streamingUrl?: string;
-
-  minTicketPrice?: number;
-
-  maxTicketPrice?: number;
-
-  currency?: string;
-
-  createdAt: Date;
-
-  updatedAt: Date;
-
-  totalTicketsSold?: number;
-
-  availableTickets?: number;
-
-  ticketTypes?: TicketTypeSummaryDto[];
-}
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class TicketTypeSummaryDto {
-  id: string;
+  @ApiProperty() id: string;
+  @ApiProperty() name: string;
+  @ApiProperty() price: number;
+  @ApiProperty() currency: string;
+  @ApiProperty() availableQuantity: number;
+  @ApiProperty() isActive: boolean;
+}
 
-  name: string;
+export class EventResponseDto {
+  @ApiProperty() id: string;
+  @ApiProperty() title: string;
+  @ApiProperty() description: string;
+  @ApiProperty() eventDate: Date;
+  @ApiProperty() eventClosingDate: Date;
+  @ApiProperty() capacity: number;
+  @ApiProperty() status: string;
+  @ApiProperty() isArchived: boolean;
 
-  price: number;
+  @ApiPropertyOptional() venue?: string;
+  @ApiPropertyOptional() address?: string;
+  @ApiPropertyOptional() city?: string;
+  @ApiPropertyOptional() countryCode?: string;
+  @ApiPropertyOptional() imageUrl?: string;
 
-  currency: string;
+  @ApiPropertyOptional({ type: [String] })
+  tags?: string[];
 
-  availableQuantity: number;
+  @ApiPropertyOptional() isVirtual?: boolean;
+  @ApiPropertyOptional() streamingUrl?: string;
+  @ApiPropertyOptional() minTicketPrice?: number;
+  @ApiPropertyOptional() maxTicketPrice?: number;
+  @ApiPropertyOptional() currency?: string;
 
-  isActive: boolean;
+  @ApiProperty() createdAt: Date;
+  @ApiProperty() updatedAt: Date;
+
+  @ApiPropertyOptional() totalTicketsSold?: number;
+  @ApiPropertyOptional() availableTickets?: number;
+
+  @ApiPropertyOptional({ type: [TicketTypeSummaryDto] })
+  ticketTypes?: TicketTypeSummaryDto[];
 }
 
 export class EventSummaryDto {

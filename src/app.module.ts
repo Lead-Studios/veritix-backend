@@ -5,9 +5,17 @@ import { AuthModule } from './auth/auth.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BlockchainModule } from './blockchain/blockchain.module';
-
+import { UsersModule } from './users/users.module';
+import { TicketsModule } from './tickets-inventory/tickets.module';
+import { EventsModule } from './events/events.module';
+import { VerificationModule } from './verification/verification.module';
+import { ContactModule } from './contact/contact.module';
 import databaseConfig from './config/database-config';
 import appConfig from './config/app.config';
+import appConfig, { appConfigValidationSchema } from './config/app.config';
+import { OrdersModule } from './orders/orders.module';
+import { StellarModule } from './stellar/stellar.module';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { AdminModule } from './admin/admin.module';
 
 @Module({
@@ -16,22 +24,25 @@ import { AdminModule } from './admin/admin.module';
     ConfigModule.forRoot({
       isGlobal: true,
       load: [appConfig, databaseConfig],
+      validationSchema: appConfigValidationSchema,
+      validationOptions: { allowUnknown: true, abortEarly: false },
     }),
-
+    ThrottlerModule.forRoot([
+      {
+        name: 'default',
+        ttl: 60_000, // 1 minute in milliseconds
+        limit: 60,
+      },
+    ]),
     // Database connection (PostgreSQL)
-  TypeOrmModule.forRootAsync({
-  imports: [ConfigModule],
-  inject: [ConfigService],
- useFactory: (configService: ConfigService) => {
-  const host = configService.get('database.host');
-  const port = configService.get('database.port');
-  const username = configService.get('database.username');
-  const database = configService.get('database.database');
-
-  console.log('DB HOST:', host);
-  console.log('DB PORT:', port);
-  console.log('DB USER:', username);
-  console.log('DB NAME:', database);
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const host = configService.get('database.host');
+        const port = configService.get('database.port');
+        const username = configService.get('database.username');
+        const database = configService.get('database.database');
 
   return {
     type: 'postgres',
@@ -46,7 +57,23 @@ import { AdminModule } from './admin/admin.module';
 },
 
     }),
+        console.log('DB HOST:', host);
+        console.log('DB PORT:', port);
+        console.log('DB USER:', username);
+        console.log('DB NAME:', database);
 
+        return {
+          type: 'postgres',
+          host,
+          port,
+          username,
+          password: configService.get('database.password'),
+          database,
+          synchronize: false,
+          autoLoadEntities: true,
+        };
+      },
+    }),
 
     AuthModule,
     AdminModule,
@@ -58,6 +85,14 @@ import { AdminModule } from './admin/admin.module';
         enabled: false, // Disabled until Stellar integration is implemented
       },
     }),
+    UsersModule,
+    TicketsModule,
+    OrdersModule,
+    EventsModule, // ← Add here
+    VerificationModule, // ← Add here
+    ContactModule,
+    StellarModule,
+    AdminModule, // ← Stellar payment listener
   ],
   controllers: [AppController],
   providers: [AppService],

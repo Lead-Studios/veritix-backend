@@ -1,62 +1,51 @@
-import { IsString, IsNumber, IsOptional, IsEnum, Min, Max, Length, IsBoolean, IsDateString, IsArray } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  IsOptional,
+  IsEnum,
+  IsString,
+  IsNumber,
+  Min,
+  Max,
+  IsBoolean,
+  IsArray,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { EventStatus } from '../../enums/event-status.enum';
 
 export class EventQueryDto {
+  @ApiPropertyOptional({ example: 'conference' })
   @IsOptional()
   @IsString()
-  @Length(1, 100)
   search?: string;
 
+  @ApiPropertyOptional({ enum: EventStatus })
   @IsOptional()
   @IsEnum(EventStatus)
   status?: EventStatus;
 
+  @ApiPropertyOptional({ example: 'Lagos' })
   @IsOptional()
   @IsString()
-  @Length(1, 100)
   city?: string;
 
+  @ApiPropertyOptional({ example: 'NG' })
   @IsOptional()
   @IsString()
-  @Length(2, 2)
   countryCode?: string;
 
+  @ApiPropertyOptional({ example: true })
   @IsOptional()
   @IsBoolean()
   isVirtual?: boolean;
 
-  @IsOptional()
-  @IsDateString()
-  dateFrom?: string;
-
-  @IsOptional()
-  @IsDateString()
-  dateTo?: string;
-
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  @Max(1000)
-  minTicketPrice?: number;
-
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  @Max(1000)
-  maxTicketPrice?: number;
-
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  tags?: string[];
-
+  @ApiPropertyOptional({ example: 1, default: 1 })
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
   @Min(1)
   page?: number = 1;
 
+  @ApiPropertyOptional({ example: 10, default: 10 })
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
@@ -64,11 +53,14 @@ export class EventQueryDto {
   @Max(100)
   limit?: number = 10;
 
+  @ApiPropertyOptional({
+    enum: ['createdAt', 'eventDate', 'title', 'capacity'],
+    default: 'eventDate',
+  })
   @IsOptional()
-  @IsEnum(['createdAt', 'eventDate', 'title', 'capacity'])
   sortBy?: string = 'eventDate';
 
+  @ApiPropertyOptional({ enum: ['ASC', 'DESC'], default: 'ASC' })
   @IsOptional()
-  @IsEnum(['ASC', 'DESC'])
   sortOrder?: 'ASC' | 'DESC' = 'ASC';
 }

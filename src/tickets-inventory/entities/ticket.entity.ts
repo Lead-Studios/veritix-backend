@@ -34,6 +34,15 @@ export class Ticket {
   qrCode: string;
 
   @Column({
+    type: 'text',
+    nullable: true,
+    comment:
+      'Base64 PNG data URI of the QR code image (data:image/png;base64,...). ' +
+      'Generated at issuance; null if generation failed.',
+  })
+  qrCodeImage: string | null;
+
+  @Column({
     type: 'enum',
     enum: TicketStatus,
     default: TicketStatus.ISSUED,

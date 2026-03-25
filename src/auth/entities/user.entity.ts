@@ -2,18 +2,20 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
 import { UserRole } from '../common/enum/user-role-enum';
 import { Exclude } from 'class-transformer';
-import { Ticket } from '../../tickets/entities/ticket.entity';
+import { Event } from '../../events/entities/event.entity';
 
 @Entity()
 export class User {
   @PrimaryGeneratedColumn()
   id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string; // switched to UUID for consistency with Event
 
   @Column({ unique: true })
   email: string;
@@ -35,11 +37,14 @@ export class User {
   @Column({ nullable: true })
   verificationCode?: string;
 
-  @CreateDateColumn()
+  @Column({ type: 'timestamp', nullable: true })
   verificationCodeExpiresAt?: Date;
 
   @Column({ nullable: true })
   passwordResetCode?: string;
+
+  @Column({ type: 'timestamp', nullable: true })
+  passwordResetCodeExpiresAt?: Date;
 
   @Column({ default: false })
   isVerified: boolean;
@@ -60,11 +65,20 @@ export class User {
   passwordResetCodeExpiresAt?: Date;
 
   @CreateDateColumn()
+  // =============================
+  // TIMESTAMPS
+  // =============================
+  @CreateDateColumn()
   createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @OneToMany(() => Ticket, (t) => t.owner)
-  tickets: Ticket[];
+  // =============================
+  // RELATIONS
+  // =============================
+
+  // A user can be the organizer of multiple events
+  @OneToMany(() => Event, (event) => event.organizer)
+  organizedEvents: Event[];
 }

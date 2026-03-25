@@ -4,13 +4,16 @@ import {
   Column,
   DeleteDateColumn,
   OneToMany,
+  ManyToOne, JoinColumn, Index,
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { EventStatus } from '../../enums/event-status.enum';
 import { BlockchainAnchorStatus } from '../../blockchain/enums';
-import { TicketType } from '../../tickets/entities/ticket-type.entity';
-import { Ticket } from '../../tickets/entities/ticket.entity';
+import { TicketType } from '../../tickets-inventory/entities/ticket-type.entity';
+import { Ticket } from '../../tickets-inventory/entities/ticket.entity';
+import { User } from '../../auth/entities/user.entity';
+
 
 @Entity()
 export class Event {
@@ -37,6 +40,21 @@ export class Event {
 
   @Column({ default: false })
   isArchived: boolean;
+
+  @Column({ type: 'varchar', nullable: true })
+  venue: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  city: string;
+
+  @Column({ type: 'varchar', length: 2, nullable: true })
+  countryCode: string;
+
+  @Column({ type: 'text', array: true, default: '{}' })
+  tags: string[];
+
+  @Column({ default: false })
+  isVirtual: boolean;
 
   @DeleteDateColumn()
   deletedAt?: Date;
@@ -86,4 +104,17 @@ export class Event {
 
   @OneToMany(() => Ticket, (t) => t.event)
   tickets: Ticket[];
+
+  @Index()
+  @Column({ type: 'uuid', nullable: true })
+  organizerId: string | null;
+
+  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'organizerId' })
+  organizer: User | null;
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

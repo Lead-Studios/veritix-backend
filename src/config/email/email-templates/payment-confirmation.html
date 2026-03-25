@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Payment Confirmed</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .header {
+        background-color: #4caf50;
+        color: white;
+        padding: 20px;
+        text-align: center;
+        border-radius: 5px 5px 0 0;
+      }
+      .content {
+        background-color: #f9f9f9;
+        padding: 30px;
+        border-radius: 0 0 5px 5px;
+      }
+      .order-details {
+        background-color: white;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 5px;
+        border-left: 4px solid #4caf50;
+      }
+      .detail-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #eee;
+      }
+      .detail-row:last-child {
+        border-bottom: none;
+      }
+      .label {
+        font-weight: bold;
+        color: #666;
+      }
+      .value {
+        color: #333;
+      }
+      .button {
+        display: inline-block;
+        padding: 12px 30px;
+        background-color: #4caf50;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        margin-top: 20px;
+      }
+      .footer {
+        text-align: center;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #ddd;
+        color: #666;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>✓ Payment Confirmed!</h1>
+    </div>
+    <div class="content">
+      <p>
+        Great news! Your payment has been successfully confirmed and your
+        tickets have been issued.
+      </p>
+
+      <div class="order-details">
+        <h2>Order Details</h2>
+        <div class="detail-row">
+          <span class="label">Order ID:</span>
+          <span class="value">{{orderId}}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Amount Paid:</span>
+          <span class="value">{{amount}} XLM</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Number of Tickets:</span>
+          <span class="value">{{ticketCount}}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Transaction Hash:</span>
+          <span class="value" style="word-break: break-all; font-size: 11px"
+            >{{txHash}}</span
+          >
+        </div>
+      </div>
+
+      <p>
+        Your tickets are now available in your account. You can view and
+        download them at any time.
+      </p>
+
+      <center>
+        <a href="{{ticketsUrl}}" class="button">View My Tickets</a>
+      </center>
+
+      <p style="margin-top: 30px; font-size: 14px; color: #666">
+        <strong>What's next?</strong><br />
+        • Check your email for individual ticket QR codes<br />
+        • Present your QR code at the event entrance<br />
+        • Have a great time at the event!
+      </p>
+    </div>
+    <div class="footer">
+      <p>
+        This is an automated message from VeriTix. Please do not reply to this
+        email.
+      </p>
+      <p>If you have any questions, please contact our support team.</p>
+    </div>
+  </body>
+</html>

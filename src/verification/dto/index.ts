@@ -1,4 +1,10 @@
-export { VerifyTicketDto, BulkVerifyTicketsDto, VerificationQueryDto, ManualVerificationDto } from './verification-operations.dto';
+export {
+  VerifyTicketDto,
+  CheckInDto,
+  BulkVerifyTicketsDto,
+  VerificationQueryDto,
+  ManualVerificationDto,
+} from './verification-operations.dto';
 export { 
   VerificationResponseDto, 
   VerifiedTicketInfoDto, 

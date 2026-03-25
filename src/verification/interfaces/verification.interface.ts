@@ -25,6 +25,19 @@ export enum VerificationStatus {
   /** Ticket has expired */
   EXPIRED = 'expired',
 
+  NOT_FOUND = 'not_found', 
+
+  SUCCESS = 'success',
+
+  /** Ticket exists but does not belong to this event. */
+  WRONG_EVENT = 'wrong_event',
+
+  /** Verifier did not have permission to scan at this event. */
+  UNAUTHORIZED = 'unauthorized',
+
+  /** Unexpected server-side failure during verification. */
+  ERROR = 'error',
+
   /** Event has not started yet */
   EVENT_NOT_STARTED = 'event_not_started',
 
