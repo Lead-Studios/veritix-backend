@@ -189,6 +189,10 @@ export class AuthService {
       throw new UnauthorizedException(UserMessages.INVALID_CREDENTIALS);
     }
 
+    if (user.isSuspended) {
+      throw new UnauthorizedException(UserMessages.ACCOUNT_SUSPENDED);
+    }
+
     if (!user.isVerified) {
       await this.resendVerificationOtp(loginUserDto.email);
       return {
@@ -205,11 +209,15 @@ export class AuthService {
   async refreshToken(refreshToken: string) {
     const validatedRefreshToken =
       this.jwtHelper.validateRefreshToken(refreshToken);
-    const userId = Number(validatedRefreshToken);
+    const userId = Number(validatedRefreshToken.userId);
     const user = await this.userRepository.findOne({
       where: { id: userId },
     });
-    if (!user) {
+    if (
+      !user ||
+      user.isSuspended ||
+      user.tokenVersion !== (validatedRefreshToken.tokenVersion ?? 0)
+    ) {
       throw new UnauthorizedException(UserMessages.INVALID_REFRESH_TOKEN);
     }
     const accessToken = this.jwtHelper.generateAccessToken(user);
@@ -222,8 +230,7 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('User not found.');
     }
-    const result = this.userHelper.formatUserResponse(user);
-    return result;
+    return user;
   }
 
   async requestResetPasswordOtp(

@@ -14,13 +14,17 @@ import { Ticket } from '../../tickets/entities/ticket.entity';
 export class User {
   @PrimaryGeneratedColumn()
   id: number;
+
   @Column({ unique: true })
   email: string;
+
   @Column()
   fullName: string;
+
   @Column()
   @Exclude()
   password: string;
+
   @Column({
     type: 'enum',
     enum: UserRole,
@@ -40,10 +44,24 @@ export class User {
   @Column({ default: false })
   isVerified: boolean;
 
+  @Column({ default: false })
+  isSuspended: boolean;
+
+  @Column({ type: 'text', nullable: true })
+  suspensionReason?: string | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  suspendedAt?: Date | null;
+
+  @Column({ type: 'int', default: 0 })
+  tokenVersion: number;
+
   @CreateDateColumn()
   passwordResetCodeExpiresAt?: Date;
 
+  @CreateDateColumn()
   createdAt: Date;
+
   @UpdateDateColumn()
   updatedAt: Date;
 

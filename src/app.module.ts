@@ -8,6 +8,7 @@ import { BlockchainModule } from './blockchain/blockchain.module';
 
 import databaseConfig from './config/database-config';
 import appConfig from './config/app.config';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -44,10 +45,11 @@ import appConfig from './config/app.config';
   };
 },
 
-}),
+    }),
 
 
     AuthModule,
+    AdminModule,
     // Blockchain module for future blockchain anchoring and verification
     BlockchainModule.register({
       isGlobal: true,
