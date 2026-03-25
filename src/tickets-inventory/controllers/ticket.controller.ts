@@ -6,12 +6,20 @@ import {
   Body,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { TicketService } from '../services/ticket.service';
 import { CreateTicketDto } from '../dto/create-ticket.dto';
 import { TicketResponseDto } from '../dto/ticket.response.dto';
+import { JwtAuthGuard } from '../../auth/guard/jwt.auth.guard';
+import { RolesGuard } from '../../auth/guard/roles.guard';
+import { Roles } from '../../auth/decorators/roles.decorators';
+import { UserRole } from '../../auth/common/enum/user-role-enum';
+import { CurrentUser } from '../../auth/decorators/current.user.decorators';
+import { User } from '../../auth/entities/user.entity';
+import { CancelTicketDto } from '../dto/cancel-ticket.dto';
 
-@Controller('events/:eventId/tickets')
+@Controller()
 export class TicketController {
   constructor(private readonly ticketService: TicketService) {}
 
@@ -19,7 +27,7 @@ export class TicketController {
    * Create tickets for a ticket type
    * POST /events/:eventId/tickets
    */
-  @Post()
+  @Post('events/:eventId/tickets')
   @HttpCode(HttpStatus.CREATED)
   async create(
     @Param('eventId') eventId: string,
@@ -32,7 +40,7 @@ export class TicketController {
    * Get all tickets for an event
    * GET /events/:eventId/tickets
    */
-  @Get()
+  @Get('events/:eventId/tickets')
   async findByEvent(
     @Param('eventId') eventId: string,
   ): Promise<TicketResponseDto[]> {
@@ -43,7 +51,7 @@ export class TicketController {
    * Get a specific ticket
    * GET /events/:eventId/tickets/:id
    */
-  @Get(':id')
+  @Get('events/:eventId/tickets/:id')
   async findById(@Param('id') id: string): Promise<TicketResponseDto> {
     return this.ticketService.findById(id);
   }
@@ -52,7 +60,7 @@ export class TicketController {
    * Scan a ticket by ID
    * POST /events/:eventId/tickets/:id/scan
    */
-  @Post(':id/scan')
+  @Post('events/:eventId/tickets/:id/scan')
   async scanTicket(@Param('id') id: string): Promise<TicketResponseDto> {
     return this.ticketService.scanTicket(id);
   }
@@ -61,8 +69,10 @@ export class TicketController {
    * Scan a ticket by QR code
    * POST /events/:eventId/tickets/scan-qr
    */
-  @Post('scan-qr/:qrCode')
-  async scanByQrCode(@Param('qrCode') qrCode: string): Promise<TicketResponseDto> {
+  @Post('events/:eventId/tickets/scan-qr/:qrCode')
+  async scanByQrCode(
+    @Param('qrCode') qrCode: string,
+  ): Promise<TicketResponseDto> {
     return this.ticketService.scanByQrCode(qrCode);
   }
 
@@ -70,19 +80,32 @@ export class TicketController {
    * Refund a ticket
    * POST /events/:eventId/tickets/:id/refund
    */
-  @Post(':id/refund')
+  @Post('events/:eventId/tickets/:id/refund')
   async refundTicket(@Param('id') id: string): Promise<TicketResponseDto> {
     return this.ticketService.refundTicket(id);
+  }
+
+  /**
+   * Cancel a ticket as the event organizer or an admin
+   * POST /tickets/:id/cancel
+   */
+  @Post('tickets/:id/cancel')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ORGANIZER, UserRole.ADMIN)
+  async cancelTicket(
+    @Param('id') id: string,
+    @Body() cancelTicketDto: CancelTicketDto,
+    @CurrentUser() user: User,
+  ): Promise<TicketResponseDto> {
+    return this.ticketService.cancelTicket(id, user, cancelTicketDto.reason);
   }
 
   /**
    * Get event statistics
    * GET /events/:eventId/tickets/stats
    */
-  @Get('stats/event')
-  async getEventStats(
-    @Param('eventId') eventId: string,
-  ): Promise<any> {
+  @Get('events/:eventId/tickets/stats/event')
+  async getEventStats(@Param('eventId') eventId: string): Promise<any> {
     return this.ticketService.getEventStats(eventId);
   }
 }
