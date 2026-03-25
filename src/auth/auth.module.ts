@@ -10,12 +10,14 @@ import { RolesGuard } from './guard/roles.guard';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './strategy/jwt.strategy';
 import { EmailService } from './helper/email-sender';
+import { AdminModule } from '../admin/admin.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
     JwtModule.register({}),
     PassportModule,
+    AdminModule,
   ],
   controllers: [AuthController],
   providers: [

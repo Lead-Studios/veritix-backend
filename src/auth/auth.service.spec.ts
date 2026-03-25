@@ -18,6 +18,11 @@ import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { SendPasswordResetOtpDto } from './dto/send-password-reset-otp.dto';
+import { AuditLogService } from '../admin/services/audit-log.service';
+import {
+  AdminAuditAction,
+  AdminAuditTargetType,
+} from '../admin/entities/admin-audit-log.entity';
 
 // ---------------------------------------------------------------------------
 // Mock the email service so no real emails are sent
@@ -87,6 +92,10 @@ describe('AuthService', () => {
     generateAccessToken: jest.fn().mockReturnValue('new-access-jwt'),
   };
 
+  const mockAuditLogService = {
+    log: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -94,6 +103,7 @@ describe('AuthService', () => {
         { provide: getRepositoryToken(User), useValue: mockRepo },
         { provide: UserHelper, useValue: mockUserHelper },
         { provide: JwtHelper, useValue: mockJwtHelper },
+        { provide: AuditLogService, useValue: mockAuditLogService },
       ],
     }).compile();
 
@@ -581,18 +591,18 @@ describe('AuthService', () => {
     it('throws ConflictException when email already exists', async () => {
       mockRepo.findOne.mockResolvedValue(makeUser());
 
-      await expect(service.createAdminUser(dto)).rejects.toThrow(
-        ConflictException,
-      );
+      await expect(
+        service.createAdminUser(dto, 'actor-admin-id'),
+      ).rejects.toThrow(ConflictException);
     });
 
     it('throws ConflictException when password is invalid', async () => {
       mockRepo.findOne.mockResolvedValue(null);
       mockUserHelper.isValidPassword.mockReturnValue(false);
 
-      await expect(service.createAdminUser(dto)).rejects.toThrow(
-        ConflictException,
-      );
+      await expect(
+        service.createAdminUser(dto, 'actor-admin-id'),
+      ).rejects.toThrow(ConflictException);
     });
 
     it('creates an ADMIN role user and returns success message', async () => {
@@ -600,15 +610,26 @@ describe('AuthService', () => {
       mockUserHelper.isValidPassword.mockReturnValue(true);
       mockUserHelper.hashPassword.mockResolvedValue('hashed-pw');
       mockRepo.create.mockImplementation((data) => data);
-      mockRepo.save.mockResolvedValue({});
+      mockRepo.save.mockResolvedValue({ id: 'new-admin-id' });
 
-      const result = await service.createAdminUser(dto);
+      const result = await service.createAdminUser(dto, 'actor-admin-id');
 
       expect(result).toEqual({
         message: UserMessages.USER_CREATED_SUCCESSFULLY,
       });
       expect(mockRepo.create).toHaveBeenCalledWith(
         expect.objectContaining({ role: UserRole.ADMIN }),
+      );
+      expect(mockAuditLogService.log).toHaveBeenCalledWith(
+        'actor-admin-id',
+        AdminAuditAction.ROLE_CHANGE,
+        AdminAuditTargetType.USER,
+        'new-admin-id',
+        expect.objectContaining({
+          previousRole: null,
+          newRole: UserRole.ADMIN,
+          createdUser: true,
+        }),
       );
     });
 
@@ -617,9 +638,9 @@ describe('AuthService', () => {
       mockUserHelper.isValidPassword.mockReturnValue(true);
       mockUserHelper.hashPassword.mockResolvedValue('hashed-pw');
       mockRepo.create.mockReturnValue({});
-      mockRepo.save.mockResolvedValue({});
+      mockRepo.save.mockResolvedValue({ id: 'new-admin-id' });
 
-      await service.createAdminUser(dto);
+      await service.createAdminUser(dto, 'actor-admin-id');
 
       expect(sendEmail).not.toHaveBeenCalled();
     });

@@ -6,10 +6,17 @@ import {
   Body,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { TicketService } from '../services/ticket.service';
 import { CreateTicketDto } from '../dto/create-ticket.dto';
 import { TicketResponseDto } from '../dto/ticket.response.dto';
+import { JwtAuthGuard } from '../../auth/guard/jwt.auth.guard';
+import { RolesGuard } from '../../auth/guard/roles.guard';
+import { Roles } from '../../auth/decorators/roles.decorators';
+import { UserRole } from '../../auth/common/enum/user-role-enum';
+import { CurrentUser } from '../../auth/decorators/current.user.decorators';
+import { User } from '../../auth/entities/user.entity';
 
 @Controller('events/:eventId/tickets')
 export class TicketController {
@@ -62,7 +69,9 @@ export class TicketController {
    * POST /events/:eventId/tickets/scan-qr
    */
   @Post('scan-qr/:qrCode')
-  async scanByQrCode(@Param('qrCode') qrCode: string): Promise<TicketResponseDto> {
+  async scanByQrCode(
+    @Param('qrCode') qrCode: string,
+  ): Promise<TicketResponseDto> {
     return this.ticketService.scanByQrCode(qrCode);
   }
 
@@ -71,8 +80,13 @@ export class TicketController {
    * POST /events/:eventId/tickets/:id/refund
    */
   @Post(':id/refund')
-  async refundTicket(@Param('id') id: string): Promise<TicketResponseDto> {
-    return this.ticketService.refundTicket(id);
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async refundTicket(
+    @Param('id') id: string,
+    @CurrentUser() user: User,
+  ): Promise<TicketResponseDto> {
+    return this.ticketService.refundTicket(id, user.id);
   }
 
   /**
@@ -80,9 +94,7 @@ export class TicketController {
    * GET /events/:eventId/tickets/stats
    */
   @Get('stats/event')
-  async getEventStats(
-    @Param('eventId') eventId: string,
-  ): Promise<any> {
+  async getEventStats(@Param('eventId') eventId: string): Promise<any> {
     return this.ticketService.getEventStats(eventId);
   }
 }

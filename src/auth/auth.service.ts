@@ -23,6 +23,11 @@ import { sendEmail } from '../config/email/email.service';
 import { UpdateProfileDto } from 'src/users/dto/user-profile.dto';
 import { UserResponseDto } from 'src/users/dto/user-response.dto';
 import { User } from 'src/users/entities/event.entity';
+import { AuditLogService } from '../admin/services/audit-log.service';
+import {
+  AdminAuditAction,
+  AdminAuditTargetType,
+} from '../admin/entities/admin-audit-log.entity';
 
 @Injectable()
 export class AuthService {
@@ -31,6 +36,7 @@ export class AuthService {
     private readonly userRepository: Repository<User>,
     private readonly userHelper: UserHelper,
     private readonly jwtHelper: JwtHelper,
+    private readonly auditLogService: AuditLogService,
   ) {}
 
   async createUser(createUserDto: CreateUserDto) {
@@ -81,7 +87,7 @@ export class AuthService {
     };
   }
 
-  async createAdminUser(createUserDto: CreateUserDto) {
+  async createAdminUser(createUserDto: CreateUserDto, actorId: string) {
     const existingUser = await this.userRepository.findOne({
       where: { email: createUserDto.email },
     });
@@ -105,7 +111,20 @@ export class AuthService {
       password: hashedPassword,
       role: UserRole.ADMIN,
     });
-    await this.userRepository.save(newUser);
+    const savedUser = await this.userRepository.save(newUser);
+
+    await this.auditLogService.log(
+      actorId,
+      AdminAuditAction.ROLE_CHANGE,
+      AdminAuditTargetType.USER,
+      savedUser.id,
+      {
+        previousRole: null,
+        newRole: UserRole.ADMIN,
+        createdUser: true,
+      },
+    );
+
     return {
       message: UserMessages.USER_CREATED_SUCCESSFULLY,
     };
