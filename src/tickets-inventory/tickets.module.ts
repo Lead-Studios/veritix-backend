@@ -9,11 +9,14 @@ import { TicketController } from './controllers/ticket.controller';
 import { StellarModule } from '../stellar/stellar.module';
 import { Order } from '../orders/orders.entity';
 import { QRService } from './qr.service';
+import { User } from '../users/entities/event.entity';
+import { AdminModule } from '../admin/admin.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([TicketType, Ticket, Order]),
+    TypeOrmModule.forFeature([TicketType, Ticket, Order, User]),
     StellarModule,
+    AdminModule,
   ],
   controllers: [TicketTypeController, TicketController],
   providers: [TicketTypeService, TicketService, QRService],
