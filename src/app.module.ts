@@ -16,6 +16,7 @@ import { OrdersModule } from './orders/orders.module';
 import { StellarModule } from './stellar/stellar.module';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AdminModule } from './admin/admin.module';
+import { VerificationModule } from './verification/verification.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
@@ -64,6 +65,8 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     }),
 
     AuthModule,
+    AdminModule,
+    VerificationModule,
     // Blockchain module for future blockchain anchoring and verification
     BlockchainModule.register({
       isGlobal: true,
