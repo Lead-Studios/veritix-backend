@@ -11,11 +11,14 @@ import { EventsModule } from './events/events.module';
 import { VerificationModule } from './verification/verification.module';
 import { ContactModule } from './contact/contact.module';
 import databaseConfig from './config/database-config';
+import appConfig from './config/app.config';
 import appConfig, { appConfigValidationSchema } from './config/app.config';
 import { OrdersModule } from './orders/orders.module';
 import { StellarModule } from './stellar/stellar.module';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AdminModule } from './admin/admin.module';
+import { VerificationModule } from './verification/verification.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
@@ -33,6 +36,7 @@ import { AdminModule } from './admin/admin.module';
         limit: 60,
       },
     ]),
+    EventEmitterModule.forRoot(),
     // Database connection (PostgreSQL)
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -43,6 +47,19 @@ import { AdminModule } from './admin/admin.module';
         const username = configService.get('database.username');
         const database = configService.get('database.database');
 
+  return {
+    type: 'postgres',
+    host,
+    port,
+    username,
+    password: configService.get('database.password'),
+    database,
+    synchronize: false,
+    autoLoadEntities: true,
+  };
+},
+
+    }),
         console.log('DB HOST:', host);
         console.log('DB PORT:', port);
         console.log('DB USER:', username);
@@ -62,6 +79,8 @@ import { AdminModule } from './admin/admin.module';
     }),
 
     AuthModule,
+    AdminModule,
+    VerificationModule,
     // Blockchain module for future blockchain anchoring and verification
     BlockchainModule.register({
       isGlobal: true,

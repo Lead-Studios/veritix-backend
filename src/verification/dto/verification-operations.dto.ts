@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import {
   IsString,
   IsOptional,
@@ -10,6 +11,9 @@ import {
   Min,
   Max,
 } from 'class-validator';
+=======
+import { IsString, IsOptional, IsBoolean, IsUUID, Length, Matches, IsNumber, Min, Max } from 'class-validator';
+>>>>>>> Stashed changes
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -38,7 +42,8 @@ export class VerifyTicketDto {
     format: 'uuid',
   })
   @IsOptional()
-  @IsUUID()
+  @IsString()
+  @Length(1, 100)
   verifierId?: string;
 
   @ApiPropertyOptional({
@@ -48,7 +53,7 @@ export class VerifyTicketDto {
   })
   @IsOptional()
   @IsBoolean()
-  markAsUsed?: boolean = true;
+  markAsUsed?: boolean = false;
 
   @ApiPropertyOptional({
     description: 'Device information used for verification',
@@ -120,7 +125,8 @@ export class BulkVerifyTicketsDto {
 
   @ApiPropertyOptional({ format: 'uuid' })
   @IsOptional()
-  @IsUUID()
+  @IsString()
+  @Length(1, 100)
   verifierId?: string;
 
   @ApiPropertyOptional({ default: true })
@@ -137,6 +143,17 @@ export class BulkVerifyTicketsDto {
   @IsOptional()
   @IsString()
   location?: string;
+}
+
+export class CheckInDto {
+  @IsString()
+  @Length(1, 100)
+  ticketCode: string;
+
+  @IsOptional()
+  @IsString()
+  @Length(1, 100)
+  verifierId?: string;
 }
 
 export class VerificationQueryDto {
@@ -175,10 +192,23 @@ export class VerificationQueryDto {
 
   @ApiPropertyOptional({ default: 1 })
   @IsOptional()
+<<<<<<< Updated upstream
+=======
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+>>>>>>> Stashed changes
   page?: number = 1;
 
   @ApiPropertyOptional({ default: 50 })
   @IsOptional()
+<<<<<<< Updated upstream
+=======
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @Max(100)
+>>>>>>> Stashed changes
   limit?: number = 50;
 
   @ApiPropertyOptional({ default: 'verifiedAt' })
@@ -208,7 +238,8 @@ export class ManualVerificationDto {
 
   @ApiPropertyOptional({ format: 'uuid' })
   @IsOptional()
-  @IsUUID()
+  @IsString()
+  @Length(1, 100)
   verifierId?: string;
 
   @ApiPropertyOptional()

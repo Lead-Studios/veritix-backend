@@ -12,6 +12,8 @@ import { Event } from '../../events/entities/event.entity';
 
 @Entity()
 export class User {
+  @PrimaryGeneratedColumn()
+  id: number;
   @PrimaryGeneratedColumn('uuid')
   id: string; // switched to UUID for consistency with Event
 
@@ -47,6 +49,22 @@ export class User {
   @Column({ default: false })
   isVerified: boolean;
 
+  @Column({ default: false })
+  isSuspended: boolean;
+
+  @Column({ type: 'text', nullable: true })
+  suspensionReason?: string | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  suspendedAt?: Date | null;
+
+  @Column({ type: 'int', default: 0 })
+  tokenVersion: number;
+
+  @CreateDateColumn()
+  passwordResetCodeExpiresAt?: Date;
+
+  @CreateDateColumn()
   // =============================
   // TIMESTAMPS
   // =============================

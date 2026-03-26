@@ -10,13 +10,17 @@ type JwtExpiry = `${number}${'s' | 'm' | 'h' | 'd'}` | number;
 export class JwtHelper {
   constructor(private readonly jwtService: JwtService) {}
 
-  public validateRefreshToken(refreshToken: string): number | null {
+  public validateRefreshToken(refreshToken: string): JwtPayload {
     try {
       const payload = this.jwtService.verify<JwtPayload>(refreshToken, {
         secret: process.env.REFRESH_TOKEN_SECRET as string,
       });
 
-      return payload?.userId ?? null;
+      if (!payload?.userId) {
+        throw new UnauthorizedException(UserMessages.INVALID_REFRESH_TOKEN);
+      }
+
+      return payload;
     } catch (error: unknown) {
       if (error instanceof Error) {
         console.error('JWT verification failed:', error.message);
@@ -32,6 +36,8 @@ export class JwtHelper {
       userId: user.id,
       email: user.email,
       fullName: user.fullName,
+      role: user.role,
+      tokenVersion: user.tokenVersion,
     };
 
     return this.jwtService.sign(payload, {
@@ -45,6 +51,8 @@ export class JwtHelper {
       userId: user.id,
       email: user.email,
       fullName: user.fullName,
+      role: user.role,
+      tokenVersion: user.tokenVersion,
     };
 
     return this.jwtService.sign(payload, {
