@@ -24,6 +24,8 @@ import { User } from '../auth/entities/user.entity';
 import { Event } from '../events/entities/event.entity';
 import { Ticket } from '../tickets-inventory/entities/ticket.entity';
 import { Order } from '../orders/orders.entity';
+import { AuditLogService } from './services/audit-log.service';
+import { AdminAuditAction } from './entities/admin-audit-log.entity';
 
 // -----------------------------------------------------------------------
 // Helpers to build a chainable QueryBuilder mock
@@ -49,6 +51,9 @@ describe('AdminService', () => {
   let eventRepoMock: ReturnType<typeof makeRepoMock>;
   let ticketRepoMock: ReturnType<typeof makeRepoMock>;
   let orderRepoMock: ReturnType<typeof makeRepoMock>;
+  const auditLogServiceMock = {
+    findPaginated: jest.fn(),
+  };
 
   beforeEach(async () => {
     userRepoMock = makeRepoMock();
@@ -73,6 +78,7 @@ describe('AdminService', () => {
         { provide: getRepositoryToken(Event), useValue: eventRepoMock },
         { provide: getRepositoryToken(Ticket), useValue: ticketRepoMock },
         { provide: getRepositoryToken(Order), useValue: orderRepoMock },
+        { provide: AuditLogService, useValue: auditLogServiceMock },
       ],
     }).compile();
 
@@ -113,6 +119,36 @@ describe('AdminService', () => {
     );
   afterEach(() => jest.clearAllMocks());
 
+  describe('getAuditLog', () => {
+    it('returns paginated audit logs filtered by action', async () => {
+      auditLogServiceMock.findPaginated.mockResolvedValue({
+        data: [
+          {
+            id: 'log-1',
+            action: AdminAuditAction.MANUAL_REFUND,
+          },
+        ],
+        total: 1,
+        page: 2,
+        limit: 10,
+        totalPages: 1,
+      });
+
+      const result = await service.getAuditLog({
+        page: 2,
+        limit: 10,
+        action: AdminAuditAction.MANUAL_REFUND,
+      });
+
+      expect(auditLogServiceMock.findPaginated).toHaveBeenCalledWith({
+        page: 2,
+        limit: 10,
+        action: AdminAuditAction.MANUAL_REFUND,
+      });
+      expect(result.data).toHaveLength(1);
+    });
+  });
+
   // -----------------------------------------------------------------------
   // getStats — shape and generatedAt
   // -----------------------------------------------------------------------
@@ -129,12 +165,22 @@ describe('AdminService', () => {
         userCall++;
         return userCall === 1 ? countQb : userCall === 2 ? countQb : groupQb;
       });
-      eventRepoMock.createQueryBuilder.mockReturnValue(countQb);
-      ticketRepoMock.createQueryBuilder.mockReturnValue(countQb);
+      let eventCall = 0;
+      eventRepoMock.createQueryBuilder.mockImplementation(() => {
+        eventCall++;
+        return eventCall === 1 ? countQb : groupQb;
+      });
+      let ticketCall = 0;
+      ticketRepoMock.createQueryBuilder.mockImplementation(() => {
+        ticketCall++;
+        return ticketCall === 1 ? countQb : groupQb;
+      });
       let orderCall = 0;
       orderRepoMock.createQueryBuilder.mockImplementation(() => {
         orderCall++;
-        return orderCall === 3 ? revenueQb : countQb;
+        if (orderCall === 1) return countQb;
+        if (orderCall === 2) return groupQb;
+        return revenueQb;
       });
 
       const result = await service.getStats();

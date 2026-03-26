@@ -17,6 +17,8 @@ import { OrdersModule } from './orders/orders.module';
 import { StellarModule } from './stellar/stellar.module';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AdminModule } from './admin/admin.module';
+import { VerificationModule } from './verification/verification.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
@@ -34,6 +36,7 @@ import { AdminModule } from './admin/admin.module';
         limit: 60,
       },
     ]),
+    EventEmitterModule.forRoot(),
     // Database connection (PostgreSQL)
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -77,6 +80,7 @@ import { AdminModule } from './admin/admin.module';
 
     AuthModule,
     AdminModule,
+    VerificationModule,
     // Blockchain module for future blockchain anchoring and verification
     BlockchainModule.register({
       isGlobal: true,
