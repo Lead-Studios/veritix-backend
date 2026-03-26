@@ -170,4 +170,38 @@ export class EventsController {
     await this.eventsService.deleteEvent(id, user);
     return { message: 'Event deleted successfully' };
   }
+
+  @UseGuards(JwtAuthGuard)
+@Post(':id/waitlist')
+async joinWaitlist(
+  @Param('id', ParseUUIDPipe) id: string,
+  @Body() body: { ticketTypeId?: string },
+  @CurrentUser() user: User,
+) {
+  return this.waitlistService.joinWaitlist(
+    id,
+    user.id,
+    body.ticketTypeId,
+  );
+}
+
+@UseGuards(JwtAuthGuard)
+@Delete(':id/waitlist')
+async leaveWaitlist(
+  @Param('id', ParseUUIDPipe) id: string,
+  @CurrentUser() user: User,
+) {
+  return this.waitlistService.leaveWaitlist(id, user.id);
+}
+
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.ORGANIZER, UserRole.ADMIN)
+@Get(':id/waitlist')
+async getWaitlist(
+  @Param('id', ParseUUIDPipe) id: string,
+  @Query('page') page = 1,
+  @Query('limit') limit = 10,
+) {
+  return this.waitlistService.getWaitlist(id, Number(page), Number(limit));
+}
 }
