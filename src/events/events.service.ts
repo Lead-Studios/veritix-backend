@@ -1,4 +1,8 @@
-import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Event } from './entities/event.entity';
@@ -10,13 +14,14 @@ import { User } from '../auth/entities/user.entity';
 import { UserRole } from 'src/auth/common/enum/user-role-enum';
 import { EventQueryDto } from './dto/event-query.dto';
 import { PaginatedEventsResponseDto } from './dto/paginated-events-response.dto';
+import { EventDetailResponseDto } from './dto';
 
 @Injectable()
 export class EventsService {
   constructor(
     @InjectRepository(Event)
     private readonly eventRepository: Repository<Event>,
-  ) { }
+  ) {}
 
   // -------------------------------
   // CREATE EVENT
@@ -47,7 +52,9 @@ export class EventsService {
 
     const isOwner = event.organizerId === user.id;
     if (!isAdmin && !isOwner) {
-      throw new ForbiddenException('You do not have permission to update this event');
+      throw new ForbiddenException(
+        'You do not have permission to update this event',
+      );
     }
 
     Object.assign(event, dto);
@@ -56,7 +63,11 @@ export class EventsService {
   // -------------------------------
   // CHANGE STATUS
   // -------------------------------
-  async changeStatus(id: string, newStatus: EventStatus, user: User): Promise<Event> {
+  async changeStatus(
+    id: string,
+    newStatus: EventStatus,
+    user: User,
+  ): Promise<Event> {
     const event = await this.getEventById(id);
 
     applyEventStatusChange(event, newStatus);
@@ -67,10 +78,13 @@ export class EventsService {
   // -------------------------------
   // GET EVENT BY ID
   // -------------------------------
-  async getEventById(id: string): Promise<Event> {
-    const event = await this.eventRepository.findOneBy({ id });
+  async getEventById(id: string): Promise<EventDetailResponseDto> {
+    const event = await this.eventRepository.findOne({
+      where: { id },
+      relations: ['ticketTypes'],
+    });
     if (!event) throw new NotFoundException('Event not found');
-    return event;
+    return this.mapToEventDetailResponse(event);
   }
 
   // -------------------------------
@@ -82,13 +96,18 @@ export class EventsService {
     const result = await this.eventRepository.delete(id);
     return (result.affected ?? 0) > 0;
   }
-  async findAll(queryDto: EventQueryDto, includeAll: boolean = false): Promise<PaginatedEventsResponseDto> {
+  async findAll(
+    queryDto: EventQueryDto,
+    includeAll: boolean = false,
+  ): Promise<PaginatedEventsResponseDto> {
     const query = this.eventRepository.createQueryBuilder('event');
 
     // 1. apply public default filters
     if (!includeAll) {
       query.andWhere('event.isArchived = :isArchived', { isArchived: false });
-      query.andWhere('event.status != :status', { status: EventStatus.CANCELLED });
+      query.andWhere('event.status != :status', {
+        status: EventStatus.CANCELLED,
+      });
     }
 
     // 2. Full-text search
@@ -101,7 +120,9 @@ export class EventsService {
 
     // 3. Status filter
     if (queryDto.status) {
-      query.andWhere('event.status = :statusFilter', { statusFilter: queryDto.status });
+      query.andWhere('event.status = :statusFilter', {
+        statusFilter: queryDto.status,
+      });
     }
 
     // 4. Location filters
@@ -109,36 +130,51 @@ export class EventsService {
       query.andWhere('event.city ILIKE :city', { city: `%${queryDto.city}%` });
     }
     if (queryDto.countryCode) {
-      query.andWhere('event.countryCode = :countryCode', { countryCode: queryDto.countryCode });
+      query.andWhere('event.countryCode = :countryCode', {
+        countryCode: queryDto.countryCode,
+      });
     }
     if (queryDto.isVirtual !== undefined) {
-      query.andWhere('event.isVirtual = :isVirtual', { isVirtual: queryDto.isVirtual });
+      query.andWhere('event.isVirtual = :isVirtual', {
+        isVirtual: queryDto.isVirtual,
+      });
     }
 
     // 5. Date range
     if (queryDto.dateFrom) {
-      query.andWhere('event.eventDate >= :dateFrom', { dateFrom: queryDto.dateFrom });
+      query.andWhere('event.eventDate >= :dateFrom', {
+        dateFrom: queryDto.dateFrom,
+      });
     }
     if (queryDto.dateTo) {
       query.andWhere('event.eventDate <= :dateTo', { dateTo: queryDto.dateTo });
     }
 
     // 6. Price range
-    if (queryDto.minTicketPrice !== undefined || queryDto.maxTicketPrice !== undefined) {
+    if (
+      queryDto.minTicketPrice !== undefined ||
+      queryDto.maxTicketPrice !== undefined
+    ) {
       query.innerJoin('event.ticketTypes', 'ticketType');
 
       if (queryDto.minTicketPrice !== undefined) {
-        query.andWhere('ticketType.price >= :minTicketPrice', { minTicketPrice: queryDto.minTicketPrice });
+        query.andWhere('ticketType.price >= :minTicketPrice', {
+          minTicketPrice: queryDto.minTicketPrice,
+        });
       }
       if (queryDto.maxTicketPrice !== undefined) {
-        query.andWhere('ticketType.price <= :maxTicketPrice', { maxTicketPrice: queryDto.maxTicketPrice });
+        query.andWhere('ticketType.price <= :maxTicketPrice', {
+          maxTicketPrice: queryDto.maxTicketPrice,
+        });
       }
     }
 
     // 7. Tags filter
     if (queryDto.tags && queryDto.tags.length > 0) {
       // Postgres ARRAY contains @>
-      query.andWhere('event.tags @> ARRAY[:...tags]::text[]', { tags: queryDto.tags });
+      query.andWhere('event.tags @> ARRAY[:...tags]::text[]', {
+        tags: queryDto.tags,
+      });
     }
 
     // 8. Sorting
@@ -188,4 +224,35 @@ export class EventsService {
   };
 }
 
+  private mapToEventDetailResponse(event: Event): EventDetailResponseDto {
+    return {
+      id: event.id,
+      title: event.title,
+      description: event.description,
+      eventDate: event.eventDate,
+      eventClosingDate: event.eventClosingDate,
+      capacity: event.capacity,
+      status: event.status,
+      isArchived: event.isArchived,
+      venue: event.venue,
+      city: event.city,
+      countryCode: event.countryCode,
+      tags: event.tags,
+      isVirtual: event.isVirtual,
+      createdAt: event.createdAt,
+      updatedAt: event.updatedAt,
+      ticketTypes: (event.ticketTypes ?? []).map((ticketType) => ({
+        id: ticketType.id,
+        name: ticketType.name,
+        priceType: ticketType.priceType,
+        price: Number(ticketType.price),
+        totalQuantity: ticketType.totalQuantity,
+        soldQuantity: ticketType.soldQuantity,
+        remainingQuantity: ticketType.getRemainingQuantity(),
+        isAvailableNow: ticketType.isAvailableNow(),
+        saleStartsAt: ticketType.saleStartsAt ?? null,
+        saleEndsAt: ticketType.saleEndsAt ?? null,
+      })),
+    };
+  }
 }
