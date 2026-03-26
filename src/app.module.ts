@@ -16,6 +16,7 @@ import { OrdersModule } from './orders/orders.module';
 import { StellarModule } from './stellar/stellar.module';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AdminModule } from './admin/admin.module';
+import { SetllaModule } from './setlla/setlla.module';
 
 @Module({
   imports: [
@@ -77,7 +78,8 @@ import { AdminModule } from './admin/admin.module';
     VerificationModule, // ← Add here
     ContactModule,
     StellarModule,
-    AdminModule, // ← Stellar payment listener
+    AdminModule,
+    SetllaModule, // ← Stellar payment listener
   ],
   controllers: [AppController],
   providers: [AppService],
