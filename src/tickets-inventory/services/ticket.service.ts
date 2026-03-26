@@ -38,62 +38,108 @@ export class TicketService {
     createTicketDto: CreateTicketDto,
     quantity: number = 1,
   ): Promise<TicketResponseDto[]> {
-    const ticketType = await this.ticketTypeService.findByIdEntity(
-      createTicketDto.ticketTypeId,
-    );
-
-    if (ticketType.eventId !== eventId) {
-      throw new BadRequestException(
-        'Ticket type does not belong to this event',
+    const queryRunner = this.ticketRepository.manager.connection.createQueryRunner();
+  
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+  
+    try {
+      // 🔒 Lock ticket type
+      const ticketType = await queryRunner.manager
+        .createQueryBuilder('ticket_type', 'tt')
+        .setLock('pessimistic_write')
+        .where('tt.id = :ticketTypeId', {
+          ticketTypeId: createTicketDto.ticketTypeId,
+        })
+        .getOne();
+  
+      if (!ticketType) {
+        throw new BadRequestException('Ticket type not found');
+      }
+  
+      if (ticketType.eventId !== eventId) {
+        throw new BadRequestException(
+          'Ticket type does not belong to this event',
+        );
+      }
+  
+      // 🔒 Lock event
+      const event = await queryRunner.manager
+        .createQueryBuilder('event', 'e')
+        .setLock('pessimistic_write')
+        .where('e.id = :eventId', { eventId })
+        .getOne();
+  
+      if (!event) {
+        throw new BadRequestException('Event not found');
+      }
+  
+      // ✅ Aggregate sold across ALL ticket types
+      const { totalSold } = await queryRunner.manager
+        .createQueryBuilder('ticket_type', 'tt')
+        .select('COALESCE(SUM(tt.soldQuantity), 0)', 'totalSold')
+        .where('tt.eventId = :eventId', { eventId })
+        .getRawOne();
+  
+      const currentTotal = Number(totalSold);
+  
+      // ❌ HARD CAPACITY CHECK (GLOBAL)
+      if (currentTotal + quantity > event.capacity) {
+        throw new BadRequestException('Event is at full capacity');
+      }
+  
+      // ✅ TicketType-level validation (still valid)
+      if (!ticketType.canPurchase(quantity)) {
+        throw new BadRequestException(
+          `Not enough tickets available. Remaining: ${ticketType.getRemainingQuantity()}`,
+        );
+      }
+  
+      // ✅ Reserve tickets safely inside transaction
+      ticketType.soldQuantity += quantity;
+      await queryRunner.manager.save(ticketType);
+  
+      // ✅ Create tickets
+      const tickets = Array.from({ length: quantity }, () =>
+        queryRunner.manager.create(Ticket, {
+          ...createTicketDto,
+          eventId,
+          status: TicketStatus.ISSUED,
+        }),
       );
-    }
-
-    if (!ticketType.canPurchase(quantity)) {
-      throw new BadRequestException(
-        `Not enough tickets available. Remaining: ${ticketType.getRemainingQuantity()}`,
+  
+      const saved = await queryRunner.manager.save(tickets);
+  
+      // ✅ Generate QR (non-blocking)
+      const withQR = await Promise.all(
+        saved.map(async (ticket) => {
+          try {
+            ticket.qrCodeImage = await this.qrService.generateQRDataURI(
+              ticket.qrCode,
+            );
+          } catch (err) {
+            this.logger.error(
+              `QR generation failed for ticket ${ticket.id}: ${
+                (err as Error).message
+              }`,
+            );
+            ticket.qrCodeImage = null;
+          }
+          return ticket;
+        }),
       );
+  
+      const finalSaved = await queryRunner.manager.save(withQR);
+  
+      await queryRunner.commitTransaction();
+  
+      return finalSaved.map((t) => this.mapToResponseDto(t));
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
     }
-
-    await this.ticketTypeService.reserveTickets(
-      createTicketDto.ticketTypeId,
-      quantity,
-    );
-
-    // Persist tickets first so each gets its auto-generated qrCode UUID
-    const tickets = Array.from({ length: quantity }, () =>
-      this.ticketRepository.create({
-        ...createTicketDto,
-        eventId,
-        status: TicketStatus.ISSUED,
-      }),
-    );
-
-    const saved = await this.ticketRepository.save(tickets);
-
-    // Generate QR code images after save so we have the actual qrCode value.
-    // Failures are non-fatal — we log and leave qrCodeImage null so ticket
-    // creation is never blocked by an image-generation issue.
-    const withQR = await Promise.all(
-      saved.map(async (ticket) => {
-        try {
-          ticket.qrCodeImage = await this.qrService.generateQRDataURI(
-            ticket.qrCode,
-          );
-        } catch (err) {
-          this.logger.error(
-            `QR generation failed for ticket ${ticket.id}: ${
-              (err as Error).message
-            }`,
-            (err as Error).stack,
-          );
-          ticket.qrCodeImage = null;
-        }
-        return ticket;
-      }),
-    );
-
-    const finalSaved = await this.ticketRepository.save(withQR);
-    return finalSaved.map((t) => this.mapToResponseDto(t));
   }
 
   async findById(id: string): Promise<TicketResponseDto> {

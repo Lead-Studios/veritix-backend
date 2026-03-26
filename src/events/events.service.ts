@@ -164,4 +164,28 @@ export class EventsService {
     };
   }
 
+  async getEventCapacity(id: string) {
+  const event = await this.eventRepository.findOne({
+    where: { id },
+  });
+
+  if (!event) throw new NotFoundException('Event not found');
+
+  const { totalSold } = await this.eventRepository.manager
+    .createQueryBuilder('ticket_type', 'tt')
+    .select('COALESCE(SUM(tt.soldQuantity), 0)', 'totalSold')
+    .where('tt.eventId = :eventId', { eventId: id })
+    .getRawOne();
+
+  const sold = Number(totalSold);
+  const remaining = event.capacity - sold;
+
+  return {
+    capacity: event.capacity,
+    totalSold: sold,
+    remaining,
+    isSoldOut: remaining <= 0,
+  };
+}
+
 }
