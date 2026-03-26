@@ -3,6 +3,7 @@ import {
   BadRequestException,
   NotFoundException,
   Logger,
+  ForbiddenException,
 } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { Ticket, TicketStatus } from '../entities/ticket.entity';
@@ -34,6 +35,7 @@ export class TicketService {
     private readonly stellarService: StellarService,
     private readonly qrService: QRService,
     private readonly auditLogService: AuditLogService,
+    private readonly eventEmitter: EventEmitter2,
   ) {
     this.ticketRepository = ticketRepository;
     this.ticketTypeService = ticketTypeService;
@@ -276,6 +278,57 @@ export class TicketService {
     return this.mapToResponseDto(updated);
   }
 
+  async cancelTicket(
+    id: string,
+    user: User,
+    reason?: string,
+  ): Promise<TicketResponseDto> {
+    const ticket = await this.ticketRepository.findOne({
+      where: { id },
+      relations: ['ticketType', 'event'],
+    });
+
+    if (!ticket) {
+      throw new NotFoundException(`Ticket with ID ${id} not found`);
+    }
+
+    const isAdmin = user.role === UserRole.ADMIN;
+    const isOrganizer = ticket.event?.organizerId === user.id;
+
+    if (!isAdmin && !isOrganizer) {
+      throw new ForbiddenException(
+        'You do not have permission to cancel this ticket',
+      );
+    }
+
+    if (ticket.status === TicketStatus.CANCELLED) {
+      throw new BadRequestException('Ticket is already cancelled');
+    }
+
+    if (ticket.status !== TicketStatus.ISSUED) {
+      throw new BadRequestException(
+        `Cannot cancel ticket with status: ${ticket.status}`,
+      );
+    }
+
+    await this.ticketTypeService.releaseTickets(ticket.ticketTypeId, 1);
+
+    ticket.markAsCancelled(reason);
+
+    const updated = await this.ticketRepository.save(ticket);
+
+    this.eventEmitter.emit('ticket.cancelled', {
+      ticketId: updated.id,
+      eventId: updated.eventId,
+      ticketTypeId: updated.ticketTypeId,
+      cancelledAt: updated.cancelledAt,
+      cancellationReason: updated.cancellationReason,
+      cancelledBy: user.id,
+    });
+
+    return this.mapToResponseDto(updated);
+  }
+
   async getEventStats(eventId: string): Promise<{
     totalTickets: number;
     issued: number;
@@ -312,6 +365,8 @@ export class TicketService {
       eventId: ticket.eventId,
       scannedAt: ticket.scannedAt,
       refundedAt: ticket.refundedAt,
+      cancelledAt: ticket.cancelledAt ?? null,
+      cancellationReason: ticket.cancellationReason ?? null,
       createdAt: ticket.createdAt,
       updatedAt: ticket.updatedAt,
     };

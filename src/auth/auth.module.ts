@@ -10,7 +10,7 @@ import { RolesGuard } from './guard/roles.guard';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './strategy/jwt.strategy';
 import { EmailService } from './helper/email-sender';
-import { AdminModule } from '../admin/admin.module';
+import { WsJwtGuard } from './guard/ws-jwt.guard';
 
 @Module({
   imports: [
@@ -26,8 +26,9 @@ import { AdminModule } from '../admin/admin.module';
     JwtHelper,
     JwtStrategy,
     RolesGuard,
+    WsJwtGuard,
     EmailService,
   ],
-  exports: [AuthService, RolesGuard],
+  exports: [AuthService, RolesGuard, WsJwtGuard, JwtModule],
 })
 export class AuthModule {}

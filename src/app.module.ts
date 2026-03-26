@@ -16,6 +16,7 @@ import { OrdersModule } from './orders/orders.module';
 import { StellarModule } from './stellar/stellar.module';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AdminModule } from './admin/admin.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { AdminModule } from './admin/admin.module';
         limit: 60,
       },
     ]),
+    EventEmitterModule.forRoot(),
     // Database connection (PostgreSQL)
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
