@@ -25,6 +25,8 @@ export class TicketService {
     ticketRepository: Repository<Ticket>,
     ticketTypeService: TicketTypeService,
     @InjectRepository(Order)
+    @InjectRepository(TicketTransfer)
+  private readonly transferRepository: Repository<TicketTransfer>,
     private readonly orderRepository: Repository<Order>,
     private readonly stellarService: StellarService,
     private readonly qrService: QRService,
@@ -286,6 +288,97 @@ export class TicketService {
       refundedAt: ticket.refundedAt,
       createdAt: ticket.createdAt,
       updatedAt: ticket.updatedAt,
+    };
+  }
+
+  async transferTicket(
+    ticketId: string,
+    fromUserId: string,
+    toUserId: string,
+    reason: 'gift' | 'resale' | 'other',
+  ) {
+    const ticket = await this.ticketRepository.findOne({
+      where: { id: ticketId },
+      relations: ['ticketType'],
+    });
+  
+    if (!ticket) {
+      throw new NotFoundException('Ticket not found');
+    }
+  
+    // 🔐 Ownership check
+    if (ticket.ownerId !== fromUserId) {
+      throw new ForbiddenException('You do not own this ticket');
+    }
+  
+    // ❌ Status check
+    if (ticket.status !== 'ISSUED') {
+      throw new BadRequestException(
+        'Only issued tickets can be transferred',
+      );
+    }
+  
+    // ❌ Transfer limit
+    if (ticket.transferCount >= 2) {
+      throw new BadRequestException(
+        'Maximum transfer limit reached',
+      );
+    }
+  
+    // 📅 Event check
+    const event = await this.eventRepository.findOne({
+      where: { id: ticket.eventId },
+    });
+  
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+  
+    if (new Date() >= new Date(event.eventDate)) {
+      throw new BadRequestException(
+        'Cannot transfer ticket after event has started',
+      );
+    }
+  
+    // 🔍 Fetch new user (you likely have User repo)
+    const newUser = await this.userRepository.findOne({
+      where: { id: toUserId },
+    });
+  
+    if (!newUser) {
+      throw new NotFoundException('Recipient user not found');
+    }
+  
+    // 🔁 Update ticket
+    ticket.ownerId = toUserId;
+    ticket.attendeeEmail = newUser.email;
+    ticket.attendeeName = newUser.name;
+    ticket.transferCount += 1;
+  
+    await this.ticketRepository.save(ticket);
+  
+    // 🧾 Log transfer
+    const transfer = this.transferRepository.create({
+      ticketId,
+      fromUserId,
+      toUserId,
+      reason,
+    });
+  
+    await this.transferRepository.save(transfer);
+  
+    // 📡 Emit event
+    this.eventEmitter.emit('ticket.transferred', {
+      ticketId,
+      fromUserId,
+      toUserId,
+      reason,
+    });
+  
+    return {
+      message: 'Ticket transferred successfully',
+      ticketId,
+      transferCount: ticket.transferCount,
     };
   }
 }
