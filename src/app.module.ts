@@ -16,6 +16,7 @@ import { OrdersModule } from './orders/orders.module';
 import { StellarModule } from './stellar/stellar.module';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AdminModule } from './admin/admin.module';
+import { VerificationModule } from './verification/verification.module';
 
 @Module({
   imports: [
@@ -62,6 +63,11 @@ import { AdminModule } from './admin/admin.module';
     }),
 
     AuthModule,
+<<<<<<< Updated upstream
+=======
+    AdminModule,
+    VerificationModule,
+>>>>>>> Stashed changes
     // Blockchain module for future blockchain anchoring and verification
     BlockchainModule.register({
       isGlobal: true,
