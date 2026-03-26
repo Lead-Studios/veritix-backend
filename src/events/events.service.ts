@@ -43,6 +43,7 @@ export class EventsService {
       eventClosingDate: new Date(dto.eventClosingDate),
       capacity: dto.capacity,
       status: EventStatus.DRAFT,
+      organizerId: user.id,
     });
 
     const saved = await this.eventRepository.save(event);
@@ -100,7 +101,16 @@ export class EventsService {
   // DELETE EVENT
   // -------------------------------
   async deleteEvent(id: string, user: User): Promise<boolean> {
-    const event = await this.getEventById(id);
+    const event = await this.eventRepository.findOne({ where: { id } });
+    if (!event) throw new NotFoundException('Event not found');
+
+    const isAdmin = user.role === UserRole.ADMIN;
+    const isOwner = event.organizerId === user.id;
+    if (!isAdmin && !isOwner) {
+      throw new ForbiddenException(
+        'You do not have permission to delete this event',
+      );
+    }
 
     const result = await this.eventRepository.delete(id);
     return (result.affected ?? 0) > 0;
