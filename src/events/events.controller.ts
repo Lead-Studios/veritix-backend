@@ -9,6 +9,7 @@ import {
   Query,
   ParseUUIDPipe,
   UseGuards,
+  Request,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -30,7 +31,7 @@ import { CurrentUser } from 'src/auth/decorators/current.user.decorators';
 import { RolesGuard } from 'src/auth/guard/roles.guard';
 import { EventQueryDto } from './dto/event-query.dto';
 import { OptionalJwtAuthGuard } from 'src/auth/guard/optional-jwt.auth.guard';
-import { ForbiddenException } from '@nestjs/common';
+import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { PaginatedEventsResponseDto } from './dto/paginated-events-response.dto';
 
 @ApiTags('Events')
@@ -149,6 +150,17 @@ export class EventsController {
     @CurrentUser() user: User,
   ) {
     return this.eventsService.changeStatus(id, status, user);
+  }
+
+  @Get()
+  @ApiOperation({ summary: 'List events with filtering, sorting, and pagination' })
+  @ApiResponse({ status: 200, description: 'Paginated event list' })
+  getAll(
+    @Query() query: EventQueryDto,
+    @Request() req: { user?: { role: UserRole } },
+  ): Promise<PaginatedEventsResponseDto<Event>> {
+    const isAdmin = req.user?.role === UserRole.ADMIN;
+    return this.eventsService.findAll(query, isAdmin);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
