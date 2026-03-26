@@ -4,7 +4,7 @@ import {
   NotFoundException,
   Logger,
 } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Ticket, TicketStatus } from '../entities/ticket.entity';
 import { CreateTicketDto } from '../dto/create-ticket.dto';
 import { TicketResponseDto } from '../dto/ticket.response.dto';
@@ -13,6 +13,8 @@ import { QRService } from '../qr.service';
 import { StellarService } from '../../stellar/stellar.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Order } from '../../orders/orders.entity';
+import { User } from '../../users/entities/event.entity';
+import { TicketType } from '../entities/ticket-type.entity';
 
 @Injectable()
 export class TicketService {
@@ -26,8 +28,11 @@ export class TicketService {
     ticketTypeService: TicketTypeService,
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
     private readonly stellarService: StellarService,
     private readonly qrService: QRService,
+    private readonly dataSource: DataSource,
   ) {
     this.ticketRepository = ticketRepository;
     this.ticketTypeService = ticketTypeService;
@@ -207,29 +212,33 @@ export class TicketService {
       throw new BadRequestException('Ticket is already refunded');
     }
 
+    let refundHash: string | null = null;
+    let order: Order | null = null;
+
     // Process refund on Stellar if it was a Stellar payment
     if (ticket.orderReference) {
-      const order = await this.orderRepository.findOne({
+      order = await this.orderRepository.findOne({
         where: { id: ticket.orderReference },
       });
-      if (order && order.stellarTxHash) {
+
+      if (order?.stellarTxHash) {
+        const buyer = await this.userRepository.findOne({
+          where: { id: order.userId },
+        });
+        const destinationAddress = buyer?.stellarWalletAddress;
+
+        if (!destinationAddress) {
+          throw new BadRequestException(
+            'Cannot refund Stellar payment: user.stellarWalletAddress is not set',
+          );
+        }
+
         try {
-          const refundAmount = ticket.ticketType.price;
-          const destination = order.buyerStellarAddress || 'UNKNOWN';
-
-          if (destination === 'UNKNOWN') {
-            throw new BadRequestException(
-              'Cannot refund: buyerStellarAddress not set on the Order',
-            );
-          }
-
-          const refundHash = await this.stellarService.sendRefund(
-            destination,
-            refundAmount,
+          refundHash = await this.stellarService.sendRefund(
+            destinationAddress,
+            ticket.ticketType.price.toString(),
             order.id,
           );
-          order.refundTxHash = refundHash;
-          await this.orderRepository.save(order);
         } catch (error) {
           throw new BadRequestException(
             `Stellar refund failed: ${(error as Error).message}`,
@@ -238,13 +247,37 @@ export class TicketService {
       }
     }
 
-    // Release ticket back to inventory
-    await this.ticketTypeService.releaseTickets(ticket.ticketTypeId, 1);
+    const updated = await this.dataSource.transaction(async (manager) => {
+      if (ticket.ticketType.soldQuantity < 1) {
+        throw new BadRequestException(
+          `Cannot release more tickets than sold. Sold: ${ticket.ticketType.soldQuantity}`,
+        );
+      }
 
-    ticket.status = TicketStatus.REFUNDED;
-    ticket.refundedAt = new Date();
+      const ticketTypeRepo = manager.getRepository(TicketType);
+      const releaseResult = await ticketTypeRepo.decrement(
+        { id: ticket.ticketTypeId },
+        'soldQuantity',
+        1,
+      );
 
-    const updated = await this.ticketRepository.save(ticket);
+      if (releaseResult.affected === 0) {
+        throw new NotFoundException(
+          `TicketType with ID ${ticket.ticketTypeId} not found`,
+        );
+      }
+
+      ticket.status = TicketStatus.REFUNDED;
+      ticket.refundedAt = new Date();
+
+      if (order && refundHash) {
+        order.refundTxHash = refundHash;
+        await manager.getRepository(Order).save(order);
+      }
+
+      return manager.getRepository(Ticket).save(ticket);
+    });
+
     return this.mapToResponseDto(updated);
   }
 
