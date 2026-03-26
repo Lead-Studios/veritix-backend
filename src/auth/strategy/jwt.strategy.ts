@@ -15,6 +15,8 @@ interface JwtPayload {
   exp?: number;
   tokenVersion: number;
 }
+import { JwtPayload } from '../interface/user.interface';
+
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
@@ -50,11 +52,17 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       // #471 — reject deleted accounts
       // #469 — reject suspended accounts
       this.authService.assertAccountActive(user);
+      const user = await this.authService.retrieveUserById(payload.userId);
+
+      if (user.tokenVersion !== (payload.tokenVersion ?? 0) || user.isSuspended) {
+        throw new UnauthorizedException(UserMessages.INVALID_ACCESS_TOKEN);
+      }
+
       return {
         id: user.id,
         fullName: user.fullName,
         email: user.email,
-        role: payload.role,
+        role: user.role,
       };
     } catch (error) {
       console.log('error validating token', error);

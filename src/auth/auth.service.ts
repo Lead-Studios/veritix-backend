@@ -26,6 +26,11 @@ import { UserResponseDto } from 'src/users/dto/user-response.dto';
 import { User } from 'src/users/entities/event.entity';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
+import { AuditLogService } from '../admin/services/audit-log.service';
+import {
+  AdminAuditAction,
+  AdminAuditTargetType,
+} from '../admin/entities/admin-audit-log.entity';
 
 @Injectable()
 export class AuthService {
@@ -35,6 +40,7 @@ export class AuthService {
     private readonly userHelper: UserHelper,
     private readonly jwtHelper: JwtHelper,
     private readonly mailService: MailService,
+    private readonly auditLogService: AuditLogService,
   ) {}
 
   async createUser(createUserDto: CreateUserDto) {
@@ -85,7 +91,7 @@ export class AuthService {
     };
   }
 
-  async createAdminUser(createUserDto: CreateUserDto) {
+  async createAdminUser(createUserDto: CreateUserDto, actorId: string) {
     const existingUser = await this.userRepository.findOne({
       where: { email: createUserDto.email },
     });
@@ -109,7 +115,20 @@ export class AuthService {
       password: hashedPassword,
       role: UserRole.ADMIN,
     });
-    await this.userRepository.save(newUser);
+    const savedUser = await this.userRepository.save(newUser);
+
+    await this.auditLogService.log(
+      actorId,
+      AdminAuditAction.ROLE_CHANGE,
+      AdminAuditTargetType.USER,
+      savedUser.id,
+      {
+        previousRole: null,
+        newRole: UserRole.ADMIN,
+        createdUser: true,
+      },
+    );
+
     return {
       message: UserMessages.USER_CREATED_SUCCESSFULLY,
     };
@@ -205,6 +224,10 @@ export class AuthService {
       throw new UnauthorizedException(UserMessages.INVALID_CREDENTIALS);
     }
 
+    if (user.isSuspended) {
+      throw new UnauthorizedException(UserMessages.ACCOUNT_SUSPENDED);
+    }
+
     if (!user.isVerified) {
       await this.resendVerificationOtp(loginUserDto.email);
       return {
@@ -222,11 +245,15 @@ export class AuthService {
   async refreshToken(refreshToken: string) {
     const validatedRefreshToken =
       this.jwtHelper.validateRefreshToken(refreshToken);
-    const userId = Number(validatedRefreshToken);
+    const userId = Number(validatedRefreshToken.userId);
     const user = await this.userRepository.findOne({
       where: { id: String(userId) },
     });
-    if (!user) {
+    if (
+      !user ||
+      user.isSuspended ||
+      user.tokenVersion !== (validatedRefreshToken.tokenVersion ?? 0)
+    ) {
       throw new UnauthorizedException(UserMessages.INVALID_REFRESH_TOKEN);
     }
     const accessToken = this.jwtHelper.generateAccessToken(user);
@@ -240,6 +267,7 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('User not found.');
     }
+    return user;
     return this.userHelper.mapToResponseDto(user);
   }
 

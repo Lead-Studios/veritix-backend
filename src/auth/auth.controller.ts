@@ -71,8 +71,8 @@ export class AuthController {
   @ApiBody({ type: CreateUserDto })
   @ApiResponse({ status: 201, description: 'Admin created successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
-  createAdmin(@Body() createUserDto: CreateUserDto) {
-    return this.authService.createAdminUser(createUserDto);
+  createAdmin(@Body() createUserDto: CreateUserDto, @CurrentUser() user: User) {
+    return this.authService.createAdminUser(createUserDto, user.id);
   }
 
   // ================= LOGIN =================
