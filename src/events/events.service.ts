@@ -208,6 +208,16 @@ export class EventsService {
       totalPages: Math.ceil(total / limit),
     };
   }
+  async updateImage(eventId: number, imageUrl: string) {
+    const event = await this.eventRepository.findOneBy({ id: eventId });
+  
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+  
+    event.imageUrl = imageUrl;
+  
+    return this.eventRepository.save(event);
 
   async getEventCapacity(id: string) {
   const event = await this.eventRepository.findOne({

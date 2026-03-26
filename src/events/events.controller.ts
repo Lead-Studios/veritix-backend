@@ -183,6 +183,36 @@ export class EventsController {
     await this.eventsService.deleteEvent(id, user);
     return { message: 'Event deleted successfully' };
   }
+  @Post(':id/image')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({}), // memory-like usage (buffer still available)
+      limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+      fileFilter: (req, file, cb) => {
+        const allowed = ['image/png', 'image/jpeg', 'image/webp'];
+
+        if (!allowed.includes(file.mimetype)) {
+          return cb(new Error('Unsupported file type'), false);
+        }
+
+        cb(null, true);
+      },
+    }),
+  )
+  async uploadEventImage(
+    @Param('id', ParseIntPipe) id: number,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new ForbiddenException('File is required');
+    }
+
+    const imageUrl = await this.storageService.uploadFile(file);
+
+    await this.eventsService.updateImage(id, imageUrl);
+
+    return { imageUrl };
+  }
 
   @Get(':id/capacity')
 @ApiOperation({ summary: 'Get event capacity status' })
