@@ -130,4 +130,60 @@ export class OrdersScheduler {
       this.config.get<OrderConfig>('order')?.expiryMinutes ?? 15;
     return new Date(from.getTime() + minutes * 60 * 1_000);
   }
+
+  @Cron(CronExpression.EVERY_5_MINUTES)
+  async handleExpiredOrders() {
+    const now = new Date();
+
+    // ✅ Find expired pending orders
+    const expiredOrders = await this.orderRepository.find({
+      where: {
+        status: 'PENDING',
+        expiresAt: () => '< NOW()', // ⚠️ fallback handled below
+      },
+      relations: ['items'],
+    });
+
+    // ⚠️ TypeORM safe fallback (for compatibility)
+    const filtered = expiredOrders.filter(
+      (o) => o.expiresAt && o.expiresAt < now,
+    );
+
+    let cancelledCount = 0;
+    let releasedTickets = 0;
+
+    for (const order of filtered) {
+      try {
+        // 🔓 Release inventory
+        for (const item of order.items || []) {
+          await this.ticketTypeService.releaseTickets(
+            item.ticketTypeId,
+            item.quantity,
+          );
+
+          releasedTickets += item.quantity;
+        }
+
+        // ❌ Cancel order
+        order.status = 'CANCELLED';
+        await this.orderRepository.save(order);
+
+        cancelledCount++;
+      } catch (err) {
+        this.logger.error(
+          `Failed to process expired order ${order.id}: ${
+            (err as Error).message
+          }`,
+        );
+        // ❗ continue — do NOT break batch
+      }
+    }
+
+    if (cancelledCount > 0) {
+      this.logger.log(
+        `Cancelled ${cancelledCount} expired orders, released ${releasedTickets} ticket reservations`,
+      );
+    }
+  }
+
 }

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Ticket Confirmation</title>
+  </head>
+  <body style="font-family: Arial, sans-serif; background: #f6f6f6; padding: 20px;">
+    <div style="max-width: 600px; margin: auto; background: #fff; padding: 20px; border-radius: 8px;">
+      
+      <h2 style="color: #333;">🎟 Ticket Confirmation</h2>
+
+      <p>Hello <strong>{{attendeeName}}</strong>,</p>
+
+      <p>Your ticket for <strong>{{eventTitle}}</strong> has been successfully issued.</p>
+
+      <p>
+        <strong>Event Date:</strong> {{eventDate}} <br />
+        <strong>Ticket Type:</strong> {{ticketType}}
+      </p>
+
+      <div style="text-align: center; margin: 20px 0;">
+        <p><strong>Your QR Code</strong></p>
+        <img src="{{qrCodeImage}}" alt="QR Code" style="width: 200px; height: 200px;" />
+      </div>
+
+      <p>Please present this QR code at the venue.</p>
+
+      <hr />
+
+      <p style="font-size: 12px; color: #888;">
+        This is an automated message. Please do not reply.
+      </p>
+    </div>
+  </body>
+</html>
