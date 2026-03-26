@@ -1,5 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { UserMessages } from './user-messages';
 import { JwtPayload } from '../interface/user.interface';
 import { User } from '../entities/user.entity';
@@ -8,12 +9,25 @@ type JwtExpiry = `${number}${'s' | 'm' | 'h' | 'd'}` | number;
 
 @Injectable()
 export class JwtHelper {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
+  ) {
+    const accessSecret = this.configService.getOrThrow<string>('ACCESS_TOKEN_SECRET');
+    const refreshSecret = this.configService.getOrThrow<string>('REFRESH_TOKEN_SECRET');
+
+    if (accessSecret.length < 32) {
+      throw new Error('ACCESS_TOKEN_SECRET must be at least 32 characters long');
+    }
+    if (refreshSecret.length < 32) {
+      throw new Error('REFRESH_TOKEN_SECRET must be at least 32 characters long');
+    }
+  }
 
   public validateRefreshToken(refreshToken: string): JwtPayload {
     try {
       const payload = this.jwtService.verify<JwtPayload>(refreshToken, {
-        secret: process.env.REFRESH_TOKEN_SECRET as string,
+        secret: this.configService.getOrThrow<string>('REFRESH_TOKEN_SECRET'),
       });
 
       if (!payload?.userId) {
@@ -41,8 +55,8 @@ export class JwtHelper {
     };
 
     return this.jwtService.sign(payload, {
-      secret: process.env.ACCESS_TOKEN_SECRET as string,
-      expiresIn: (process.env.ACCESS_TOKEN_EXPIRATION ?? '1h') as JwtExpiry,
+      secret: this.configService.getOrThrow<string>('ACCESS_TOKEN_SECRET'),
+      expiresIn: (this.configService.get<string>('ACCESS_TOKEN_EXPIRATION') ?? '1h') as JwtExpiry,
     });
   }
 
@@ -56,8 +70,8 @@ export class JwtHelper {
     };
 
     return this.jwtService.sign(payload, {
-      secret: process.env.REFRESH_TOKEN_SECRET as string,
-      expiresIn: (process.env.REFRESH_TOKEN_EXPIRATION ?? '7d') as JwtExpiry,
+      secret: this.configService.getOrThrow<string>('REFRESH_TOKEN_SECRET'),
+      expiresIn: (this.configService.get<string>('REFRESH_TOKEN_EXPIRATION') ?? '7d') as JwtExpiry,
     });
   }
 
