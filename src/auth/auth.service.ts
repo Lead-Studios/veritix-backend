@@ -318,6 +318,21 @@ export class AuthService {
   }
 
   /**
+   * Returns a safe user DTO without sensitive fields.
+   * Used by the current-user endpoint to avoid exposing
+   * password, verification codes, etc.
+   */
+  async getSafeUser(userId: string): Promise<UserResponseDto> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+    if (!user) {
+      throw new UnauthorizedException('User not found.');
+    }
+    return this.userHelper.mapToResponseDto(user);
+  }
+
+  /**
    * Validates that a user account is in a loginable state.
    * Call this in AuthService.login() and JwtStrategy.validate().
    *

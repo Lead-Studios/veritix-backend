@@ -23,6 +23,7 @@ import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ResendOtpDto } from './dto/resend-otp.dto';
 import { SendPasswordResetOtpDto } from './dto/send-password-reset-otp.dto';
+import { UserResponseDto } from '../users/dto/user-response.dto';
 import { SuspendUserDto } from '../admin/dto/suspend-user.dto';
 
 import {
@@ -109,10 +110,14 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get currently authenticated user' })
-  @ApiResponse({ status: 200, description: 'Returns current user details' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns current user details',
+    type: UserResponseDto,
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  retrieveCurrentUser(@CurrentUser() user: User) {
-    return user;
+  async retrieveCurrentUser(@CurrentUser() user: User): Promise<UserResponseDto> {
+    return this.authService.getSafeUser(String(user.id));
   }
 
   // ================= LOGOUT =================
