@@ -21,6 +21,15 @@ export class EventsService {
   constructor(
     @InjectRepository(Event)
     private readonly eventRepository: Repository<Event>,
+  
+    @InjectRepository(Ticket)
+    private readonly ticketRepository: Repository<Ticket>,
+  
+    @InjectRepository(TicketType)
+    private readonly ticketTypeRepository: Repository<TicketType>,
+  
+    @Inject(CACHE_MANAGER)
+    private readonly cacheManager: Cache,
   ) {}
 
   // -------------------------------
@@ -222,6 +231,106 @@ export class EventsService {
     remaining,
     isSoldOut: remaining <= 0,
   };
+}
+
+async getEventAnalytics(eventId: string, user: User) {
+  const cacheKey = `event:analytics:${eventId}`;
+
+  // ✅ cache first
+  const cached = await this.cacheManager.get(cacheKey);
+  if (cached) return cached;
+
+  const event = await this.eventRepository.findOne({
+    where: { id: eventId },
+  });
+
+  if (!event) throw new NotFoundException('Event not found');
+
+  // 🔐 Access control
+  const isAdmin = user.role === UserRole.ADMIN;
+  const isOwner = event.organizerId === user.id;
+
+  if (!isAdmin && !isOwner) {
+    throw new ForbiddenException('Access denied');
+  }
+
+  // -------------------------------
+  // 1. Sales by Ticket Type
+  // -------------------------------
+  const ticketTypes = await this.ticketTypeRepository.find({
+    where: { eventId },
+  });
+
+  const salesByTicketType = ticketTypes.map((tt) => ({
+    name: tt.name,
+    sold: tt.soldQuantity,
+    remaining: tt.totalQuantity - tt.soldQuantity,
+  }));
+
+  // -------------------------------
+  // 2. Total Revenue
+  // -------------------------------
+  const { revenue } = await this.ticketTypeRepository
+    .createQueryBuilder('tt')
+    .select('COALESCE(SUM(tt.price * tt.soldQuantity), 0)', 'revenue')
+    .where('tt.eventId = :eventId', { eventId })
+    .getRawOne();
+
+  // -------------------------------
+  // 3. Scan Stats
+  // -------------------------------
+  const scanStatsRaw = await this.ticketRepository
+    .createQueryBuilder('t')
+    .select('COUNT(*) FILTER (WHERE t.status = :scanned)', 'scanned')
+    .addSelect('COUNT(*) FILTER (WHERE t.status != :cancelled)', 'total')
+    .setParameters({
+      scanned: 'SCANNED',
+      cancelled: 'CANCELLED',
+    })
+    .where('t.eventId = :eventId', { eventId })
+    .getRawOne();
+
+  const totalScanned = Number(scanStatsRaw.scanned || 0);
+  const totalTickets = Number(scanStatsRaw.total || 0);
+
+  const scanRate =
+    totalTickets === 0 ? 0 : Number(((totalScanned / totalTickets) * 100).toFixed(1));
+
+  // -------------------------------
+  // 4. Sales Velocity (last 30 days)
+  // -------------------------------
+  const salesVelocity = await this.ticketRepository
+    .createQueryBuilder('t')
+    .select(`DATE(t.createdAt)`, 'date')
+    .addSelect('COUNT(*)', 'ticketsSold')
+    .where('t.eventId = :eventId', { eventId })
+    .andWhere('t.createdAt >= NOW() - INTERVAL \'30 days\'')
+    .groupBy('date')
+    .orderBy('date', 'ASC')
+    .getRawMany();
+
+  const formattedVelocity = salesVelocity.map((row) => ({
+    date: row.date,
+    ticketsSold: Number(row.ticketsSold),
+  }));
+
+  const result = {
+    eventId,
+    title: event.title,
+    salesByTicketType,
+    totalRevenue: Number(revenue),
+    scanStats: {
+      totalScanned,
+      scanRate,
+    },
+    salesVelocity: formattedVelocity,
+    generatedAt: new Date().toISOString(),
+  };
+
+  // ✅ cache for 5 mins
+  await this.cacheManager.set(cacheKey, result, 300);
+
+  return result;
 }
 
   private mapToEventDetailResponse(event: Event): EventDetailResponseDto {
