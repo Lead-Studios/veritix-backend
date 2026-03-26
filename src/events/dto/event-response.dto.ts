@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { TicketPriceType } from '../../tickets-inventory/entities/ticket-type.entity';
 
 export class TicketTypeSummaryDto {
   @ApiProperty() id: string;
@@ -42,6 +43,24 @@ export class EventResponseDto {
 
   @ApiPropertyOptional({ type: [TicketTypeSummaryDto] })
   ticketTypes?: TicketTypeSummaryDto[];
+}
+
+export class EventDetailTicketTypeDto {
+  @ApiProperty() id: string;
+  @ApiProperty() name: string;
+  @ApiProperty({ enum: TicketPriceType }) priceType: TicketPriceType;
+  @ApiProperty() price: number;
+  @ApiProperty() totalQuantity: number;
+  @ApiProperty() soldQuantity: number;
+  @ApiProperty() remainingQuantity: number;
+  @ApiProperty() isAvailableNow: boolean;
+  @ApiPropertyOptional() saleStartsAt?: Date | null;
+  @ApiPropertyOptional() saleEndsAt?: Date | null;
+}
+
+export class EventDetailResponseDto extends EventResponseDto {
+  @ApiProperty({ type: [EventDetailTicketTypeDto] })
+  ticketTypes: EventDetailTicketTypeDto[];
 }
 
 export class EventSummaryDto {

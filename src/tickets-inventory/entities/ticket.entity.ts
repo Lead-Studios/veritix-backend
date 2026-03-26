@@ -107,6 +107,20 @@ export class Ticket {
   })
   refundedAt: Date;
 
+  @Column({
+    type: 'timestamp',
+    nullable: true,
+    comment: 'When ticket was cancelled',
+  })
+  cancelledAt: Date | null;
+
+  @Column({
+    type: 'varchar',
+    nullable: true,
+    comment: 'Reason provided when ticket was cancelled',
+  })
+  cancellationReason: string | null;
+
   @CreateDateColumn()
   createdAt: Date;
 
@@ -137,5 +151,14 @@ export class Ticket {
   markAsRefunded(): void {
     this.status = TicketStatus.REFUNDED;
     this.refundedAt = new Date();
+  }
+
+  /**
+   * Mark ticket as cancelled
+   */
+  markAsCancelled(reason?: string): void {
+    this.status = TicketStatus.CANCELLED;
+    this.cancelledAt = new Date();
+    this.cancellationReason = reason ?? null;
   }
 }
