@@ -3,14 +3,8 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { AuthService } from '../auth.service';
 import { UserMessages } from '../helper/user-messages';
+import { JwtPayload } from '../interface/user.interface';
 
-interface JwtPayload {
-  sub: string;
-  email?: string;
-  role: string;
-  iat?: number;
-  exp?: number;
-}
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private readonly authService: AuthService) {
@@ -27,12 +21,17 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(payload: JwtPayload) {
     try {
-      const user = await this.authService.retrieveUserById(Number(payload.sub));
+      const user = await this.authService.retrieveUserById(payload.userId);
+
+      if (user.tokenVersion !== (payload.tokenVersion ?? 0) || user.isSuspended) {
+        throw new UnauthorizedException(UserMessages.INVALID_ACCESS_TOKEN);
+      }
+
       return {
         id: user.id,
         fullName: user.fullName,
         email: user.email,
-        role: payload.role,
+        role: user.role,
       };
     } catch (error) {
       console.log('error validating token', error);
