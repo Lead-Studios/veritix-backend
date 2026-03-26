@@ -17,6 +17,7 @@ import { OrdersModule } from './orders/orders.module';
 import { StellarModule } from './stellar/stellar.module';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AdminModule } from './admin/admin.module';
+import { VerificationLogsModule } from './verification-logs/verification-logs.module';
 import { SetllaModule } from './setlla/setlla.module';
 import { VerificationModule } from './verification/verification.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
@@ -98,6 +99,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     ContactModule,
     StellarModule,
     AdminModule,
+    VerificationLogsModule, // ← Stellar payment listener
     SetllaModule, // ← Stellar payment listener
   ],
   controllers: [AppController],
