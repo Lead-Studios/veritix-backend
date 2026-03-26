@@ -90,4 +90,17 @@ export class TicketController {
   async deleteTicket(id: string): Promise<void> {
     return this.ticketService.deleteTicket(id);
   }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ORGANIZER, UserRole.ADMIN)
+  @Get('scan-log/:ticketId')
+  async getScanLog(
+    @Param('ticketId', ParseUUIDPipe) ticketId: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.verificationService.getLogsForTicket(
+      ticketId,
+      user,
+    );
+  }
 }

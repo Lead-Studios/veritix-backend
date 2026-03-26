@@ -99,4 +99,50 @@ export class TicketService {
       usageRate: total > 0 ? (usedCount / total * 100).toFixed(2) : 0,
     };
   }
+
+  async getLogsForTicket(ticketId: string, user: User) {
+    // ✅ Fetch ticket (needed for context + access control)
+    const ticket = await this.ticketRepo.findOne({
+      where: { id: ticketId },
+    });
+  
+    if (!ticket) {
+      throw new NotFoundException('Ticket not found');
+    }
+  
+    // 🔐 Fetch event for ownership check
+    const event = await this.eventRepo.findOne({
+      where: { id: ticket.eventId },
+    });
+  
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+  
+    // 🔐 Access control
+    const isAdmin = user.role === UserRole.ADMIN;
+    const isOwner = event.organizerId === user.id;
+  
+    if (!isAdmin && !isOwner) {
+      throw new ForbiddenException('Access denied');
+    }
+  
+    // ✅ Fetch logs (latest first)
+    const logs = await this.logRepo.find({
+      where: { ticketId },
+      order: { verifiedAt: 'DESC' },
+    });
+  
+    return {
+      ticketId,
+      ticketStatus: ticket.status,
+      logs: logs.map((log) => ({
+        status: log.status,
+        isValid: log.isValid,
+        message: log.message,
+        verifiedAt: log.verifiedAt,
+        verifiedBy: log.verifiedBy,
+      })),
+    };
+  }
 }
