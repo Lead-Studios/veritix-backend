@@ -15,6 +15,7 @@ import appConfig from './config/app.config';
 import appConfig, { appConfigValidationSchema } from './config/app.config';
 import { OrdersModule } from './orders/orders.module';
 import { StellarModule } from './stellar/stellar.module';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AdminModule } from './admin/admin.module';
 import { VerificationLogsModule } from './verification-logs/verification-logs.module';
@@ -31,6 +32,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
       validationSchema: appConfigValidationSchema,
       validationOptions: { allowUnknown: true, abortEarly: false },
     }),
+    ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([
       {
         name: 'default',

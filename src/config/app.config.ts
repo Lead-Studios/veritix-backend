@@ -35,3 +35,6 @@ export default () => ({
       '',
   },
 });
+export default () => ({
+  ORDER_EXPIRY_MINUTES: parseInt(process.env.ORDER_EXPIRY_MINUTES || '15', 10),
+});
