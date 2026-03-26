@@ -1,98 +1,251 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# VeriTix Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+VeriTix is an event ticketing and verification platform focused on secure issuance, purchase flows, verification at entry, and blockchain-ready auditability. This repository contains the NestJS backend API that powers authentication, events, ticket inventory, order processing, admin operations, contact workflows, and ticket verification.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Tech Stack
 
-## Description
+- NestJS 11
+- PostgreSQL 15+
+- TypeORM 0.3
+- Stellar SDK
+- SendGrid
+- Swagger / OpenAPI
+- Jest + Supertest
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Project Overview
 
-## Project setup
+The backend exposes REST APIs for user registration and login, event creation and lifecycle management, ticket inventory, order management, verification at check-in, admin user operations, contact submissions, and blockchain integration scaffolding. PostgreSQL is the system of record, TypeORM manages entities and migrations, and the Stellar integration is used for payment and verification-related platform workflows.
+
+## Prerequisites
+
+Install the following before you start:
+
+- Node.js 20 or newer
+- npm 10 or newer
+- PostgreSQL 15 or newer
+- GitHub CLI (`gh`)
+
+Recommended local checks:
 
 ```bash
-$ npm install
+node -v
+npm -v
+gh --version
+psql --version
 ```
 
-## Compile and run the project
+## Local Setup
+
+1. Clone the repository.
+
+```bash
+git clone <repo-url>
+cd veritix-backend
+```
+
+2. Install dependencies.
+
+```bash
+npm install
+```
+
+3. Create your local environment file.
+
+```bash
+cp .env.example .env
+```
+
+4. Update `.env` with your PostgreSQL credentials, JWT secrets, and any Stellar settings you need.
+
+5. Run database migrations.
+
+```bash
+npm run migration:run
+```
+
+6. Start the API in watch mode.
+
+```bash
+npm run start:dev
+```
+
+7. Open the Swagger docs.
+
+```text
+http://localhost:3000/api
+```
+
+## Environment Variables
+
+The table below combines the variables defined in `src/config/app.config.ts`, `src/config/database-config.ts`, other config readers in the codebase, and `.env.example`.
+
+| Variable | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `PORT` | number | Optional | `3000` | Port used by the Nest application in local and deployed environments. |
+| `APP_NAME` | string | Optional | none | Friendly application name exposed through app config. |
+| `DATABASE_HOST` | string | Yes | none | PostgreSQL host name or IP address. |
+| `DATABASE_PORT` | number | Yes | `5432` | PostgreSQL port. |
+| `DATABASE_USER` | string | Yes | none | PostgreSQL username. |
+| `DATABASE_PASSWORD` | string | Yes | none | PostgreSQL password. |
+| `DATABASE_NAME` | string | Yes | `veritix_db` | PostgreSQL database name. |
+| `DATABASE_SSL` | boolean | Optional | `false` | Enables SSL for the database connection when set to `true`. |
+| `ACCESS_TOKEN_SECRET` | string | Yes | none | Secret used to sign access tokens. |
+| `REFRESH_TOKEN_SECRET` | string | Yes | none | Secret used to sign refresh tokens. |
+| `ACCESS_TOKEN_EXPIRATION` | string | Optional | `1h` | Access token TTL read by `JwtHelper`. Example: `15m`, `1h`. |
+| `REFRESH_TOKEN_EXPIRATION` | string | Optional | `7d` | Refresh token TTL read by `JwtHelper`. Example: `7d`, `30d`. |
+| `STELLAR_NETWORK` | string | Optional | `testnet` | Target Stellar network. Supported values in config validation: `testnet`, `mainnet`. |
+| `STELLAR_RECEIVING_ADDRESS` | string | Optional | none | Primary Stellar receiving address for platform payments. |
+| `STELLAR_PLATFORM_ADDRESS` | string | Optional | falls back to `STELLAR_RECEIVING_ADDRESS` | Alias used by the payment listener and Stellar module. |
+| `STELLAR_SECRET_KEY` | string | Optional | none | Platform Stellar secret key. Treat as sensitive and never commit it. |
+| `ORDER_EXPIRY_MINUTES` | number | Optional | `15` | Lifetime of a pending order before it expires. |
+
+## Example Environment File
+
+The repository includes a starter file at [`.env.example`](/Users/buildafrica_1/Desktop/Drip-contribution/veritix-backend/.env.example). Copy it to `.env` and update the values for your machine.
+
+## Database Migrations
+
+Use the TypeORM migration scripts below:
+
+```bash
+# apply all pending migrations
+npm run migration:run
+
+# generate a new migration from entity changes
+npm run migration:generate
+
+# revert the most recent migration
+npm run migration:revert
+```
+
+Notes:
+
+- `migration:run` and `migration:revert` depend on `src/data-source.ts`.
+- `migration:generate` writes a new file under `src/migrations/`.
+- Run migrations after changing entities and before starting the app against a fresh database.
+
+## API Docs
+
+Swagger is mounted at:
+
+```text
+http://localhost:3000/api
+```
+
+The current bootstrap lives in [`src/main.ts`](/Users/buildafrica_1/Desktop/Drip-contribution/veritix-backend/src/main.ts).
+
+## Available Scripts
 
 ```bash
 # development
-$ npm run start
+npm run start
+npm run start:dev
+npm run start:debug
 
-# watch mode
-$ npm run start:dev
+# production
+npm run build
+npm run start:prod
 
-# production mode
-$ npm run start:prod
+# linting and formatting
+npm run lint
+npm run format
+
+# database
+npm run migration:run
+npm run migration:generate
+npm run migration:revert
 ```
 
-## Run tests
+## Running Tests
 
 ```bash
 # unit tests
-$ npm run test
+npm test
 
-# e2e tests
-$ npm run test:e2e
+# end-to-end tests
+npm run test:e2e
 
-# test coverage
-$ npm run test:cov
+# coverage
+npm run test:cov
 ```
 
-## Deployment
+## Module Overview
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+- `src/admin`: Admin-only API surface for managing users and other privileged operations such as role updates, suspension workflows, and administrative reporting.
+- `src/auth`: Authentication and authorization domain containing registration, login, OTP verification, JWT handling, role guards, decorators, and the core `User` entity.
+- `src/blockchain`: Shared blockchain abstraction layer that wraps provider-specific behavior and exposes enums, config, interfaces, and services used by ticketing and event modules.
+- `src/common`: Cross-cutting utilities such as exception filters, interceptors, and shared helpers used across the application.
+- `src/config`: Central configuration for app settings, database setup, pagination helpers, and email assets/templates.
+- `src/contact`: Contact and support submission workflow, including DTOs, persistence models, and controller/service logic for inbound messages.
+- `src/enums`: Shared enums that do not belong to a single bounded context, such as event status values used across the platform.
+- `src/events`: Event lifecycle domain that manages event creation, updates, status transitions, validation rules, and event-related API responses.
+- `src/migrations`: TypeORM migration history for schema creation and evolution, including event fields, Stellar payment support, and newer admin/user-management changes.
+- `src/orders`: Purchase and order-processing domain that manages order entities, expiry configuration, scheduling, and order-related DTOs and endpoints.
+- `src/stellar`: Stellar-specific integration layer for payment listening and Stellar network configuration, isolated from the rest of the backend behind a dedicated module.
+- `src/test`: Repository-level domain and e2e tests that cover multi-module business flows beyond a single service or controller.
+- `src/ticket-verification`: An additional ticket verification slice with its own controllers, services, DTOs, entities, and repositories for verification-specific workflows.
+- `src/tickets-inventory`: Ticket inventory management for ticket types, QR code support, issuance state, and inventory-oriented services/controllers.
+- `src/users`: User-facing profile and account APIs outside the auth module, including user DTOs, controller handlers, and service logic.
+- `src/verification`: Verification endpoints, DTOs, logs, stats, and service logic for checking ticket validity, check-in flows, and verification history.
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## Contributing
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+### Branch Naming
+
+Use short, descriptive branch names with one of these prefixes:
+
+- `feat/` for new features
+- `fix/` for bug fixes
+- `test/` for test-only work
+- `perf/` for performance improvements
+- `docs/` for documentation changes
+
+Examples:
+
+```text
+feat/admin-user-management
+fix/jwt-refresh-validation
+test/verification-controller
+docs/complete-readme
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### Commit Message Format
 
-## Resources
+Use conventional, scoped commit messages where possible:
 
-Check out a few resources that may come in handy when working with NestJS:
+```text
+feat: add admin user suspension endpoints
+fix: reject suspended users during refresh token exchange
+docs: complete README setup and contributing guide
+test: add verification controller e2e coverage
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### Pull Request Checklist
 
-## Support
+Before opening a PR, make sure you have:
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+- rebased or merged the latest target branch
+- added or updated tests for your change
+- run `npm test` and `npm run test:e2e`
+- run `npm run lint` and `npm run build`
+- updated migrations if entity/schema changes were introduced
+- updated `.env.example` if configuration changed
+- updated the README or Swagger annotations when the API contract changed
 
-## Stay in touch
+### Workflow
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+1. Create a branch from the latest default branch.
+2. Keep changes focused on a single concern.
+3. Write or update tests alongside the implementation.
+4. Open a PR with a clear summary, screenshots or API examples when relevant, and any migration or rollout notes.
+
+## Troubleshooting
+
+- If `npm run migration:run` fails with `ts-node: command not found`, run `npm install` first so local dev dependencies are installed.
+- If `psql` is missing, install PostgreSQL client tools and make sure they are available on your shell `PATH`.
+- If Swagger loads but endpoints are missing, confirm the relevant module is imported into `AppModule`.
+- If JWT auth fails immediately on startup, confirm `ACCESS_TOKEN_SECRET` and `REFRESH_TOKEN_SECRET` are set.
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+This repository is currently marked `UNLICENSED` in `package.json`.
