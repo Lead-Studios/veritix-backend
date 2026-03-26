@@ -23,7 +23,7 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { sendEmail } from '../config/email/email.service';
 import { UpdateProfileDto } from 'src/users/dto/user-profile.dto';
 import { UserResponseDto } from 'src/users/dto/user-response.dto';
-import { User } from 'src/users/entities/event.entity';
+import { User } from './entities/user.entity';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { AuditLogService } from '../admin/services/audit-log.service';
@@ -31,6 +31,7 @@ import {
   AdminAuditAction,
   AdminAuditTargetType,
 } from '../admin/entities/admin-audit-log.entity';
+import { EmailService } from './helper/email-sender';
 
 @Injectable()
 export class AuthService {
@@ -39,7 +40,7 @@ export class AuthService {
     private readonly userRepository: Repository<User>,
     private readonly userHelper: UserHelper,
     private readonly jwtHelper: JwtHelper,
-    private readonly mailService: MailService,
+    private readonly emailService: EmailService,
     private readonly auditLogService: AuditLogService,
   ) {}
 
@@ -170,6 +171,11 @@ export class AuthService {
 
     const tokens = this.jwtHelper.generateTokens(user);
 
+    // Hash and store the refresh token for rotation
+    const refreshTokenHash = await bcrypt.hash(tokens.refreshToken, 10);
+    user.currentRefreshTokenHash = refreshTokenHash;
+    await this.userRepository.save(user);
+
     return {
       message: UserMessages.VERIFY_OTP_SUCCESS,
       user: this.userHelper.mapToResponseDto(user),
@@ -224,7 +230,7 @@ export class AuthService {
       throw new UnauthorizedException(UserMessages.INVALID_CREDENTIALS);
     }
 
-    if (user.isSuspended) {
+    if (user.suspendedAt) {
       throw new UnauthorizedException(UserMessages.ACCOUNT_SUSPENDED);
     }
 
@@ -236,6 +242,12 @@ export class AuthService {
       };
     }
     const tokens = this.jwtHelper.generateTokens(user);
+
+    // Hash and store the refresh token for rotation
+    const refreshTokenHash = await bcrypt.hash(tokens.refreshToken, 10);
+    user.currentRefreshTokenHash = refreshTokenHash;
+    await this.userRepository.save(user);
+
     return {
       user: this.userHelper.mapToResponseDto(user),
       tokens: tokens,
@@ -245,30 +257,64 @@ export class AuthService {
   async refreshToken(refreshToken: string) {
     const validatedRefreshToken =
       this.jwtHelper.validateRefreshToken(refreshToken);
-    const userId = Number(validatedRefreshToken.userId);
+    const userId = String(validatedRefreshToken.userId);
     const user = await this.userRepository.findOne({
-      where: { id: String(userId) },
+      where: { id: userId },
     });
     if (
       !user ||
-      user.isSuspended ||
+      user.suspendedAt ||
       user.tokenVersion !== (validatedRefreshToken.tokenVersion ?? 0)
     ) {
       throw new UnauthorizedException(UserMessages.INVALID_REFRESH_TOKEN);
     }
-    const accessToken = this.jwtHelper.generateAccessToken(user);
-    return { accessToken };
+
+    // Verify the refresh token hash matches (token rotation check)
+    if (!user.currentRefreshTokenHash) {
+      throw new UnauthorizedException(UserMessages.INVALID_REFRESH_TOKEN);
+    }
+
+    const isRefreshTokenValid = await bcrypt.compare(
+      refreshToken,
+      user.currentRefreshTokenHash,
+    );
+
+    if (!isRefreshTokenValid) {
+      // Suspicious activity: token reuse detected
+      // Invalidate all sessions by incrementing tokenVersion
+      user.tokenVersion += 1;
+      user.currentRefreshTokenHash = null;
+      await this.userRepository.save(user);
+      throw new UnauthorizedException('Suspicious activity detected');
+    }
+
+    // Generate new tokens (rotation)
+    const tokens = this.jwtHelper.generateTokens(user);
+
+    // Hash and store the new refresh token
+    const newRefreshTokenHash = await bcrypt.hash(tokens.refreshToken, 10);
+    user.currentRefreshTokenHash = newRefreshTokenHash;
+    await this.userRepository.save(user);
+
+    return tokens;
   }
 
-  async retrieveUserById(userId: number) {
+  async logout(userId: string): Promise<void> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (user) {
+      user.currentRefreshTokenHash = null;
+      await this.userRepository.save(user);
+    }
+  }
+
+  async retrieveUserById(userId: string) {
     const user = await this.userRepository.findOne({
-      where: { id: String(userId) },
+      where: { id: userId },
     });
     if (!user) {
       throw new UnauthorizedException('User not found.');
     }
     return user;
-    return this.userHelper.mapToResponseDto(user);
   }
 
   /**
@@ -313,7 +359,7 @@ export class AuthService {
 
     await this.userRepository.softDelete(user.id);
 
-    await this.mailService.sendAccountDeletionConfirmation(originalEmail);
+    await this.emailService.sendAccountDeletionConfirmation(originalEmail);
   }
 
   async requestEmailChange(userId: string, newEmail: string): Promise<void> {
@@ -336,7 +382,7 @@ export class AuthService {
       emailChangeOtpExpiresAt: otpExpiry,
     });
  
-    await this.mailService.sendEmailChangeOtp(newEmail, otp);
+    await this.emailService.sendEmailChangeOtp(newEmail, otp);
   }
  
   async confirmEmailChange(userId: string, otp: string): Promise<void> {
@@ -370,7 +416,7 @@ export class AuthService {
       tokenVersion:            user.tokenVersion + 1,
     });
 
-    await this.mailService.sendEmailChangeNotification(oldEmail);
+    await this.emailService.sendEmailChangeNotification(oldEmail);
   }
  
   async suspendUser(adminId: string, targetId: string, reason: string): Promise<void> {
@@ -429,7 +475,7 @@ export class AuthService {
 
     for (const field of allowedFields) {
       if (dto[field] !== undefined) {
-        (user as Record<string, unknown>)[field] = dto[field];
+        (user as unknown as Record<string, unknown>)[field] = dto[field];
       }
     }
 
@@ -573,6 +619,9 @@ export class AuthService {
     user.password = await this.userHelper.hashPassword(newPassword);
     user.passwordResetCode = undefined;
     user.passwordResetCodeExpiresAt = undefined;
+    // Invalidate all refresh tokens on password reset for security
+    user.tokenVersion += 1;
+    user.currentRefreshTokenHash = null;
 
     await this.userRepository.save(user);
 

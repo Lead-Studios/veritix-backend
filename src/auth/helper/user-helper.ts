@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { UserResponseDto } from 'src/users/dto/user-response.dto';
-import { User } from 'src/users/entities/event.entity';
+import { User } from 'src/auth/entities/user.entity';
 
 @Injectable()
 export class UserHelper {

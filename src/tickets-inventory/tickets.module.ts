@@ -9,7 +9,7 @@ import { TicketController } from './controllers/ticket.controller';
 import { StellarModule } from '../stellar/stellar.module';
 import { Order } from '../orders/orders.entity';
 import { QRService } from './qr.service';
-import { User } from '../users/entities/event.entity';
+import { User } from '../auth/entities/user.entity';
 import { AdminModule } from '../admin/admin.module';
 
 @Module({

@@ -87,4 +87,42 @@ export class EmailService {
       );
     }
   }
+
+  async sendAccountDeletionConfirmation(to: string) {
+    try {
+      const htmlContent = await loadHtmlTemplate('account-deletion-confirmation');
+      await this.sendEmail(to, 'Account Deletion Confirmation', htmlContent);
+    } catch (error) {
+      this.logger.error(`Failed to send account deletion confirmation to ${to}`, error);
+      throw new InternalServerErrorException('Failed to send account deletion confirmation email');
+    }
+  }
+
+  async sendEmailChangeOtp(to: string, otp: string) {
+    try {
+      let htmlContent = await loadHtmlTemplate('email-change-otp');
+
+      const placeholders: Record<string, string> = {};
+      otp.split('').forEach((digit, index) => {
+        placeholders[`otp${index + 1}`] = digit;
+      });
+
+      htmlContent = replacePlaceholders(htmlContent, placeholders);
+
+      await this.sendEmail(to, 'Email Change Verification', htmlContent);
+    } catch (error) {
+      this.logger.error(`Error sending email change OTP to ${to}`, error);
+      throw new InternalServerErrorException('Failed to send email change OTP');
+    }
+  }
+
+  async sendEmailChangeNotification(to: string) {
+    try {
+      const htmlContent = await loadHtmlTemplate('email-change-notification');
+      await this.sendEmail(to, 'Your Email Has Been Changed', htmlContent);
+    } catch (error) {
+      this.logger.error(`Failed to send email change notification to ${to}`, error);
+      throw new InternalServerErrorException('Failed to send email change notification');
+    }
+  }
 }

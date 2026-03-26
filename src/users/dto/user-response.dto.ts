@@ -25,6 +25,12 @@ export class UserResponseDto {
   })
   isVerified: boolean;
 
+  @ApiProperty({
+    example: false,
+    description: 'Whether the user account is suspended',
+  })
+  isSuspended: boolean;
+
   @ApiPropertyOptional({ example: '+2348012345678', nullable: true })
   phone: string | null;
 

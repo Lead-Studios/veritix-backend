@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
-import { Users } from './entities/event.entity';
+import { User } from 'src/auth/entities/user.entity';
 import { NotFoundDomainException } from 'src/common/exceptions/not-found.exception';
 
 @Injectable()
 export class UsersService {
-  private readonly usersRepository: Repository<Users>;
+  private readonly usersRepository: Repository<User>;
   async findOne(id: string) {
     const user = await this.usersRepository.findOne({ where: { id } });
 

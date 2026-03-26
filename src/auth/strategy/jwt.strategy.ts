@@ -5,16 +5,7 @@ import { AuthService } from '../auth.service';
 import { UserMessages } from '../helper/user-messages';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from 'src/users/entities/event.entity';
-
-interface JwtPayload {
-  sub: string;
-  email?: string;
-  role: string;
-  iat?: number;
-  exp?: number;
-  tokenVersion: number;
-}
+import { User } from 'src/auth/entities/user.entity';
 import { JwtPayload } from '../interface/user.interface';
 
 @Injectable()
@@ -31,19 +22,20 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
+      secretOrKey: secret,
     });
   }
 
   async validate(payload: JwtPayload) {
     try {
-      const user = await this.authService.retrieveUserById(Number(payload.sub));
+      const user = await this.authService.retrieveUserById(payload.userId);
 
       if (!user) {
         throw new UnauthorizedException('User not found.');
       }
 
       // Reject if tokenVersion in JWT is stale (session was invalidated)
-      if (payload.tokenVersion !== user.) {
+      if (user.tokenVersion !== (payload.tokenVersion ?? 0)) {
         throw new UnauthorizedException(
           'Session expired. Please log in again.',
         );
@@ -52,9 +44,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       // #471 — reject deleted accounts
       // #469 — reject suspended accounts
       this.authService.assertAccountActive(user);
-      const user = await this.authService.retrieveUserById(payload.userId);
 
-      if (user.tokenVersion !== (payload.tokenVersion ?? 0) || user.isSuspended) {
+      if (user.isSuspended) {
         throw new UnauthorizedException(UserMessages.INVALID_ACCESS_TOKEN);
       }
 
