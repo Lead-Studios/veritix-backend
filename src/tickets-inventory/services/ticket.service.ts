@@ -363,26 +363,59 @@ export class TicketService {
     return this.mapToResponseDto(updated);
   }
 
+  /**
+   * Returns per-status counts, a grand total, and a scan-rate for the event.
+   *
+   * Uses a single GROUP BY aggregate query instead of loading every ticket row
+   * into memory, keeping this O(1) in database round-trips regardless of
+   * ticket volume.
+   *
+   * SQL equivalent:
+   *   SELECT status, COUNT(*) AS count
+   *   FROM   ticket
+   *   WHERE  "eventId" = :eventId
+   *   GROUP  BY status
+   */
   async getEventStats(eventId: string): Promise<{
     totalTickets: number;
     issued: number;
     scanned: number;
     refunded: number;
     cancelled: number;
+    scanRate: number;
   }> {
-    const tickets = await this.ticketRepository.find({
-      where: { eventId },
-    });
+    const rows: { status: TicketStatus; count: string }[] =
+      await this.ticketRepository
+        .createQueryBuilder('ticket')
+        .select('ticket.status', 'status')
+        .addSelect('COUNT(*)', 'count')
+        .where('ticket.eventId = :eventId', { eventId })
+        .groupBy('ticket.status')
+        .getRawMany();
 
-    return {
-      totalTickets: tickets.length,
-      issued: tickets.filter((t) => t.status === TicketStatus.ISSUED).length,
-      scanned: tickets.filter((t) => t.status === TicketStatus.SCANNED).length,
-      refunded: tickets.filter((t) => t.status === TicketStatus.REFUNDED)
-        .length,
-      cancelled: tickets.filter((t) => t.status === TicketStatus.CANCELLED)
-        .length,
-    };
+    // Fold the aggregate rows into a plain lookup map.
+    // COUNT() returns a string in most drivers, so we parse to number.
+    const countByStatus = new Map<TicketStatus, number>(
+      rows.map(({ status, count }) => [status, parseInt(count, 10)]),
+    );
+
+    const get = (s: TicketStatus) => countByStatus.get(s) ?? 0;
+
+    const issued = get(TicketStatus.ISSUED);
+    const scanned = get(TicketStatus.SCANNED);
+    const refunded = get(TicketStatus.REFUNDED);
+    const cancelled = get(TicketStatus.CANCELLED);
+    const totalTickets = issued + scanned + refunded + cancelled;
+
+    // scanRate: percentage of issued+scanned tickets that have been scanned.
+    // Denominator excludes refunded/cancelled because those were never
+    // available to scan.
+    const scannable = issued + scanned;
+    const scanRate = scannable > 0
+      ? Math.round((scanned / scannable) * 100 * 100) / 100 // 2 d.p.
+      : 0;
+
+    return { totalTickets, issued, scanned, refunded, cancelled, scanRate };
   }
 
   private mapToResponseDto(ticket: Ticket): TicketResponseDto {
