@@ -33,6 +33,8 @@ export class TicketService {
     ticketRepository: Repository<Ticket>,
     ticketTypeService: TicketTypeService,
     @InjectRepository(Order)
+    @InjectRepository(TicketTransfer)
+  private readonly transferRepository: Repository<TicketTransfer>,
     private readonly orderRepository: Repository<Order>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
