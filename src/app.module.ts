@@ -11,6 +11,7 @@ import { EventsModule } from './events/events.module';
 import { VerificationModule } from './verification/verification.module';
 import { ContactModule } from './contact/contact.module';
 import databaseConfig from './config/database-config';
+import appConfig from './config/app.config';
 import appConfig, { appConfigValidationSchema } from './config/app.config';
 import { OrdersModule } from './orders/orders.module';
 import { StellarModule } from './stellar/stellar.module';
@@ -46,6 +47,19 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
         const username = configService.get('database.username');
         const database = configService.get('database.database');
 
+  return {
+    type: 'postgres',
+    host,
+    port,
+    username,
+    password: configService.get('database.password'),
+    database,
+    synchronize: false,
+    autoLoadEntities: true,
+  };
+},
+
+    }),
         console.log('DB HOST:', host);
         console.log('DB PORT:', port);
         console.log('DB USER:', username);

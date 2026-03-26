@@ -27,6 +27,7 @@ export class UserHelper {
       fullName: user.fullName,
       role: user.role,
       isVerified: user.isVerified,
+      isSuspended: user.isSuspended,
       phone: user.phone ?? null,
       avatarUrl: user.avatarUrl ?? null,
       bio: user.bio ?? null,
