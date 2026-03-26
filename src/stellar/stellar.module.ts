@@ -12,8 +12,8 @@ import { TicketsModule } from '../tickets-inventory/tickets.module';
     TypeOrmModule.forFeature([Order, StellarCursor]),
     TicketsModule,
   ],
-  providers: [StellarService],
-  exports: [StellarService],
+  providers: [StellarService, PriceService],
+  exports: [StellarService, PriceService],
 })
 export class StellarModule implements OnModuleInit {
   constructor(private readonly stellarService: StellarService) { }

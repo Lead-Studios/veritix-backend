@@ -14,7 +14,7 @@ import { QRService } from '../qr.service';
 import { StellarService } from '../../stellar/stellar.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Order } from '../../orders/orders.entity';
-import { User } from '../../users/entities/event.entity';
+import { User } from '../../auth/entities/user.entity';
 import { TicketType } from '../entities/ticket-type.entity';
 import { AuditLogService } from '../../admin/services/audit-log.service';
 import {
@@ -33,6 +33,8 @@ export class TicketService {
     ticketRepository: Repository<Ticket>,
     ticketTypeService: TicketTypeService,
     @InjectRepository(Order)
+    @InjectRepository(TicketTransfer)
+  private readonly transferRepository: Repository<TicketTransfer>,
     private readonly orderRepository: Repository<Order>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,

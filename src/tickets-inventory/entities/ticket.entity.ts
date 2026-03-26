@@ -127,6 +127,11 @@ export class Ticket {
   @UpdateDateColumn()
   updatedAt: Date;
 
+  @Column({ type: 'int', default: 0 })
+transferCount: number;
+
+@Column({ nullable: true })
+ownerId: string; // 👈 REQUIRED for ownership validation
   /**
    * Check if ticket can be scanned
    */

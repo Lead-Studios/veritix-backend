@@ -117,4 +117,19 @@ export class TicketController {
   async getEventStats(@Param('eventId') eventId: string): Promise<any> {
     return this.ticketService.getEventStats(eventId);
   }
+
+  @UseGuards(JwtAuthGuard)
+@Post(':id/transfer')
+async transferTicket(
+  @Param('id', ParseUUIDPipe) id: string,
+  @Body() body: { toUserId: string; reason: 'gift' | 'resale' | 'other' },
+  @CurrentUser() user: User,
+) {
+  return this.ticketService.transferTicket(
+    id,
+    user.id,
+    body.toUserId,
+    body.reason,
+  );
+}
 }
