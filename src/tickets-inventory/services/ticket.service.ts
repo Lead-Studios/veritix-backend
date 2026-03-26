@@ -14,9 +14,11 @@ import { QRService } from '../qr.service';
 import { StellarService } from '../../stellar/stellar.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Order } from '../../orders/orders.entity';
-import { User } from '../../auth/entities/user.entity';
-import { UserRole } from '../../auth/common/enum/user-role-enum';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { AuditLogService } from '../../admin/services/audit-log.service';
+import {
+  AdminAuditAction,
+  AdminAuditTargetType,
+} from '../../admin/entities/admin-audit-log.entity';
 
 @Injectable()
 export class TicketService {
@@ -32,6 +34,7 @@ export class TicketService {
     private readonly orderRepository: Repository<Order>,
     private readonly stellarService: StellarService,
     private readonly qrService: QRService,
+    private readonly auditLogService: AuditLogService,
     private readonly eventEmitter: EventEmitter2,
   ) {
     this.ticketRepository = ticketRepository;
@@ -198,7 +201,7 @@ export class TicketService {
     return this.scanTicket(ticket.id);
   }
 
-  async refundTicket(id: string): Promise<TicketResponseDto> {
+  async refundTicket(id: string, actorId?: string): Promise<TicketResponseDto> {
     const ticket = await this.ticketRepository.findOne({
       where: { id },
       relations: ['ticketType'],
@@ -250,6 +253,28 @@ export class TicketService {
     ticket.refundedAt = new Date();
 
     const updated = await this.ticketRepository.save(ticket);
+
+    if (actorId) {
+      await this.auditLogService.log(
+        actorId,
+        AdminAuditAction.MANUAL_REFUND,
+        AdminAuditTargetType.TICKET,
+        updated.id,
+        {
+          orderReference: updated.orderReference ?? null,
+          ticketTypeId: updated.ticketTypeId,
+          refundTxHash: ticket.orderReference
+            ? (
+                await this.orderRepository.findOne({
+                  where: { id: ticket.orderReference },
+                })
+              )?.refundTxHash ?? null
+            : null,
+          refundedAt: updated.refundedAt?.toISOString() ?? null,
+        },
+      );
+    }
+
     return this.mapToResponseDto(updated);
   }
 

@@ -80,6 +80,14 @@ export class TicketController {
    * Refund a ticket
    * POST /events/:eventId/tickets/:id/refund
    */
+  @Post(':id/refund')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async refundTicket(
+    @Param('id') id: string,
+    @CurrentUser() user: User,
+  ): Promise<TicketResponseDto> {
+    return this.ticketService.refundTicket(id, user.id);
   @Post('events/:eventId/tickets/:id/refund')
   async refundTicket(@Param('id') id: string): Promise<TicketResponseDto> {
     return this.ticketService.refundTicket(id);
@@ -104,6 +112,7 @@ export class TicketController {
    * Get event statistics
    * GET /events/:eventId/tickets/stats
    */
+  @Get('stats/event')
   @Get('events/:eventId/tickets/stats/event')
   async getEventStats(@Param('eventId') eventId: string): Promise<any> {
     return this.ticketService.getEventStats(eventId);
