@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import {
@@ -13,6 +17,7 @@ import { TicketService } from '../tickets-inventory/services/ticket.service';
 import { EventsService } from '../events/events.service';
 import { TicketStatus } from '../tickets-inventory/entities/ticket.entity';
 import { Ticket } from '../tickets-inventory/entities/ticket.entity';
+import { VerificationGateway } from './verification.gateway';
 
 /**
  * Verification Service for VeriTix
@@ -37,6 +42,7 @@ export class VerificationService {
     private readonly ticketService: TicketService,
     private readonly eventsService: EventsService,
     private readonly dataSource: DataSource,
+    private readonly verificationGateway: VerificationGateway,
   ) {}
 
   /**
@@ -46,8 +52,15 @@ export class VerificationService {
    * @param request - The verification request data
    * @returns Promise resolving to the verification result
    */
-  async verifyTicket(request: VerificationRequest): Promise<VerificationResult> {
-    const { ticketCode, eventId: requestEventId, verifierId, markAsUsed = false } = request;
+  async verifyTicket(
+    request: VerificationRequest,
+  ): Promise<VerificationResult> {
+    const {
+      ticketCode,
+      eventId: requestEventId,
+      verifierId,
+      markAsUsed = false,
+    } = request;
 
     try {
       // 1. Look up ticket by QR code
@@ -224,6 +237,7 @@ export class VerificationService {
 
       // 8. If markAsUsed, scan the ticket transactionally
       if (markAsUsed) {
+        const verifiedAt = new Date();
         const queryRunner = this.dataSource.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
@@ -235,14 +249,16 @@ export class VerificationService {
           await ticketRepo.save(ticket);
 
           // Log the verification
-          const logRepo = queryRunner.manager.getRepository(VerificationLogEntity);
+          const logRepo = queryRunner.manager.getRepository(
+            VerificationLogEntity,
+          );
           await logRepo.save({
             ticketCode,
             ticketId: ticket.id,
             eventId: ticket.eventId,
             status: VerificationStatus.VALID,
             verifierId,
-            verifiedAt: new Date(),
+            verifiedAt,
             deviceInfo: null,
           });
 
@@ -253,6 +269,14 @@ export class VerificationService {
         } finally {
           await queryRunner.release();
         }
+
+        const stats = await this.getStatsForEvent(ticket.eventId);
+        this.verificationGateway.emitScanUpdate({
+          eventId: ticket.eventId,
+          totalScanned: stats.verifiedCount,
+          remaining: stats.remainingCount,
+          lastScanAt: verifiedAt.toISOString(),
+        });
       } else {
         // Just log without marking as scanned
         await this.logVerificationResult(
@@ -278,7 +302,9 @@ export class VerificationService {
     } catch (error) {
       // Handle unexpected errors
       throw new BadRequestException(
-        `Verification failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        `Verification failed: ${
+          error instanceof Error ? error.message : 'Unknown error'
+        }`,
       );
     }
   }
@@ -290,7 +316,10 @@ export class VerificationService {
    * @param verifierId - The ID of the staff member
    * @returns Promise resolving to the verification result
    */
-  checkIn(ticketCode: string, verifierId?: string): Promise<VerificationResult> {
+  checkIn(
+    ticketCode: string,
+    verifierId?: string,
+  ): Promise<VerificationResult> {
     return this.verifyTicket({
       ticketCode,
       verifierId,
@@ -493,9 +522,7 @@ export class VerificationService {
   /**
    * Map VerificationLogEntity to VerificationLog interface
    */
-  private mapLogEntityToInterface(
-    log: VerificationLogEntity,
-  ): VerificationLog {
+  private mapLogEntityToInterface(log: VerificationLogEntity): VerificationLog {
     return {
       id: log.id,
       ticketCode: log.ticketCode,
@@ -508,4 +535,3 @@ export class VerificationService {
     };
   }
 }
-

@@ -19,6 +19,9 @@ import {
   TicketStats,
   UserStats,
 } from './dto/admin-stats.dto';
+import { AuditLogService } from './services/audit-log.service';
+import { AdminAuditAction } from './entities/admin-audit-log.entity';
+import { PaginatedAdminAuditLogResponseDto } from './dto/admin-audit-log.dto';
 
 @Injectable()
 export class AdminService {
@@ -31,6 +34,7 @@ export class AdminService {
     private readonly ticketRepo: Repository<Ticket>,
     @InjectRepository(Order)
     private readonly orderRepo: Repository<Order>,
+    private readonly auditLogService: AuditLogService,
   ) {}
 
   async getStats(): Promise<AdminStatsResponseDto> {
@@ -48,6 +52,14 @@ export class AdminService {
       orders,
       generatedAt: new Date().toISOString(),
     };
+  }
+
+  async getAuditLog(options: {
+    page?: number;
+    limit?: number;
+    action?: AdminAuditAction;
+  }): Promise<PaginatedAdminAuditLogResponseDto> {
+    return this.auditLogService.findPaginated(options);
   }
 
   // -----------------------------------------------------------------------

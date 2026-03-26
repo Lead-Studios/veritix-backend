@@ -3,6 +3,7 @@ import {
   BadRequestException,
   NotFoundException,
   Logger,
+  ForbiddenException,
 } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { Ticket, TicketStatus } from '../entities/ticket.entity';
@@ -13,6 +14,11 @@ import { QRService } from '../qr.service';
 import { StellarService } from '../../stellar/stellar.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Order } from '../../orders/orders.entity';
+import { AuditLogService } from '../../admin/services/audit-log.service';
+import {
+  AdminAuditAction,
+  AdminAuditTargetType,
+} from '../../admin/entities/admin-audit-log.entity';
 
 @Injectable()
 export class TicketService {
@@ -28,6 +34,8 @@ export class TicketService {
     private readonly orderRepository: Repository<Order>,
     private readonly stellarService: StellarService,
     private readonly qrService: QRService,
+    private readonly auditLogService: AuditLogService,
+    private readonly eventEmitter: EventEmitter2,
   ) {
     this.ticketRepository = ticketRepository;
     this.ticketTypeService = ticketTypeService;
@@ -193,7 +201,7 @@ export class TicketService {
     return this.scanTicket(ticket.id);
   }
 
-  async refundTicket(id: string): Promise<TicketResponseDto> {
+  async refundTicket(id: string, actorId?: string): Promise<TicketResponseDto> {
     const ticket = await this.ticketRepository.findOne({
       where: { id },
       relations: ['ticketType'],
@@ -245,6 +253,79 @@ export class TicketService {
     ticket.refundedAt = new Date();
 
     const updated = await this.ticketRepository.save(ticket);
+
+    if (actorId) {
+      await this.auditLogService.log(
+        actorId,
+        AdminAuditAction.MANUAL_REFUND,
+        AdminAuditTargetType.TICKET,
+        updated.id,
+        {
+          orderReference: updated.orderReference ?? null,
+          ticketTypeId: updated.ticketTypeId,
+          refundTxHash: ticket.orderReference
+            ? (
+                await this.orderRepository.findOne({
+                  where: { id: ticket.orderReference },
+                })
+              )?.refundTxHash ?? null
+            : null,
+          refundedAt: updated.refundedAt?.toISOString() ?? null,
+        },
+      );
+    }
+
+    return this.mapToResponseDto(updated);
+  }
+
+  async cancelTicket(
+    id: string,
+    user: User,
+    reason?: string,
+  ): Promise<TicketResponseDto> {
+    const ticket = await this.ticketRepository.findOne({
+      where: { id },
+      relations: ['ticketType', 'event'],
+    });
+
+    if (!ticket) {
+      throw new NotFoundException(`Ticket with ID ${id} not found`);
+    }
+
+    const isAdmin = user.role === UserRole.ADMIN;
+    const isOrganizer = ticket.event?.organizerId === user.id;
+
+    if (!isAdmin && !isOrganizer) {
+      throw new ForbiddenException(
+        'You do not have permission to cancel this ticket',
+      );
+    }
+
+    if (ticket.status === TicketStatus.CANCELLED) {
+      throw new BadRequestException('Ticket is already cancelled');
+    }
+
+    if (ticket.status !== TicketStatus.ISSUED) {
+      throw new BadRequestException(
+        `Cannot cancel ticket with status: ${ticket.status}`,
+      );
+    }
+
+    await this.ticketTypeService.releaseTickets(ticket.ticketTypeId, 1);
+
+    ticket.markAsCancelled(reason);
+
+    const updated = await this.ticketRepository.save(ticket);
+
+    this.eventEmitter.emit('ticket.cancelled', {
+      ticketId: updated.id,
+      eventId: updated.eventId,
+      ticketTypeId: updated.ticketTypeId,
+      cancelledAt: updated.cancelledAt,
+      cancellationReason: updated.cancellationReason,
+      cancelledBy: user.id,
+    });
+
     return this.mapToResponseDto(updated);
   }
 
@@ -284,6 +365,8 @@ export class TicketService {
       eventId: ticket.eventId,
       scannedAt: ticket.scannedAt,
       refundedAt: ticket.refundedAt,
+      cancelledAt: ticket.cancelledAt ?? null,
+      cancellationReason: ticket.cancellationReason ?? null,
       createdAt: ticket.createdAt,
       updatedAt: ticket.updatedAt,
     };
