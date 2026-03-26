@@ -14,9 +14,42 @@ import { TicketType } from '../../tickets-inventory/entities/ticket-type.entity'
 import { Ticket } from '../../tickets-inventory/entities/ticket.entity';
 import { User } from '../../auth/entities/user.entity';
 
+export enum EventStatus {
+  DRAFT     = 'DRAFT',
+  PUBLISHED = 'PUBLISHED',
+  CANCELLED = 'CANCELLED',
+  COMPLETED = 'COMPLETED',
+}
 
 @Entity()
 export class Event {
+  @Column({ type: 'enum', enum: EventStatus, default: EventStatus.DRAFT })
+  status: EventStatus;
+
+  @Column({ type: 'timestamptz' })
+  startDate: Date;
+
+  @Column({ type: 'timestamptz' })
+  endDate: Date;
+
+  @Column({ default: false })
+  isVirtual: boolean;
+
+  @Column({ nullable: true })
+  streamingUrl?: string;
+
+  @Column({ nullable: true })
+  imageUrl?: string;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  minTicketPrice?: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  maxTicketPrice?: number;
+
+  @Column({ default: false })
+  isArchived: boolean;
+
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -35,12 +68,6 @@ export class Event {
   @Column()
   capacity: number;
 
-  @Column({ type: 'enum', enum: EventStatus, default: EventStatus.DRAFT })
-  status: EventStatus;
-
-  @Column({ default: false })
-  isArchived: boolean;
-
   @Column({ type: 'varchar', nullable: true })
   venue: string;
 
@@ -52,9 +79,6 @@ export class Event {
 
   @Column({ type: 'text', array: true, default: '{}' })
   tags: string[];
-
-  @Column({ default: false })
-  isVirtual: boolean;
 
   @DeleteDateColumn()
   deletedAt?: Date;
