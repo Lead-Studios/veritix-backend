@@ -11,9 +11,11 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './strategy/jwt.strategy';
 import { EmailService } from './helper/email-sender';
 import { WsJwtGuard } from './guard/ws-jwt.guard';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule,
     TypeOrmModule.forFeature([User]),
     JwtModule.register({}),
     PassportModule,
