@@ -17,7 +17,6 @@ import { WsJwtGuard } from './guard/ws-jwt.guard';
     TypeOrmModule.forFeature([User]),
     JwtModule.register({}),
     PassportModule,
-    AdminModule,
   ],
   controllers: [AuthController],
   providers: [

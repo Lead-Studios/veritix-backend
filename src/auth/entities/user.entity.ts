@@ -12,10 +12,8 @@ import { Event } from '../../events/entities/event.entity';
 
 @Entity()
 export class User {
-  @PrimaryGeneratedColumn()
-  id: number;
   @PrimaryGeneratedColumn('uuid')
-  id: string; // switched to UUID for consistency with Event
+  id: string;
 
   @Column({ unique: true })
   email: string;
@@ -61,10 +59,58 @@ export class User {
   @Column({ type: 'int', default: 0 })
   tokenVersion: number;
 
-  @CreateDateColumn()
-  passwordResetCodeExpiresAt?: Date;
+  @Column({ nullable: true })
+  @Exclude()
+  currentRefreshTokenHash?: string | null;
 
-  @CreateDateColumn()
+  @Column({ nullable: true })
+  pendingEmail?: string;
+
+  @Column({ nullable: true })
+  emailChangeOtp?: string;
+
+  @Column({ nullable: true })
+  emailChangeOtpExpiresAt?: Date;
+
+  // =============================
+  // PROFILE FIELDS
+  // =============================
+
+  @Column({
+    nullable: true,
+    length: 30,
+    comment: 'User phone number',
+  })
+  phone: string | null;
+
+  @Column({
+    nullable: true,
+    comment: 'URL of the user avatar image',
+  })
+  avatarUrl: string | null;
+
+  @Column({
+    nullable: true,
+    length: 500,
+    comment: 'Short user biography (max 500 chars)',
+  })
+  bio: string | null;
+
+  @Column({
+    nullable: true,
+    length: 100,
+    comment: 'Country of residence',
+  })
+  country: string | null;
+
+  @Column({
+    nullable: true,
+    length: 56,
+    comment:
+      'Stellar public key — used for ticket refunds (starts with G, 56 chars)',
+  })
+  stellarWalletAddress: string | null;
+
   // =============================
   // TIMESTAMPS
   // =============================

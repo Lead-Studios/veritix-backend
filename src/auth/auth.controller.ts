@@ -23,6 +23,7 @@ import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ResendOtpDto } from './dto/resend-otp.dto';
 import { SendPasswordResetOtpDto } from './dto/send-password-reset-otp.dto';
+import { SuspendUserDto } from '../admin/dto/suspend-user.dto';
 
 import {
   ApiTags,
@@ -112,6 +113,19 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   retrieveCurrentUser(@CurrentUser() user: User) {
     return user;
+  }
+
+  // ================= LOGOUT =================
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Logout user and invalidate refresh token' })
+  @ApiResponse({ status: 200, description: 'Logout successful' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async logout(@CurrentUser() user: User) {
+    await this.authService.logout(user.id);
+    return { message: 'Logout successful' };
   }
 
   // ================= PASSWORD RESET FLOW =================
