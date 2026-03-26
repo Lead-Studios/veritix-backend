@@ -6,6 +6,9 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
+  ParseUUIDPipe,
+  Request,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -148,5 +151,29 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Password reset successfully' })
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     return this.authService.resetPassword(resetPasswordDto);
+  }
+
+  @Post(':id/suspend')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Suspend a user account' })
+  @ApiResponse({ status: 204, description: 'User suspended, active sessions invalidated' })
+  @ApiResponse({ status: 403, description: 'Cannot suspend another admin' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  suspend(
+    @Param('id', ParseUUIDPipe) targetId: string,
+    @Request() req: { user: { id: string } },
+    @Body() dto: SuspendUserDto,
+  ): Promise<void> {
+    return this.authService.suspendUser(req.user.id, targetId, dto.reason);
+  }
+ 
+  @Post(':id/unsuspend')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Remove suspension from a user account' })
+  @ApiResponse({ status: 204, description: 'User unsuspended' })
+  unsuspend(
+    @Param('id', ParseUUIDPipe) targetId: string,
+  ): Promise<void> {
+    return this.authService.unsuspendUser(targetId);
   }
 }
