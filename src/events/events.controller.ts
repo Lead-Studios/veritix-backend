@@ -177,4 +177,16 @@ export class EventsController {
 async getCapacity(@Param('id', ParseUUIDPipe) id: string) {
   return this.eventsService.getEventCapacity(id);
 }
+
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.ORGANIZER, UserRole.ADMIN)
+@Get(':id/analytics')
+@ApiBearerAuth('JWT-auth')
+@ApiOperation({ summary: 'Get event analytics (organizer/admin)' })
+async getAnalytics(
+  @Param('id', ParseUUIDPipe) id: string,
+  @CurrentUser() user: User,
+) {
+  return this.eventsService.getEventAnalytics(id, user);
+}
 }
