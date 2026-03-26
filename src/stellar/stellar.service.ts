@@ -73,10 +73,12 @@ export class StellarService implements OnModuleDestroy {
    */
   async sendRefund(
     destinationAddress: string,
-    amountXLM: number,
+    amountXLM: string,
     orderId: string,
   ): Promise<string> {
-    const secretKey = this.configService.get<string>('stellarSecretKey');
+    const secretKey =
+      this.configService.get<string>('STELLAR_SECRET_KEY') ??
+      this.configService.get<string>('stellarSecretKey');
     if (!secretKey) {
       throw new Error('STELLAR_SECRET_KEY is not configured on the platform');
     }
@@ -111,7 +113,7 @@ export class StellarService implements OnModuleDestroy {
             StellarSdk.Operation.payment({
               destination: destinationAddress,
               asset: StellarSdk.Asset.native(),
-              amount: amountXLM.toString(),
+              amount: amountXLM,
             }),
           )
           .addMemo(StellarSdk.Memo.text(`Ref-${orderId}`.substring(0, 28))) // Max 28 bytes
@@ -124,7 +126,13 @@ export class StellarService implements OnModuleDestroy {
         this.logger.log(`Refund transaction successful: ${response.hash}`);
         return response.hash;
       } catch (error: any) {
-        if (error?.response?.status === 429 && retries < maxRetries) {
+        const horizonRateLimited =
+          error?.response?.status === 429 ||
+          error?.response?.data?.extras?.result_codes?.transaction ===
+            'RATE_LIMIT_EXCEEDED' ||
+          error?.response?.data?.title === 'Rate Limit Exceeded';
+
+        if (horizonRateLimited && retries < maxRetries) {
           this.logger.warn(
             'RATE_LIMIT_EXCEEDED from Horizon. Retrying in 2 seconds...',
           );

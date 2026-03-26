@@ -9,6 +9,7 @@ import {
   Query,
   ParseUUIDPipe,
   UseGuards,
+  Request,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -31,6 +32,7 @@ import { RolesGuard } from 'src/auth/guard/roles.guard';
 import { EventQueryDto } from './dto/event-query.dto';
 import { OptionalJwtAuthGuard } from 'src/auth/guard/optional-jwt.auth.guard';
 import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
+import { PaginatedEventsResponseDto } from './dto/paginated-events-response.dto';
 
 @ApiTags('Events')
 @Controller('events')
@@ -150,6 +152,17 @@ export class EventsController {
     return this.eventsService.changeStatus(id, status, user);
   }
 
+  @Get()
+  @ApiOperation({ summary: 'List events with filtering, sorting, and pagination' })
+  @ApiResponse({ status: 200, description: 'Paginated event list' })
+  getAll(
+    @Query() query: EventQueryDto,
+    @Request() req: { user?: { role: UserRole } },
+  ): Promise<PaginatedEventsResponseDto<Event>> {
+    const isAdmin = req.user?.role === UserRole.ADMIN;
+    return this.eventsService.findAll(query, isAdmin);
+  }
+
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ORGANIZER, UserRole.ADMIN)
   @Delete(':id')
@@ -170,4 +183,23 @@ export class EventsController {
     await this.eventsService.deleteEvent(id, user);
     return { message: 'Event deleted successfully' };
   }
+
+  @Get(':id/capacity')
+@ApiOperation({ summary: 'Get event capacity status' })
+@ApiParam({ name: 'id', type: String })
+async getCapacity(@Param('id', ParseUUIDPipe) id: string) {
+  return this.eventsService.getEventCapacity(id);
+}
+
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.ORGANIZER, UserRole.ADMIN)
+@Get(':id/analytics')
+@ApiBearerAuth('JWT-auth')
+@ApiOperation({ summary: 'Get event analytics (organizer/admin)' })
+async getAnalytics(
+  @Param('id', ParseUUIDPipe) id: string,
+  @CurrentUser() user: User,
+) {
+  return this.eventsService.getEventAnalytics(id, user);
+}
 }

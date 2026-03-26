@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -23,6 +24,13 @@ import { sendEmail } from '../config/email/email.service';
 import { UpdateProfileDto } from 'src/users/dto/user-profile.dto';
 import { UserResponseDto } from 'src/users/dto/user-response.dto';
 import { User } from 'src/users/entities/event.entity';
+import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
+import { AuditLogService } from '../admin/services/audit-log.service';
+import {
+  AdminAuditAction,
+  AdminAuditTargetType,
+} from '../admin/entities/admin-audit-log.entity';
 
 @Injectable()
 export class AuthService {
@@ -31,6 +39,8 @@ export class AuthService {
     private readonly userRepository: Repository<User>,
     private readonly userHelper: UserHelper,
     private readonly jwtHelper: JwtHelper,
+    private readonly mailService: MailService,
+    private readonly auditLogService: AuditLogService,
   ) {}
 
   async createUser(createUserDto: CreateUserDto) {
@@ -81,7 +91,7 @@ export class AuthService {
     };
   }
 
-  async createAdminUser(createUserDto: CreateUserDto) {
+  async createAdminUser(createUserDto: CreateUserDto, actorId: string) {
     const existingUser = await this.userRepository.findOne({
       where: { email: createUserDto.email },
     });
@@ -105,7 +115,20 @@ export class AuthService {
       password: hashedPassword,
       role: UserRole.ADMIN,
     });
-    await this.userRepository.save(newUser);
+    const savedUser = await this.userRepository.save(newUser);
+
+    await this.auditLogService.log(
+      actorId,
+      AdminAuditAction.ROLE_CHANGE,
+      AdminAuditTargetType.USER,
+      savedUser.id,
+      {
+        previousRole: null,
+        newRole: UserRole.ADMIN,
+        createdUser: true,
+      },
+    );
+
     return {
       message: UserMessages.USER_CREATED_SUCCESSFULLY,
     };
@@ -201,6 +224,10 @@ export class AuthService {
       throw new UnauthorizedException(UserMessages.INVALID_CREDENTIALS);
     }
 
+    if (user.isSuspended) {
+      throw new UnauthorizedException(UserMessages.ACCOUNT_SUSPENDED);
+    }
+
     if (!user.isVerified) {
       await this.resendVerificationOtp(loginUserDto.email);
       return {
@@ -218,11 +245,15 @@ export class AuthService {
   async refreshToken(refreshToken: string) {
     const validatedRefreshToken =
       this.jwtHelper.validateRefreshToken(refreshToken);
-    const userId = Number(validatedRefreshToken);
+    const userId = Number(validatedRefreshToken.userId);
     const user = await this.userRepository.findOne({
       where: { id: String(userId) },
     });
-    if (!user) {
+    if (
+      !user ||
+      user.isSuspended ||
+      user.tokenVersion !== (validatedRefreshToken.tokenVersion ?? 0)
+    ) {
       throw new UnauthorizedException(UserMessages.INVALID_REFRESH_TOKEN);
     }
     const accessToken = this.jwtHelper.generateAccessToken(user);
@@ -236,7 +267,138 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('User not found.');
     }
+    return user;
     return this.userHelper.mapToResponseDto(user);
+  }
+
+  /**
+   * Validates that a user account is in a loginable state.
+   * Call this in AuthService.login() and JwtStrategy.validate().
+   *
+   * Throws:
+   *   - UnauthorizedException if soft-deleted (#471)
+   *   - ForbiddenException   if suspended   (#469)
+   */
+  assertAccountActive(user: User): void {
+    if (user.suspendedAt) {
+      throw new ForbiddenException(`Account suspended: ${user.suspensionReason ?? 'contact support'}`);
+    }
+  }
+ 
+  async deleteAccount(userId: string, password: string): Promise<void> {
+    const user = await this.userRepository
+      .createQueryBuilder('u')
+      .addSelect('u.password')
+      .where('u.id = :id', { id: userId })
+      .getOne();
+ 
+    if (!user) throw new NotFoundException('User not found.');
+ 
+    const passwordMatches = await bcrypt.compare(password, user.password);
+    if (!passwordMatches) {
+      throw new ForbiddenException('Incorrect password.');
+    }
+ 
+    const originalEmail = user.email;
+
+    await this.userRepository.save({
+      ...user,
+      email:        `deleted_${user.id}@deleted.veritix`,
+      fullName:     'Deleted User',
+      phone:        undefined,
+      avatarUrl:    undefined,
+      bio:          undefined,
+      tokenVersion: user.tokenVersion + 1,  
+    });
+
+    await this.userRepository.softDelete(user.id);
+
+    await this.mailService.sendAccountDeletionConfirmation(originalEmail);
+  }
+
+  async requestEmailChange(userId: string, newEmail: string): Promise<void> {
+    const [user, existing] = await Promise.all([
+      this.userRepository.findOneByOrFail({ id: userId }),
+      this.userRepository.findOneBy({ email: newEmail }),
+    ]);
+ 
+    if (existing) {
+      throw new ConflictException('This email address is already registered.');
+    }
+ 
+    const otp        = crypto.randomInt(100_000, 999_999).toString();
+    const otpExpiry  = new Date(Date.now() + 10 * 60 * 1_000); // 10 minutes
+ 
+    await this.userRepository.save({
+      ...user,
+      pendingEmail:            newEmail,
+      emailChangeOtp:          await bcrypt.hash(otp, 10),
+      emailChangeOtpExpiresAt: otpExpiry,
+    });
+ 
+    await this.mailService.sendEmailChangeOtp(newEmail, otp);
+  }
+ 
+  async confirmEmailChange(userId: string, otp: string): Promise<void> {
+    const user = await this.userRepository.findOneByOrFail({ id: userId });
+ 
+    if (
+      !user.pendingEmail         ||
+      !user.emailChangeOtp       ||
+      !user.emailChangeOtpExpiresAt
+    ) {
+      throw new ForbiddenException('No pending email change request.');
+    }
+ 
+    if (new Date() > user.emailChangeOtpExpiresAt) {
+      throw new ForbiddenException('OTP has expired. Please request a new one.');
+    }
+ 
+    const otpMatches = await bcrypt.compare(otp, user.emailChangeOtp);
+    if (!otpMatches) {
+      throw new ForbiddenException('Incorrect OTP.');
+    }
+ 
+    const oldEmail = user.email;
+ 
+    await this.userRepository.save({
+      ...user,
+      email:                   user.pendingEmail,
+      pendingEmail:            undefined,
+      emailChangeOtp:          undefined,
+      emailChangeOtpExpiresAt: undefined,
+      tokenVersion:            user.tokenVersion + 1,
+    });
+
+    await this.mailService.sendEmailChangeNotification(oldEmail);
+  }
+ 
+  async suspendUser(adminId: string, targetId: string, reason: string): Promise<void> {
+    const [admin, target] = await Promise.all([
+      this.userRepository.findOneByOrFail({ id: adminId }),
+      this.userRepository.findOneByOrFail({ id: targetId }),
+    ]);
+ 
+    if (target.role === UserRole.ADMIN) {
+      throw new ForbiddenException('An admin cannot suspend another admin.');
+    }
+ 
+    await this.userRepository.save({
+      ...target,
+      suspendedAt:     new Date(),
+      suspensionReason: reason,
+      tokenVersion:    target.tokenVersion + 1,  // kick active sessions
+    });
+  }
+ 
+  async unsuspendUser(targetId: string): Promise<void> {
+    const target = await this.userRepository.findOneByOrFail({ id: targetId });
+ 
+    await this.userRepository.save({
+      ...target,
+      suspendedAt:      undefined,
+      suspensionReason: undefined,
+    });
   }
 
   // ─── Profile update ────────────────────────────────────────────────────────

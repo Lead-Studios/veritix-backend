@@ -55,6 +55,21 @@ export class TicketResponseDto {
   })
   refundedAt: Date | null;
 
+  @ApiProperty({
+    example: null,
+    nullable: true,
+    description:
+      'Timestamp when the ticket was cancelled by an organizer or admin',
+  })
+  cancelledAt: Date | null;
+
+  @ApiProperty({
+    example: 'Fraudulent purchase',
+    nullable: true,
+    description: 'Optional audit reason recorded when the ticket was cancelled',
+  })
+  cancellationReason: string | null;
+
   @ApiProperty({ example: '2025-07-20T09:00:00.000Z' })
   createdAt: Date;
 

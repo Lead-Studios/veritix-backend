@@ -74,6 +74,7 @@ describe('StellarService', () => {
   };
 
   beforeEach(async () => {
+    jest.useFakeTimers();
     (StellarSdk.Keypair.fromSecret as jest.Mock).mockReturnValue(mockKeypair);
 
     const module: TestingModule = await Test.createTestingModule({
@@ -110,6 +111,7 @@ describe('StellarService', () => {
   });
 
   afterEach(() => {
+    jest.useRealTimers();
     jest.clearAllMocks();
   });
 
@@ -193,7 +195,7 @@ describe('StellarService', () => {
         hash: 'mock-tx-hash-123',
       });
 
-      const hash = await service.sendRefund('GDESTINATIONADDRESS', 10, 'order-123');
+      const hash = await service.sendRefund('GDESTINATIONADDRESS', '10', 'order-123');
       expect(hash).toBe('mock-tx-hash-123');
     });
 
@@ -211,8 +213,48 @@ describe('StellarService', () => {
         .mockRejectedValueOnce(rateLimitError)
         .mockResolvedValueOnce({ hash: 'mock-tx-hash-456' });
 
-      const hash = await service.sendRefund('GDESTINATIONADDRESS', 10, 'order-123');
+      const refundPromise = service.sendRefund(
+        'GDESTINATIONADDRESS',
+        '10',
+        'order-123',
+      );
+      await jest.advanceTimersByTimeAsync(2000);
+      const hash = await refundPromise;
       expect(hash).toBe('mock-tx-hash-456');
+      expect(service.server.submitTransaction).toHaveBeenCalledTimes(2);
+    });
+
+    it('should retry once on Horizon RATE_LIMIT_EXCEEDED result code', async () => {
+      const mockAccount = { sequenceNumber: () => '123' };
+      (service.server.loadAccount as jest.Mock).mockResolvedValue(mockAccount);
+      (service.server.feeStats as jest.Mock).mockResolvedValue({
+        last_ledgers_base_fee_stats: { min: '100' },
+      });
+
+      const rateLimitError = new Error('Rate limit');
+      (rateLimitError as any).response = {
+        data: {
+          extras: {
+            result_codes: {
+              transaction: 'RATE_LIMIT_EXCEEDED',
+            },
+          },
+        },
+      };
+
+      (service.server.submitTransaction as jest.Mock)
+        .mockRejectedValueOnce(rateLimitError)
+        .mockResolvedValueOnce({ hash: 'mock-tx-hash-789' });
+
+      const refundPromise = service.sendRefund(
+        'GDESTINATIONADDRESS',
+        '10',
+        'order-123',
+      );
+      await jest.advanceTimersByTimeAsync(2000);
+      const hash = await refundPromise;
+
+      expect(hash).toBe('mock-tx-hash-789');
       expect(service.server.submitTransaction).toHaveBeenCalledTimes(2);
     });
 
@@ -230,8 +272,15 @@ describe('StellarService', () => {
         .mockRejectedValueOnce(rateLimitError)
         .mockRejectedValueOnce(rateLimitError);
 
+      const refundPromise = service.sendRefund(
+        'GDESTINATIONADDRESS',
+        '10',
+        'order-123',
+      );
+      await jest.advanceTimersByTimeAsync(2000);
+
       await expect(
-        service.sendRefund('GDESTINATIONADDRESS', 10, 'order-123'),
+        refundPromise,
       ).rejects.toThrow(rateLimitError);
       expect(service.server.submitTransaction).toHaveBeenCalledTimes(2);
     });
@@ -249,7 +298,7 @@ describe('StellarService', () => {
       (service.server.submitTransaction as jest.Mock).mockRejectedValueOnce(otherError);
 
       await expect(
-        service.sendRefund('GDESTINATIONADDRESS', 10, 'order-123'),
+        service.sendRefund('GDESTINATIONADDRESS', '10', 'order-123'),
       ).rejects.toThrow(otherError);
       expect(service.server.submitTransaction).toHaveBeenCalledTimes(1);
     });

@@ -7,6 +7,7 @@ import { VerificationLogRepository } from './verification-log.repository';
 import { TicketsModule } from '../tickets-inventory/tickets.module';
 import { EventsModule } from '../events/events.module';
 import { AuthModule } from '../auth/auth.module';
+import { VerificationGateway } from './verification.gateway';
 
 /**
  * Verification Module for VeriTix
@@ -49,7 +50,11 @@ import { AuthModule } from '../auth/auth.module';
     AuthModule,
   ],
   controllers: [VerificationController],
-  providers: [VerificationService, VerificationLogRepository],
+  providers: [
+    VerificationService,
+    VerificationLogRepository,
+    VerificationGateway,
+  ],
   exports: [VerificationService, VerificationLogRepository],
 })
 export class VerificationModule {}

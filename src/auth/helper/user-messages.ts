@@ -20,4 +20,5 @@ export const UserMessages = {
   VERIFY_OTP_SUCCESS: 'Email verified successfully',
   PASSWORDS_DO_NOT_MATCH: 'New Password and Confirm Password must Match.',
   PASSWORDS_RESET_SUCCESSFUL: 'Password reset successfully',
+  ACCOUNT_SUSPENDED: 'Account has been suspended',
 };

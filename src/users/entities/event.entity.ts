@@ -22,9 +22,26 @@ export class User {
   @Column()
   fullName: string;
 
-  @Column()
-  @Exclude()
+  @Column({ select: false })
   password: string;
+
+  @Column()
+  tokenVersion?: number;
+
+  @Column({ nullable: true })
+  pendingEmail?: string;
+
+  @Column({ nullable: true })
+  emailChangeOtp?: string;
+
+  @Column({ nullable: true })
+  emailChangeOtpExpiresAt?: Date;
+
+  @Column({ nullable: true })
+  suspendedAt?: Date;
+
+  @Column({ nullable: true })
+  suspensionReason?: string;
 
   @Column({
     type: 'enum',

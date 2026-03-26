@@ -11,6 +11,7 @@ import { EventsModule } from './events/events.module';
 import { VerificationModule } from './verification/verification.module';
 import { ContactModule } from './contact/contact.module';
 import databaseConfig from './config/database-config';
+import appConfig from './config/app.config';
 import appConfig, { appConfigValidationSchema } from './config/app.config';
 import { OrdersModule } from './orders/orders.module';
 import { StellarModule } from './stellar/stellar.module';
@@ -18,6 +19,9 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AdminModule } from './admin/admin.module';
 import { VerificationLogsModule } from './verification-logs/verification-logs.module';
+import { SetllaModule } from './setlla/setlla.module';
+import { VerificationModule } from './verification/verification.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
@@ -36,6 +40,7 @@ import { VerificationLogsModule } from './verification-logs/verification-logs.mo
         limit: 60,
       },
     ]),
+    EventEmitterModule.forRoot(),
     // Database connection (PostgreSQL)
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -46,6 +51,19 @@ import { VerificationLogsModule } from './verification-logs/verification-logs.mo
         const username = configService.get('database.username');
         const database = configService.get('database.database');
 
+  return {
+    type: 'postgres',
+    host,
+    port,
+    username,
+    password: configService.get('database.password'),
+    database,
+    synchronize: false,
+    autoLoadEntities: true,
+  };
+},
+
+    }),
         console.log('DB HOST:', host);
         console.log('DB PORT:', port);
         console.log('DB USER:', username);
@@ -65,6 +83,8 @@ import { VerificationLogsModule } from './verification-logs/verification-logs.mo
     }),
 
     AuthModule,
+    AdminModule,
+    VerificationModule,
     // Blockchain module for future blockchain anchoring and verification
     BlockchainModule.register({
       isGlobal: true,
@@ -82,6 +102,7 @@ import { VerificationLogsModule } from './verification-logs/verification-logs.mo
     StellarModule,
     AdminModule,
     VerificationLogsModule, // ← Stellar payment listener
+    SetllaModule, // ← Stellar payment listener
   ],
   controllers: [AppController],
   providers: [AppService],
