@@ -1,92 +1,9 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AuthModule } from './auth/auth.module';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { BlockchainModule } from './blockchain/blockchain.module';
-import { UsersModule } from './users/users.module';
-import { TicketsModule } from './tickets-inventory/tickets.module';
-import { EventsModule } from './events/events.module';
-import { VerificationModule } from './verification/verification.module';
-import { ContactModule } from './contact/contact.module';
-import databaseConfig from './config/database-config';
-import appConfig, { appConfigValidationSchema } from './config/app.config';
-import { OrdersModule } from './orders/orders.module';
-import { StellarModule } from './stellar/stellar.module';
-import { ScheduleModule } from '@nestjs/schedule';
-import { ThrottlerModule } from '@nestjs/throttler';
-import { AdminModule } from './admin/admin.module';
-import { VerificationLogsModule } from './verification-logs/verification-logs.module';
-import { SetllaModule } from './setlla/setlla.module';
-import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
-  imports: [
-    // Global configuration
-    ConfigModule.forRoot({
-      isGlobal: true,
-      load: [appConfig, databaseConfig],
-      validationSchema: appConfigValidationSchema,
-      validationOptions: { allowUnknown: true, abortEarly: false },
-    }),
-    ScheduleModule.forRoot(),
-    ThrottlerModule.forRoot([
-      {
-        name: 'default',
-        ttl: 60_000, // 1 minute in milliseconds
-        limit: 60,
-      },
-    ]),
-    EventEmitterModule.forRoot(),
-    // Database connection (PostgreSQL)
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
-        const host = configService.get('database.host');
-        const port = configService.get('database.port');
-        const username = configService.get('database.username');
-        const database = configService.get('database.database');
-
-        console.log('DB HOST:', host);
-        console.log('DB PORT:', port);
-        console.log('DB USER:', username);
-        console.log('DB NAME:', database);
-
-        return {
-          type: 'postgres',
-          host,
-          port,
-          username,
-          password: configService.get('database.password'),
-          database,
-          synchronize: false,
-          autoLoadEntities: true,
-        };
-      },
-    }),
-
-    AuthModule,
-    AdminModule,
-    VerificationModule,
-    // Blockchain module for future blockchain anchoring and verification
-    BlockchainModule.register({
-      isGlobal: true,
-      config: {
-        provider: 'STELLAR',
-        enabled: false, // Disabled until Stellar integration is implemented
-      },
-    }),
-    UsersModule,
-    TicketsModule,
-    OrdersModule,
-    EventsModule,
-    ContactModule,
-    StellarModule,
-    VerificationLogsModule,
-    SetllaModule,
-  ],
+  imports: [],
   controllers: [AppController],
   providers: [AppService],
 })
