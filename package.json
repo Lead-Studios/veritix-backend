@@ -30,6 +30,7 @@
     "@nestjs/swagger": "^11.4.1",
     "@nestjs/throttler": "^6.5.0",
     "@nestjs/typeorm": "^11.0.1",
+    "@sendgrid/mail": "^8.1.6",
     "joi": "^18.1.2",
     "pg": "^8.20.0",
     "reflect-metadata": "^0.2.2",
