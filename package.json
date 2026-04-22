@@ -27,6 +27,7 @@
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/swagger": "^11.4.1",
     "@nestjs/typeorm": "^11.0.1",
     "joi": "^18.1.2",
     "pg": "^8.20.0",
