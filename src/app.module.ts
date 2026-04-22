@@ -6,6 +6,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { envValidationSchema } from './config/env.validation';
+import { HealthModule } from './health/health.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 
@@ -34,11 +35,14 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
         autoLoadEntities: true,
       }),
     }),
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
     { provide: APP_GUARD, useClass: ThrottlerGuard },
+  ],
+  exports: [],
     EmailService,
   ],
   exports: [EmailService],
