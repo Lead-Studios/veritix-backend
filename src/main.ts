@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
@@ -22,6 +23,13 @@ async function bootstrap() {
 
   // Global structured error format
   app.useGlobalFilters(new HttpExceptionFilter());
+
+  // Enable CORS
+  const configService = app.get(ConfigService);
+  const allowedOrigins = configService
+    .get<string>('ALLOWED_ORIGINS')!
+    .split(',');
+  app.enableCors({ origin: allowedOrigins });
 
   // Swagger documentation
   if (process.env.NODE_ENV !== 'production') {
