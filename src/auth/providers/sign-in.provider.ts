@@ -5,6 +5,7 @@ import {
   UnauthorizedException,
   ServiceUnavailableException,
   Logger,
+  ForbiddenException,
 } from "@nestjs/common";
 import { AuditLogService } from "../../audit-log/audit-log.service";
 import { AuditLogType } from "../../audit-log/entities/audit-log.entity";
@@ -12,6 +13,7 @@ import { UsersService } from "src/users/users.service";
 import { HashingProvider } from "./hashing-provider";
 import { GenerateTokenProvider } from "../../common/utils/generate-token.provider";
 import { SignInDto } from "../dto/create-auth.dto";
+import * as bcrypt from "bcrypt";
 
 @Injectable()
 export class SignInProvider {
@@ -88,13 +90,20 @@ export class SignInProvider {
     }
 
     if (!user.isVerified) {
-      throw new UnauthorizedException(
-        "You need to verify your email to be able log in",
+      this.logger.warn(`User ${email} is not verified`);
+      throw new ForbiddenException(
+        "Please verify your email to log in. A verification email has been sent.",
       );
     }
 
     // 3. Generate tokens
     const tokens = await this.generateTokensProvider.generateTokens(user);
+    
+    // Store refresh token hash
+    const refreshTokenHash = await bcrypt.hash(tokens.refresh_token, 10);
+    await this.usersService['userRepository'].update(user.id, {
+      currentRefreshTokenHash: refreshTokenHash,
+    });
     
     // Log successful login
     await this.auditLogService.create({

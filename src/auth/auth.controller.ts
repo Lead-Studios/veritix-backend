@@ -50,8 +50,37 @@ export class AuthController {
     },
   })
   @ApiResponse({ status: 401, description: "Invalid credentials" })
+  @ApiResponse({ status: 403, description: "Email not verified" })
   SignIn(@Body() signinDto: SignInDto) {
     return this.authService.signIn(signinDto);
+  }
+
+  @Post("login")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: "User login",
+    description: "Authenticate a verified user and return access & refresh tokens",
+  })
+  @ApiBody({ type: SignInDto })
+  @ApiResponse({
+    status: 200,
+    description: "User successfully authenticated",
+    schema: {
+      example: {
+        accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        user: {
+          id: "1",
+          email: "user@example.com",
+          role: "user",
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 401, description: "Invalid credentials" })
+  @ApiResponse({ status: 403, description: "Email not verified - resend prompt" })
+  Login(@Body() loginDto: SignInDto) {
+    return this.authService.signIn(loginDto);
   }
 
   @Post("refresh-token")
