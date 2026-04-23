@@ -6,6 +6,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { envValidationSchema } from './config/env.validation';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -31,8 +32,13 @@ import { envValidationSchema } from './config/env.validation';
         autoLoadEntities: true,
       }),
     }),
+    HealthModule,
   ],
   controllers: [AppController],
-  providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
+  providers: [
+    AppService,
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+  ],
+  exports: [],
 })
 export class AppModule {}
