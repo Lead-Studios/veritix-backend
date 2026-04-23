@@ -10,6 +10,7 @@ import { GenerateTokenProvider } from "../../common/utils/generate-token.provide
 import jwtConfig from "src/config/jwt.config";
 import { UsersService } from "src/users/users.service";
 import { RefreshTokenDto } from "../dto/refresh-token.dto";
+import * as bcrypt from "bcrypt";
 
 @Injectable()
 export class RefreshTokenProvider {
@@ -26,7 +27,7 @@ export class RefreshTokenProvider {
 
   public async refreshToken(refreshTokenDto: RefreshTokenDto) {
     try {
-      const { sub } = await this.jwtService.verifyAsync(
+      const { sub, tokenVersion } = await this.jwtService.verifyAsync(
         refreshTokenDto.refreshToken,
         {
           secret: this.jwtConfiguration.secret,
@@ -37,16 +38,45 @@ export class RefreshTokenProvider {
 
       const user = await this.userServices.findOneById(sub);
 
-      const access_token = await this.generateTokensProvider.SignToken(
-        user.id,
-        this.jwtConfiguration.expiresIn,
-        { email: user.email },
+      // Check if the refresh token hash matches
+      if (user.currentRefreshTokenHash) {
+        const isMatch = await bcrypt.compare(
+          refreshTokenDto.refreshToken,
+          user.currentRefreshTokenHash,
+        );
+
+        if (!isMatch) {
+          // Suspicious activity: token reuse detected
+          await this.userServices['userRepository'].update(user.id, {
+            tokenVersion: user.tokenVersion + 1,
+          });
+          throw new UnauthorizedException("Suspicious activity detected");
+        }
+      }
+
+      // Generate new tokens with updated tokenVersion
+      const userWithUpdatedVersion = {
+        ...user,
+        tokenVersion: user.tokenVersion,
+      };
+      const tokens = await this.generateTokensProvider.generateTokens(
+        userWithUpdatedVersion as any,
       );
 
-      return { access_token, refresh_token: refreshTokenDto.refreshToken };
+      // Store new refresh token hash
+      const refreshTokenHash = await bcrypt.hash(tokens.refresh_token, 10);
+      await this.userServices['userRepository'].update(user.id, {
+        currentRefreshTokenHash: refreshTokenHash,
+      });
+
+      return { access_token: tokens.access_token, refresh_token: tokens.refresh_token };
     } catch (error) {
       if (error.name === "TokenExpiredError") {
         throw new UnauthorizedException("Refresh token has expired");
+      }
+
+      if (error.message === "Suspicious activity detected") {
+        throw error;
       }
 
       throw new UnauthorizedException("Invalid or expired refresh token");

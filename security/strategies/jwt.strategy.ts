@@ -2,10 +2,14 @@ import { Injectable, UnauthorizedException, Logger } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
 import { ExtractJwt, Strategy } from "passport-jwt";
 import { ConfigService } from "@nestjs/config";
+import { UsersService } from "../../src/users/users.service";
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly usersService: UsersService,
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
@@ -28,6 +32,17 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
         `Invalid userId in payload: ${JSON.stringify(payload, null, 2)}`,
       );
       throw new UnauthorizedException("Invalid userId");
+    }
+
+    // Validate tokenVersion
+    if (payload.tokenVersion !== undefined) {
+      const user = await this.usersService.findOneById(userId);
+      if (user && payload.tokenVersion !== user.tokenVersion) {
+        this.logger.error(
+          `Token version mismatch for user ${userId}. Payload version: ${payload.tokenVersion}, User version: ${user.tokenVersion}`,
+        );
+        throw new UnauthorizedException("Invalid token");
+      }
     }
 
     return {

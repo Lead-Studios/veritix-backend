@@ -33,6 +33,12 @@ export class Admin {
   refreshToken: string;
 
   @Column({ nullable: true })
+  currentRefreshTokenHash: string;
+
+  @Column({ default: 0 })
+  tokenVersion: number;
+
+  @Column({ nullable: true })
   resetToken: string;
 
   @Column({ type: "timestamp", nullable: true })

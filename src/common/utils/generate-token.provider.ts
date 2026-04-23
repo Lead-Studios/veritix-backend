@@ -32,9 +32,11 @@ export class GenerateTokenProvider {
         userId: user.id,
         email: user.email,
         role: user.role,
+        tokenVersion: user.tokenVersion || 0,
       }),
       this.SignToken(user.id, this.jwtConfiguration.refreshExpiresIn, {
         userId: user.id,
+        tokenVersion: user.tokenVersion || 0,
       }),
     ]);
 

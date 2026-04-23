@@ -47,6 +47,12 @@ export class User {
   @Column({ default: "local" })
   provider: string;
 
+  @Column({ nullable: true })
+  currentRefreshTokenHash: string;
+
+  @Column({ default: 0 })
+  tokenVersion: number;
+
   @OneToMany(() => Conference, (conference) => conference.organizer)
   conferences: Conference[]; // A user can organize multiple conferences
 
