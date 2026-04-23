@@ -80,6 +80,14 @@ export class OrdersController {
     return this.ordersService.findById(id, user);
   }
 
+  @Get(':id/tickets')
+  async getTickets(
+    @CurrentUser() user: User,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.ordersService.getOrderTickets(id, user);
+  }
+
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   async cancelOrder(

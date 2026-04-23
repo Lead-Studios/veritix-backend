@@ -9,10 +9,11 @@ import { OrdersController } from './orders.controller';
 import { TicketModule } from 'src/ticket-verification/ticket.module';
 import { TicketsModule } from 'src/tickets-inventory/tickets.module';
 import { Order, OrderItem } from './orders.entity';
+import { Ticket } from 'src/tickets-inventory/entities/ticket.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Order, OrderItem]),
+    TypeOrmModule.forFeature([Order, OrderItem, Ticket]),
     ConfigModule.forFeature(orderConfig),
     TicketModule,
     TicketsModule,

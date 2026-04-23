@@ -18,6 +18,7 @@ import {
 import { OrderConfig } from './order.config';
 import { Order, OrderItem } from './orders.entity';
 import { TicketTypeService } from 'src/tickets-inventory/services/ticket-type.service';
+import { Ticket } from 'src/tickets-inventory/entities/ticket.entity';
 import { OrderStatus } from './enums/order-status.enum';
 import { User } from 'src/auth/entities/user.entity';
 import { UserRole } from 'src/auth/common/enum/user-role-enum';
@@ -29,6 +30,8 @@ export class OrdersService {
   constructor(
     @InjectRepository(Order)
     private readonly orderRepo: Repository<Order>,
+    @InjectRepository(Ticket)
+    private readonly ticketRepo: Repository<Ticket>,
     private readonly ticketTypeService: TicketTypeService,
     private readonly config: ConfigService,
     private readonly dataSource: DataSource,
@@ -194,6 +197,37 @@ export class OrdersService {
       relations: ['items'],
       order: { createdAt: 'DESC' },
     });
+  }
+
+  /**
+   * Fetch all tickets associated with a specific order.
+   *
+   * @param orderId - ID of the order
+   * @param user - Authenticated user (required for permission check)
+   * @returns List of ticket summaries
+   */
+  async getOrderTickets(orderId: string, user: User) {
+    // 1. Authorization check: ensure order exists and user has permission
+    await this.findById(orderId, user);
+
+    // 2. Fetch all tickets for this order
+    const tickets = await this.ticketRepo.find({
+      where: { orderReference: orderId },
+      relations: ['ticketType', 'event'],
+      order: { createdAt: 'ASC' },
+    });
+
+    // 3. Map to the requested summary format
+    return tickets.map((t) => ({
+      id: t.id,
+      qrCodeImage: t.qrCode, // Placeholder for actual image generation
+      attendeeName: t.attendeeName,
+      attendeeEmail: t.attendeeEmail,
+      status: t.status,
+      ticketTypeName: t.ticketType?.name,
+      eventTitle: t.event?.title,
+      eventDate: t.event?.eventDate,
+    }));
   }
 
   /**

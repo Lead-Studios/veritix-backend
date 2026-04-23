@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { DataSource } from 'typeorm';
 import { OrdersService } from './orders.service';
 import { Order, OrderItem } from './orders.entity';
+import { Ticket } from 'src/tickets-inventory/entities/ticket.entity';
 import { TicketTypeService } from 'src/tickets-inventory/services/ticket-type.service';
 import { OrderStatus } from './enums/order-status.enum';
 import { User } from 'src/auth/entities/user.entity';
@@ -18,6 +19,7 @@ import { OrderError, OrderErrorCode } from './dto/order.dto';
 describe('OrdersService', () => {
   let service: OrdersService;
   let orderRepo: any;
+  let ticketRepo: any;
   let ticketTypeService: any;
   let configService: any;
   let dataSource: any;
@@ -33,6 +35,11 @@ describe('OrdersService', () => {
       update: jest.fn(),
       create: jest.fn(),
       save: jest.fn(),
+    };
+
+    ticketRepo = {
+      find: jest.fn(),
+      findOne: jest.fn(),
     };
 
     ticketTypeService = {
@@ -59,6 +66,7 @@ describe('OrdersService', () => {
       providers: [
         OrdersService,
         { provide: getRepositoryToken(Order), useValue: orderRepo },
+        { provide: getRepositoryToken(Ticket), useValue: ticketRepo },
         { provide: TicketTypeService, useValue: ticketTypeService },
         { provide: ConfigService, useValue: configService },
         { provide: DataSource, useValue: dataSource },
@@ -143,6 +151,42 @@ describe('OrdersService', () => {
       await expect(service.findById('order-1', otherUser)).rejects.toThrow(
         ForbiddenException,
       );
+    });
+  });
+
+  describe('getOrderTickets', () => {
+    const mockOrder = { id: 'order-1', userId: 'user-1' } as Order;
+    const mockTickets = [
+      {
+        id: 't-1',
+        qrCode: 'qr-1',
+        attendeeName: 'Alice',
+        ticketType: { name: 'VIP' },
+        event: { title: 'Concert', eventDate: new Date() },
+      },
+    ];
+
+    it('should return ticket summaries if user is authorized', async () => {
+      orderRepo.findOne.mockResolvedValue(mockOrder);
+      ticketRepo.find.mockResolvedValue(mockTickets);
+
+      const result = await service.getOrderTickets('order-1', mockUser);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].attendeeName).toBe('Alice');
+      expect(result[0].ticketTypeName).toBe('VIP');
+      expect(ticketRepo.find).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { orderReference: 'order-1' } }),
+      );
+    });
+
+    it('should throw ForbiddenException if user is not authorized', async () => {
+      orderRepo.findOne.mockResolvedValue(mockOrder);
+      const otherUser = { id: 'user-2', role: UserRole.SUBSCRIBER } as User;
+
+      await expect(
+        service.getOrderTickets('order-1', otherUser),
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 
