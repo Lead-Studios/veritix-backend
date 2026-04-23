@@ -77,13 +77,7 @@ export class OrdersController {
     @CurrentUser() user: User,
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<Order> {
-    const order = await this.ordersService.findById(id);
-    
-    if (order.userId !== user.id && user.role !== UserRole.ADMIN) {
-      throw new ForbiddenException('You do not have permission to view this order');
-    }
-    
-    return order;
+    return this.ordersService.findById(id, user);
   }
 
   @Delete(':id')

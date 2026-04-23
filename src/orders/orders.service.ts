@@ -160,14 +160,29 @@ export class OrdersService {
     return { order, stellarMemo };
   }
 
-  async findById(orderId: string): Promise<Order> {
+  /**
+   * Find an order by ID.
+   *
+   * @param orderId - ID of the order to find
+   * @param user - Authenticated user (required for permission check)
+   * @throws NotFoundException if the order doesn't exist
+   * @throws ForbiddenException if the user is not the owner or an ADMIN
+   */
+  async findById(orderId: string, user: User): Promise<Order> {
     const order = await this.orderRepo.findOne({
       where: { id: orderId },
       relations: ['items', 'items.ticketType'],
     });
 
     if (!order) {
-      throw new OrderError(`Order ${orderId} not found`, OrderErrorCode.ORDER_NOT_FOUND);
+      throw new NotFoundException(`Order ${orderId} not found`);
+    }
+
+    // Permission Check: Owner or ADMIN
+    if (order.userId !== user.id && user.role !== UserRole.ADMIN) {
+      throw new ForbiddenException(
+        'You do not have permission to view this order',
+      );
     }
 
     return order;
