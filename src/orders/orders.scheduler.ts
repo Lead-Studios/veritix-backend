@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
-import { LessThan, Repository } from 'typeorm';
+import { DataSource, LessThan, Repository } from 'typeorm';
 import { OrderConfig } from './order.config';
 import { Order } from './orders.entity';
 import { TicketTypeService } from 'src/tickets-inventory/services/ticket-type.service';
@@ -25,6 +25,7 @@ export class OrdersScheduler {
     private readonly orderRepo: Repository<Order>,
     private readonly ticketTypeService: TicketTypeService,
     private readonly config: ConfigService,
+    private readonly dataSource: DataSource,
   ) {}
 
   /**
@@ -97,23 +98,28 @@ export class OrdersScheduler {
   /**
    * Release inventory for a single order, then mark it CANCELLED.
    * Returns the number of tickets released.
+   *
+   * Wrapped in a transaction to ensure both inventory and status
+   * are updated together.
    */
   async cancelAndRelease(order: Order): Promise<number> {
     let released = 0;
 
-    // Release each line item back to its ticket-type pool.
-    for (const item of order.items ?? []) {
-      await this.ticketTypeService.releaseTickets(
-        item.ticketType.id,
-        item.quantity,
-      );
-      released += item.quantity;
-    }
+    await this.dataSource.transaction(async (manager) => {
+      // 1. Release each line item back to its ticket-type pool.
+      for (const item of order.items ?? []) {
+        await this.ticketTypeService.releaseTickets(
+          item.ticketType.id,
+          item.quantity,
+          manager.queryRunner,
+        );
+        released += item.quantity;
+      }
 
-    // Persist the status change. Use a targeted update to avoid
-    // overwriting concurrent writes on other columns.
-    await this.orderRepo.update(order.id, {
-      status: OrderStatus.CANCELLED,
+      // 2. Mark the order as CANCELLED.
+      await manager.update(Order, order.id, {
+        status: OrderStatus.CANCELLED,
+      });
     });
 
     return released;
