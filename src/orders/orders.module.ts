@@ -4,35 +4,21 @@ import { ConfigModule } from '@nestjs/config';
 
 import orderConfig from './order.config';
 import { OrdersScheduler } from './orders.scheduler';
+import { OrdersService } from './orders.service';
+import { OrdersController } from './orders.controller';
 import { TicketModule } from 'src/ticket-verification/ticket.module';
+import { TicketsModule } from 'src/tickets-inventory/tickets.module';
 import { Order, OrderItem } from './orders.entity';
 
-/**
- * OrdersModule
- *
- * Registers `OrdersScheduler` as a provider so @nestjs/schedule picks up
- * its @Cron decorators automatically once ScheduleModule.forRoot() is in
- * AppModule.
- *
- * AppModule wiring required:
- * ```ts
- * @Module({
- *   imports: [
- *     ScheduleModule.forRoot(),   // ← must be present exactly once
- *     ConfigModule.forRoot({ load: [orderConfig], isGlobal: true }),
- *     OrdersModule,
- *   ],
- * })
- * export class AppModule {}
- * ```
- */
 @Module({
   imports: [
     TypeOrmModule.forFeature([Order, OrderItem]),
     ConfigModule.forFeature(orderConfig),
     TicketModule,
+    TicketsModule,
   ],
-  providers: [OrdersScheduler],
-  exports: [OrdersScheduler],
+  controllers: [OrdersController],
+  providers: [OrdersService, OrdersScheduler],
+  exports: [OrdersService, OrdersScheduler],
 })
 export class OrdersModule {}

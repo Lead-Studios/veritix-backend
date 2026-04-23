@@ -92,12 +92,6 @@ export class OrdersController {
     @CurrentUser() user: User,
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<Order> {
-    const order = await this.ordersService.findById(id);
-    
-    if (order.userId !== user.id && user.role !== UserRole.ADMIN) {
-      throw new ForbiddenException('You do not have permission to cancel this order');
-    }
-    
-    return this.ordersService.cancelOrder(id);
+    return this.ordersService.cancel(id, user);
   }
 }

@@ -1,4 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { DataSource, Repository } from 'typeorm';
@@ -13,6 +19,8 @@ import { OrderConfig } from './order.config';
 import { Order, OrderItem } from './orders.entity';
 import { TicketTypeService } from 'src/tickets-inventory/services/ticket-type.service';
 import { OrderStatus } from './enums/order-status.enum';
+import { User } from 'src/auth/entities/user.entity';
+import { UserRole } from 'src/auth/common/enum/user-role-enum';
 
 @Injectable()
 export class OrdersService {
@@ -21,7 +29,6 @@ export class OrdersService {
   constructor(
     @InjectRepository(Order)
     private readonly orderRepo: Repository<Order>,
-    @InjectRepository(OrderItem)
     private readonly ticketTypeService: TicketTypeService,
     private readonly config: ConfigService,
     private readonly dataSource: DataSource,
@@ -175,13 +182,66 @@ export class OrdersService {
   }
 
   /**
-   * Cancel a PENDING order that has not yet expired.
+   * Cancel a PENDING order and release its reserved inventory.
    *
-   * Inventory is NOT released here — the scheduler (Issue 9) handles
-   * bulk release on expiry. Manual cancellation is a soft-cancel that
-   * sets status to CANCELLED; the scheduler's next run will release
-   * inventory for any CANCELLED orders it encounters, or you may call
-   * TicketTypeService.releaseTickets directly in a follow-up.
+   * Only the order owner or an ADMIN can perform this action.
+   *
+   * @param id - Order ID to cancel
+   * @param user - Authenticated user performing the action
+   * @throws NotFoundException if the order doesn't exist
+   * @throws ForbiddenException if user is not authorized
+   * @throws BadRequestException if order status is not PENDING
+   */
+  async cancel(id: string, user: User): Promise<Order> {
+    const order = await this.orderRepo.findOne({
+      where: { id },
+      relations: ['items'],
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Order ${id} not found`);
+    }
+
+    // Permission Check: Owner or ADMIN
+    if (order.userId !== user.id && user.role !== UserRole.ADMIN) {
+      throw new ForbiddenException(
+        'You do not have permission to cancel this order',
+      );
+    }
+
+    // Status Check: Must be PENDING
+    if (order.status !== OrderStatus.PENDING) {
+      throw new BadRequestException(
+        `Order ${id} cannot be cancelled — status is ${order.status}`,
+      );
+    }
+
+    // Release inventory and update status in a single transaction
+    await this.dataSource.transaction(async (manager) => {
+      // 1. Mark as CANCELLED
+      await manager.update(Order, id, { status: OrderStatus.CANCELLED });
+
+      // 2. Release tickets back to inventory
+      for (const item of order.items) {
+        await this.ticketTypeService.releaseTickets(
+          item.ticketTypeId,
+          item.quantity,
+          manager.queryRunner,
+        );
+      }
+    });
+
+    this.logger.log(
+      `Order ${id} cancelled by user ${user.id} (${user.role}) — inventory released`,
+    );
+
+    order.status = OrderStatus.CANCELLED;
+    return order;
+  }
+
+  /**
+   * Cancel a PENDING order that has not yet expired (LEGACY).
+   * @deprecated Use cancel(id, user) for manual cancellations with inventory release.
    */
   async cancelOrder(orderId: string): Promise<Order> {
     const order = await this.findById(orderId);
