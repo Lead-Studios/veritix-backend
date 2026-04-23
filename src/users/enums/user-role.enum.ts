@@ -1,0 +1,5 @@
+export enum UserRole {
+  SUBSCRIBER = 'SUBSCRIBER',
+  ORGANIZER = 'ORGANIZER',
+  ADMIN = 'ADMIN',
+}
