@@ -6,6 +6,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { envValidationSchema } from './config/env.validation';
+import { EmailService } from './common/email/email.service';
 
 @Module({
   imports: [
@@ -33,6 +34,11 @@ import { envValidationSchema } from './config/env.validation';
     }),
   ],
   controllers: [AppController],
-  providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
+  providers: [
+    AppService,
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    EmailService,
+  ],
+  exports: [EmailService],
 })
 export class AppModule {}
