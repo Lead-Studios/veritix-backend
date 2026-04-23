@@ -47,6 +47,15 @@ export class Event {
   @Column()
   location: string;
 
+  @Column({ nullable: true })
+  city: string;
+
+  @Column({ nullable: true, length: 2 })
+  countryCode: string;
+
+  @Column({ default: false })
+  isVirtual: boolean;
+
   @Column({ type: 'timestamptz' })
   eventDate: Date;
 
@@ -69,6 +78,9 @@ export class Event {
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'organizerId' })
   organizer: User;
+
+  @OneToMany('TicketType', 'event')
+  ticketTypes: any[];
 
   @CreateDateColumn()
   createdAt: Date;
