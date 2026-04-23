@@ -1,21 +1,19 @@
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { TicketType } from '../../ticket-types/entities/ticket-type.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  DeleteDateColumn,
-  OneToMany,
-  ManyToOne, JoinColumn, Index,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToOne,
+  OneToMany,
+  JoinColumn,
 } from 'typeorm';
-import { EventStatus } from '../../enums/event-status.enum';
-import { BlockchainAnchorStatus } from '../../blockchain/enums';
-import { TicketType } from '../../tickets-inventory/entities/ticket-type.entity';
-import { Ticket } from '../../tickets-inventory/entities/ticket.entity';
-import { User } from '../../auth/entities/user.entity';
+import { User } from '../../users/entities/user.entity';
+import { EventStatus } from '../enums/event-status.enum';
 
-
-@Entity()
+@Entity('events')
 export class Event {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -23,95 +21,67 @@ export class Event {
   @Column()
   title: string;
 
-  @Column({ type: 'timestamp' })
-  eventDate: Date;
-
-  @Column({ type: 'timestamp' })
-  eventClosingDate: Date;
-
-  @Column({ type: 'text' })
+  @Column('text', { nullable: true })
   description: string;
 
   @Column()
-  capacity: number;
-
-  @Column({ type: 'enum', enum: EventStatus, default: EventStatus.DRAFT })
-  status: EventStatus;
-
-  @Column({ default: false })
-  isArchived: boolean;
-
-  @Column({ type: 'varchar', nullable: true })
   venue: string;
 
-  @Column({ type: 'varchar', nullable: true })
+  @Column()
+  address: string;
+
+  @Column('timestamp')
+  eventDate: Date;
+
+  @Column({ default: true })
+  isActive: boolean;
+
+  @Column('decimal', { precision: 10, scale: 2, nullable: true })
+  maxCapacity: number;
+
+  @OneToMany(() => TicketType, ticketType => ticketType.event)
+  ticketTypes: TicketType[];
+  @Column({ type: 'text', nullable: true })
+  description: string;
+
+  @Column()
+  location: string;
+
+  @Column({ nullable: true })
   city: string;
 
-  @Column({ type: 'varchar', length: 2, nullable: true })
+  @Column({ nullable: true, length: 2 })
   countryCode: string;
-
-  @Column({ type: 'text', array: true, default: '{}' })
-  tags: string[];
 
   @Column({ default: false })
   isVirtual: boolean;
 
-  @DeleteDateColumn()
-  deletedAt?: Date;
+  @Column({ type: 'timestamptz' })
+  eventDate: Date;
 
-  // =====================================
-  // BLOCKCHAIN ANCHORING FIELDS
-  // These fields enable blockchain integration without tight coupling
-  // =====================================
-
-  /**
-   * Blockchain anchor hash for event verification
-   * null = not anchored, string = anchored to blockchain
-   */
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  blockchainAnchorHash: string | null;
-
-  /**
-   * Blockchain transaction ID for this event
-   */
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  blockchainTransactionId: string | null;
-
-  /**
-   * Status of blockchain anchoring operation
-   */
   @Column({
     type: 'enum',
-    enum: BlockchainAnchorStatus,
-    nullable: true,
+    enum: EventStatus,
+    default: EventStatus.DRAFT,
   })
-  blockchainStatus: BlockchainAnchorStatus | null;
+  status: EventStatus;
 
-  /**
-   * Timestamp when event was anchored to blockchain
-   */
-  @Column({ type: 'timestamp', nullable: true })
-  blockchainAnchoredAt: Date | null;
+  @Column({ type: 'int', default: 0 })
+  capacity: number;
 
-  /**
-   * Last time blockchain anchor was verified
-   */
-  @Column({ type: 'timestamp', nullable: true })
-  blockchainVerifiedAt: Date | null;
+  @Column({ default: false })
+  isArchived: boolean;
 
-  @OneToMany(() => TicketType, (tt) => tt.event)
-  ticketTypes: TicketType[];
+  @Column({ type: 'uuid' })
+  organizerId: string;
 
-  @OneToMany(() => Ticket, (t) => t.event)
-  tickets: Ticket[];
-
-  @Index()
-  @Column({ type: 'uuid', nullable: true })
-  organizerId: string | null;
-
-  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'organizerId' })
-  organizer: User | null;
+  organizer: User;
+
+  @OneToMany('TicketType', 'event')
+  ticketTypes: any[];
+
   @CreateDateColumn()
   createdAt: Date;
 

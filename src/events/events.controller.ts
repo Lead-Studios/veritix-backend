@@ -1,107 +1,79 @@
 import {
   Controller,
-  Get,
   Post,
-  Patch,
+  Body,
+  UseGuards,
   Delete,
   Param,
-  Body,
+  Get,
   Query,
-  ParseUUIDPipe,
-  UseGuards,
+  Patch,
 } from '@nestjs/common';
 import { EventsService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
-import { EventStatus } from '../enums/event-status.enum';
-import { UserRole } from '../auth/common/enum/user-role-enum';
-import { User } from '../auth/entities/user.entity';
-import { JwtAuthGuard } from 'src/auth/guard/jwt.auth.guard';
-import { Roles } from 'src/auth/decorators/roles.decorators';
-import { CurrentUser } from 'src/auth/decorators/current.user.decorators';
-import { RolesGuard } from 'src/auth/guard/roles.guard';
 import { EventQueryDto } from './dto/event-query.dto';
-import { OptionalJwtAuthGuard } from 'src/auth/guard/optional-jwt.auth.guard';
-import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
+import { EventStatus } from './enums/event-status.enum';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { User } from '../users/entities/user.entity';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @Controller('events')
 export class EventsController {
-  constructor(private readonly eventsService: EventsService) { }
+  constructor(private readonly eventsService: EventsService) {}
 
-  // -------------------------------
-  // PUBLIC ENDPOINTS
-  // -------------------------------
+  @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ORGANIZER', 'ADMIN')
+  async create(@Body() createEventDto: CreateEventDto, @CurrentUser() user: User) {
+    return await this.eventsService.createEvent(createEventDto, user);
+  }
 
-  @UseGuards(OptionalJwtAuthGuard)
   @Get()
-  async getAll(
-    @Query() query: EventQueryDto,
-    @Query('includeAll') includeAllStr?: string,
-    @CurrentUser() user?: User,
-  ) {
-    let includeAll = includeAllStr === 'true';
+  async findAll(@Query() query: EventQueryDto) {
+    return await this.eventsService.findAll(query);
+  }
 
-    // Restrict includeAll to ADMIN
-    if (includeAll) {
-      if (!user || user.role !== UserRole.ADMIN) {
-        throw new ForbiddenException('Only admins can query with includeAll');
-      }
-    } else {
-      includeAll = false;
-    }
+  @Get('my')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ORGANIZER', 'ADMIN')
+  async findMyEvents(@CurrentUser() user: User, @Query() pagination: PaginationDto) {
+    return await this.eventsService.findByOrganizer(user.id, pagination);
+  }
 
-    return this.eventsService.findAll(query, includeAll);
+  @Get(':id/capacity')
+  async getCapacity(@Param('id') id: string) {
+    return await this.eventsService.getCapacity(id);
   }
 
   @Get(':id')
-  async getById(@Param('id', ParseUUIDPipe) id: string) {
-    return this.eventsService.getEventById(id);
+  async getById(@Param('id') id: string) {
+    return await this.eventsService.getById(id);
   }
 
-  // -------------------------------
-  // PROTECTED ENDPOINTS
-  // -------------------------------
-
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ORGANIZER, UserRole.ADMIN)
-  @Post()
-  async create(
-    @Body() dto: CreateEventDto,
-    @CurrentUser() user: User,
-  ) {
-    return this.eventsService.createEvent(dto, user);
-  }
-
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ORGANIZER, UserRole.ADMIN)
   @Patch(':id')
-  async update(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdateEventDto,
-    @CurrentUser() user: User,
-  ) {
-    return this.eventsService.updateEvent(id, dto, user);
+  @UseGuards(JwtAuthGuard)
+  async update(@Param('id') id: string, @Body() dto: UpdateEventDto, @CurrentUser() user: User) {
+    return await this.eventsService.update(id, dto, user);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ORGANIZER, UserRole.ADMIN)
   @Patch(':id/status')
+  @UseGuards(JwtAuthGuard)
   async changeStatus(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id') id: string,
     @Body('status') status: EventStatus,
     @CurrentUser() user: User,
   ) {
-    return this.eventsService.changeStatus(id, status, user);
+    return await this.eventsService.changeStatus(id, status, user);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ORGANIZER, UserRole.ADMIN)
   @Delete(':id')
-  async delete(
-    @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: User,
-  ) {
-    await this.eventsService.deleteEvent(id, user);
-    return { message: 'Event deleted successfully' };
+  @UseGuards(JwtAuthGuard)
+  async remove(@Param('id') id: string, @CurrentUser() user: User) {
+    await this.eventsService.remove(id, user);
+    return { message: 'Event archived successfully' };
   }
 }

@@ -1,20 +1,19 @@
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { envValidationSchema } from './config/env.validation';
 import { AuthModule } from './auth/auth.module';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { BlockchainModule } from './blockchain/blockchain.module';
-import { UsersModule } from './users/users.module';
-import { TicketsModule } from './tickets-inventory/tickets.module';
+import { HealthModule } from './health/health.module';
 import { EventsModule } from './events/events.module';
-import { VerificationModule } from './verification/verification.module';
-import { ContactModule } from './contact/contact.module';
-import databaseConfig from './config/database-config';
-import appConfig from './config/app.config';
-import { OrdersModule } from './orders/orders.module';
-import { StellarModule } from './stellar/stellar.module';
+import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
+import { LoggerMiddleware } from './common/middleware/logger.middleware';
+
 
 @Module({
   imports: [
@@ -24,55 +23,38 @@ import { StellarModule } from './stellar/stellar.module';
     // Global configuration
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, databaseConfig],
+      validationSchema: envValidationSchema,
     }),
-
-    // Database connection (PostgreSQL)
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 100,
+      },
+    ]),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
-        const host = configService.get('database.host');
-        const port = configService.get('database.port');
-        const username = configService.get('database.username');
-        const database = configService.get('database.database');
-
-        console.log('DB HOST:', host);
-        console.log('DB PORT:', port);
-        console.log('DB USER:', username);
-        console.log('DB NAME:', database);
-
-        return {
-          type: 'postgres',
-          host,
-          port,
-          username,
-          password: configService.get('database.password'),
-          database,
-          synchronize: false,
-          autoLoadEntities: true,
-        };
-      },
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres',
+        url: configService.get<string>('DATABASE_URL'),
+        synchronize: false,
+        runMigrations: true,
+        migrationsTableName: 'migrations',
+        autoLoadEntities: true,
+      }),
     }),
-
     AuthModule,
-    // Blockchain module for future blockchain anchoring and verification
-    BlockchainModule.register({
-      isGlobal: true,
-      config: {
-        provider: 'STELLAR',
-        enabled: false, // Disabled until Stellar integration is implemented
-      },
-    }),
-    UsersModule,
-    TicketsModule,
-    OrdersModule,
-    EventsModule,           // ← Add here
-    VerificationModule,     // ← Add here
-    ContactModule,
-    StellarModule,          // ← Stellar payment listener
+    HealthModule,
+    EventsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+  ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RequestIdMiddleware, LoggerMiddleware).forRoutes('*');
+  }
+}

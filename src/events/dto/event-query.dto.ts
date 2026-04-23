@@ -1,11 +1,11 @@
-import { IsString, IsNumber, IsOptional, IsEnum, Min, Max, Length, IsBoolean, IsDateString, IsArray } from 'class-validator';
+import { IsOptional, IsString, IsBoolean, IsDateString, IsEnum, IsIn } from 'class-validator';
 import { Type } from 'class-transformer';
-import { EventStatus } from '../../enums/event-status.enum';
+import { PaginationDto } from '../../common/dto/pagination.dto';
+import { EventStatus } from '../enums/event-status.enum';
 
-export class EventQueryDto {
+export class EventQueryDto extends PaginationDto {
   @IsOptional()
   @IsString()
-  @Length(1, 100)
   search?: string;
 
   @IsOptional()
@@ -14,15 +14,14 @@ export class EventQueryDto {
 
   @IsOptional()
   @IsString()
-  @Length(1, 100)
   city?: string;
 
   @IsOptional()
   @IsString()
-  @Length(2, 2)
   countryCode?: string;
 
   @IsOptional()
+  @Type(() => Boolean)
   @IsBoolean()
   isVirtual?: boolean;
 
@@ -35,40 +34,10 @@ export class EventQueryDto {
   dateTo?: string;
 
   @IsOptional()
-  @IsNumber()
-  @Min(0)
-  @Max(1000)
-  minTicketPrice?: number;
+  @IsIn(['eventDate', 'createdAt'])
+  sortBy?: 'eventDate' | 'createdAt' = 'createdAt';
 
   @IsOptional()
-  @IsNumber()
-  @Min(0)
-  @Max(1000)
-  maxTicketPrice?: number;
-
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  tags?: string[];
-
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  @Min(1)
-  page?: number = 1;
-
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  @Min(1)
-  @Max(100)
-  limit?: number = 10;
-
-  @IsOptional()
-  @IsEnum(['createdAt', 'eventDate', 'title', 'capacity'])
-  sortBy?: string = 'eventDate';
-
-  @IsOptional()
-  @IsEnum(['ASC', 'DESC'])
-  sortOrder?: 'ASC' | 'DESC' = 'ASC';
+  @IsIn(['asc', 'desc'])
+  sortOrder?: 'asc' | 'desc' = 'desc';
 }

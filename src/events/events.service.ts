@@ -1,167 +1,131 @@
-import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import {
+  Injectable,
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { Event } from './entities/event.entity';
-import { EventStatus } from '../enums/event-status.enum';
-import { applyEventStatusChange } from './lifecycle/event.lifecycle';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
-import { User } from '../auth/entities/user.entity';
-import { UserRole } from 'src/auth/common/enum/user-role-enum';
 import { EventQueryDto } from './dto/event-query.dto';
-import { PaginatedEventsResponseDto } from './dto/paginated-events-response.dto';
+import { EventStatus } from './enums/event-status.enum';
+import { isValidTransition } from './event-transitions';
+import { User } from '../users/entities/user.entity';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @Injectable()
 export class EventsService {
   constructor(
     @InjectRepository(Event)
-    private readonly eventRepository: Repository<Event>,
-  ) { }
+    private eventsRepository: Repository<Event>,
+  ) {}
 
-  // -------------------------------
-  // CREATE EVENT
-  // -------------------------------
   async createEvent(dto: CreateEventDto, user: User): Promise<Event> {
-    const event = this.eventRepository.create({
-      title: dto.title,
-      description: dto.description,
+    const event = this.eventsRepository.create({
+      ...dto,
       eventDate: new Date(dto.eventDate),
-      eventClosingDate: new Date(dto.eventClosingDate),
-      capacity: dto.capacity,
-      status: EventStatus.DRAFT,
+      organizerId: user.id,
+      status: dto.status || EventStatus.DRAFT,
     });
-
-    const saved = await this.eventRepository.save(event);
-
-    return saved;
+    return await this.eventsRepository.save(event);
   }
 
-  // -------------------------------
-  // UPDATE EVENT
-  // -------------------------------
-  async updateEvent(id: string, dto: UpdateEventDto, user: User) {
-    const event = await this.eventRepository.findOne({ where: { id } });
-    if (!event) throw new NotFoundException('Event not found');
+  async findAll(query: EventQueryDto): Promise<{ data: Event[]; total: number; page: number; limit: number; totalPages: number }> {
+    const { search, status, city, countryCode, isVirtual, dateFrom, dateTo, sortBy = 'createdAt', sortOrder = 'desc', page = 1, limit = 20 } = query;
 
-    const isAdmin = user.role === UserRole.ADMIN;
+    const qb = this.eventsRepository.createQueryBuilder('event')
+      .where('event.isArchived = false')
+      .andWhere('event.status = :status', { status: status ?? EventStatus.PUBLISHED });
 
-    const isOwner = event.organizerId === user.id;
-    if (!isAdmin && !isOwner) {
-      throw new ForbiddenException('You do not have permission to update this event');
+    if (search) {
+      qb.andWhere('(event.title ILIKE :search OR event.description ILIKE :search)', { search: `%${search}%` });
     }
+    if (city) qb.andWhere('event.city ILIKE :city', { city: `%${city}%` });
+    if (countryCode) qb.andWhere('event.countryCode = :countryCode', { countryCode });
+    if (isVirtual !== undefined) qb.andWhere('event.isVirtual = :isVirtual', { isVirtual });
+    if (dateFrom) qb.andWhere('event.eventDate >= :dateFrom', { dateFrom });
+    if (dateTo) qb.andWhere('event.eventDate <= :dateTo', { dateTo });
 
-    Object.assign(event, dto);
-    return this.eventRepository.save(event);
+    qb.orderBy(`event.${sortBy}`, sortOrder.toUpperCase() as 'ASC' | 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    const [data, total] = await qb.getManyAndCount();
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
-  // -------------------------------
-  // CHANGE STATUS
-  // -------------------------------
-  async changeStatus(id: string, newStatus: EventStatus, user: User): Promise<Event> {
-    const event = await this.getEventById(id);
 
-    applyEventStatusChange(event, newStatus);
-
-    return this.eventRepository.save(event);
-  }
-
-  // -------------------------------
-  // GET EVENT BY ID
-  // -------------------------------
-  async getEventById(id: string): Promise<Event> {
-    const event = await this.eventRepository.findOneBy({ id });
+  async getById(id: string): Promise<Event> {
+    const event = await this.eventsRepository.findOne({
+      where: { id },
+      relations: ['ticketTypes', 'organizer'],
+    });
     if (!event) throw new NotFoundException('Event not found');
     return event;
   }
 
-  // -------------------------------
-  // DELETE EVENT
-  // -------------------------------
-  async deleteEvent(id: string, user: User): Promise<boolean> {
-    const event = await this.getEventById(id);
-
-    const result = await this.eventRepository.delete(id);
-    return (result.affected ?? 0) > 0;
-  }
-  async findAll(queryDto: EventQueryDto, includeAll: boolean = false): Promise<PaginatedEventsResponseDto> {
-    const query = this.eventRepository.createQueryBuilder('event');
-
-    // 1. apply public default filters
-    if (!includeAll) {
-      query.andWhere('event.isArchived = :isArchived', { isArchived: false });
-      query.andWhere('event.status != :status', { status: EventStatus.CANCELLED });
+  async update(id: string, dto: UpdateEventDto, user: User): Promise<Event> {
+    const event = await this.eventsRepository.findOne({ where: { id } });
+    if (!event) throw new NotFoundException('Event not found');
+    if (event.organizerId !== user.id && user.role !== 'ADMIN') {
+      throw new ForbiddenException('You do not have permission to update this event');
     }
-
-    // 2. Full-text search
-    if (queryDto.search) {
-      query.andWhere(
-        '(event.title ILIKE :search OR event.description ILIKE :search)',
-        { search: `%${queryDto.search}%` },
-      );
-    }
-
-    // 3. Status filter
-    if (queryDto.status) {
-      query.andWhere('event.status = :statusFilter', { statusFilter: queryDto.status });
-    }
-
-    // 4. Location filters
-    if (queryDto.city) {
-      query.andWhere('event.city ILIKE :city', { city: `%${queryDto.city}%` });
-    }
-    if (queryDto.countryCode) {
-      query.andWhere('event.countryCode = :countryCode', { countryCode: queryDto.countryCode });
-    }
-    if (queryDto.isVirtual !== undefined) {
-      query.andWhere('event.isVirtual = :isVirtual', { isVirtual: queryDto.isVirtual });
-    }
-
-    // 5. Date range
-    if (queryDto.dateFrom) {
-      query.andWhere('event.eventDate >= :dateFrom', { dateFrom: queryDto.dateFrom });
-    }
-    if (queryDto.dateTo) {
-      query.andWhere('event.eventDate <= :dateTo', { dateTo: queryDto.dateTo });
-    }
-
-    // 6. Price range
-    if (queryDto.minTicketPrice !== undefined || queryDto.maxTicketPrice !== undefined) {
-      query.innerJoin('event.ticketTypes', 'ticketType');
-
-      if (queryDto.minTicketPrice !== undefined) {
-        query.andWhere('ticketType.price >= :minTicketPrice', { minTicketPrice: queryDto.minTicketPrice });
-      }
-      if (queryDto.maxTicketPrice !== undefined) {
-        query.andWhere('ticketType.price <= :maxTicketPrice', { maxTicketPrice: queryDto.maxTicketPrice });
-      }
-    }
-
-    // 7. Tags filter
-    if (queryDto.tags && queryDto.tags.length > 0) {
-      // Postgres ARRAY contains @>
-      query.andWhere('event.tags @> ARRAY[:...tags]::text[]', { tags: queryDto.tags });
-    }
-
-    // 8. Sorting
-    const sortBy = queryDto.sortBy || 'eventDate';
-    const sortOrder = queryDto.sortOrder || 'ASC';
-    query.orderBy(`event.${sortBy}`, sortOrder as 'ASC' | 'DESC');
-
-    // 9. Pagination
-    const page = queryDto.page || 1;
-    const limit = queryDto.limit || 10;
-    const skip = (page - 1) * limit;
-
-    query.skip(skip).take(limit);
-
-    const [data, total] = await query.getManyAndCount();
-
-    return {
-      data,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    };
+    Object.assign(event, dto);
+    if (dto.eventDate) event.eventDate = new Date(dto.eventDate);
+    return await this.eventsRepository.save(event);
   }
 
+  async changeStatus(id: string, newStatus: EventStatus, user: User): Promise<Event> {
+    const event = await this.eventsRepository.findOne({ where: { id } });
+    if (!event) throw new NotFoundException('Event not found');
+    if (event.organizerId !== user.id && user.role !== 'ADMIN') {
+      throw new ForbiddenException('You do not have permission to change this event status');
+    }
+    if (!isValidTransition(event.status, newStatus)) {
+      throw new BadRequestException(`Cannot transition from ${event.status} to ${newStatus}`);
+    }
+    event.status = newStatus;
+    return await this.eventsRepository.save(event);
+  }
+
+  async remove(id: string, user: User): Promise<void> {
+    const event = await this.eventsRepository.findOne({ where: { id } });
+    if (!event) throw new NotFoundException('Event not found');
+    if (event.organizerId !== user.id && user.role !== 'ADMIN') {
+      throw new ForbiddenException('You do not have permission to delete this event');
+    }
+    if (event.status !== EventStatus.DRAFT && event.status !== EventStatus.CANCELLED) {
+      throw new BadRequestException('Only events in DRAFT or CANCELLED status can be deleted');
+    }
+    event.isArchived = true;
+    await this.eventsRepository.save(event);
+  }
+
+  async getCapacity(id: string): Promise<{ capacity: number; totalSold: number; remaining: number; isSoldOut: boolean }> {
+    const event = await this.eventsRepository.findOne({ where: { id } });
+    if (!event) throw new NotFoundException('Event not found');
+    const capacity = event.capacity;
+    const totalSold = 0;
+    const remaining = capacity - totalSold;
+    return { capacity, totalSold, remaining, isSoldOut: remaining <= 0 };
+  }
+
+  async findByOrganizer(organizerId: string, pagination: PaginationDto): Promise<{ data: Event[]; total: number }> {
+    const page = pagination.page || 1;
+    const limit = pagination.limit || 20;
+    const [data, total] = await this.eventsRepository.findAndCount({
+      where: { organizerId, isArchived: false },
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+    return { data, total };
+  }
+
+  async findOne(id: string): Promise<Event> {
+    const event = await this.eventsRepository.findOne({ where: { id } });
+    if (!event) throw new NotFoundException('Event not found');
+    return event;
+  }
 }
