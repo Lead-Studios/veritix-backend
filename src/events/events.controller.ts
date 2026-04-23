@@ -7,9 +7,13 @@ import {
   Param,
   Get,
   Query,
+  Patch,
 } from '@nestjs/common';
 import { EventsService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
+import { UpdateEventDto } from './dto/update-event.dto';
+import { EventQueryDto } from './dto/event-query.dto';
+import { EventStatus } from './enums/event-status.enum';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -24,18 +28,20 @@ export class EventsController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ORGANIZER', 'ADMIN')
-  async create(
-    @Body() createEventDto: CreateEventDto,
-    @CurrentUser() user: User,
-  ) {
+  async create(@Body() createEventDto: CreateEventDto, @CurrentUser() user: User) {
     return await this.eventsService.createEvent(createEventDto, user);
   }
 
-  @Delete(':id')
-  @UseGuards(JwtAuthGuard)
-  async remove(@Param('id') id: string, @CurrentUser() user: User) {
-    await this.eventsService.remove(id, user);
-    return { message: 'Event archived successfully' };
+  @Get()
+  async findAll(@Query() query: EventQueryDto) {
+    return await this.eventsService.findAll(query);
+  }
+
+  @Get('my')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ORGANIZER', 'ADMIN')
+  async findMyEvents(@CurrentUser() user: User, @Query() pagination: PaginationDto) {
+    return await this.eventsService.findByOrganizer(user.id, pagination);
   }
 
   @Get(':id/capacity')
@@ -43,13 +49,31 @@ export class EventsController {
     return await this.eventsService.getCapacity(id);
   }
 
-  @Get('my')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ORGANIZER', 'ADMIN')
-  async findMyEvents(
+  @Get(':id')
+  async getById(@Param('id') id: string) {
+    return await this.eventsService.getById(id);
+  }
+
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard)
+  async update(@Param('id') id: string, @Body() dto: UpdateEventDto, @CurrentUser() user: User) {
+    return await this.eventsService.update(id, dto, user);
+  }
+
+  @Patch(':id/status')
+  @UseGuards(JwtAuthGuard)
+  async changeStatus(
+    @Param('id') id: string,
+    @Body('status') status: EventStatus,
     @CurrentUser() user: User,
-    @Query() pagination: PaginationDto,
   ) {
-    return await this.eventsService.findByOrganizer(user.id, pagination);
+    return await this.eventsService.changeStatus(id, status, user);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard)
+  async remove(@Param('id') id: string, @CurrentUser() user: User) {
+    await this.eventsService.remove(id, user);
+    return { message: 'Event archived successfully' };
   }
 }
