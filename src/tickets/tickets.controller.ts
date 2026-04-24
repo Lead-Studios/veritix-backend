@@ -11,6 +11,7 @@ import {
   Res,
   NotFoundException,
   Req,
+  ParseUUIDPipe,
 } from "@nestjs/common";
 import { TicketService } from "./tickets.service";
 import { CreateTicketDto } from "./dto/create-ticket.dto";
@@ -170,4 +171,11 @@ async downloadICal(
 
   res.send(icsFile);
 }
+
+  @Post(':id/scan')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ORGANIZER, UserRole.ADMIN)
+  async scanTicket(@Param('id', ParseUUIDPipe) id: string) {
+    await this.ticketService.scan(id);
+  }
 }

@@ -88,6 +88,9 @@ export class Ticket {
   status: string;
 
   @Column({ nullable: true })
+  scannedAt: Date;
+
+  @Column({ nullable: true })
   qrCode: string;
 
   @Column({ nullable: true })
