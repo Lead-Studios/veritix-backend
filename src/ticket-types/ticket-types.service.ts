@@ -35,7 +35,7 @@ export class TicketTypesService {
     }));
   }
 
-  async findOne(id: string): Promise<TicketType | null> {
+  async findOne(id: string): Promise<TicketType> {
     const ticketType = await this.ticketTypeRepository.findOne({
       where: { id },
       relations: ['event'],
@@ -89,7 +89,7 @@ export class TicketTypesService {
     const ticketType = await repository
       .createQueryBuilder("ticketType")
       .where("ticketType.id = :id", { id: ticketTypeId })
-      .setLock({ mode: 'pessimistic_write' as const })
+      .setLock('pessimistic_write')
       .getOne();
 
     if (!ticketType) {
@@ -136,7 +136,7 @@ export class TicketTypesService {
     const ticketType = await repository
       .createQueryBuilder("ticketType")
       .where("ticketType.id = :id", { id: ticketTypeId })
-      .setLock({ mode: 'pessimistic_write' as const })
+      .setLock('pessimistic_write')
       .getOne();
 
     if (!ticketType) {

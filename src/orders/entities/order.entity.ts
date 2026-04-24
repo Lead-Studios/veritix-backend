@@ -38,16 +38,16 @@ export class Order {
   stellarMemo: string;
 
   @Column({ nullable: true, unique: true })
-  stellarTxHash: string;
+  stellarTxHash: string | null;
 
   @Column({ nullable: true, unique: true })
-  refundTxHash: string;
+  refundTxHash: string | null;
 
   @Column({ type: 'timestamp' })
   expiresAt: Date;
 
   @Column({ type: 'timestamp', nullable: true })
-  paidAt: Date;
+  paidAt: Date | null;
 
   @OneToMany(() => OrderItem, (item) => item.order, { cascade: true })
   items: OrderItem[];
