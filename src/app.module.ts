@@ -46,6 +46,7 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
     OrdersModule,
     TicketsModule,
     StellarModule,
+    VerificationModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
