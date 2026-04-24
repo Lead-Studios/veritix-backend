@@ -89,7 +89,7 @@ export class TicketTypesService {
     const ticketType = await repository
       .createQueryBuilder("ticketType")
       .where("ticketType.id = :id", { id: ticketTypeId })
-      .setLock({ mode: 'pessimistic_write' })
+      .setLock({ mode: 'pessimistic_write' as const })
       .getOne();
 
     if (!ticketType) {
@@ -136,7 +136,7 @@ export class TicketTypesService {
     const ticketType = await repository
       .createQueryBuilder("ticketType")
       .where("ticketType.id = :id", { id: ticketTypeId })
-      .setLock({ mode: 'pessimistic_write' })
+      .setLock({ mode: 'pessimistic_write' as const })
       .getOne();
 
     if (!ticketType) {
