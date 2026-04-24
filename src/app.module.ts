@@ -78,6 +78,7 @@ import { OrdersModule } from "./orders/orders.module";
     ConferenceGalleryModule,
     PromoCodeModule,
     AuditLogModule,
+    OrdersModule,
     StellarModule,
   ],
   controllers: [AppController],
