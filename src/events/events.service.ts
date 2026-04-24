@@ -24,8 +24,17 @@ export class EventsService {
 
   async createEvent(dto: CreateEventDto, user: User): Promise<Event> {
     const event = this.eventsRepository.create({
-      ...dto,
+      title: dto.title,
+      description: dto.description,
+      venue: dto.venue,
+      city: dto.city,
+      countryCode: dto.countryCode,
+      isVirtual: dto.isVirtual ?? false,
+      imageUrl: dto.imageUrl,
       eventDate: new Date(dto.eventDate),
+      eventClosingDate: dto.eventClosingDate ? new Date(dto.eventClosingDate) : null,
+      capacity: dto.capacity ?? 0,
+      tags: dto.tags ?? [],
       organizerId: user.id,
       status: dto.status || EventStatus.DRAFT,
     });
@@ -71,8 +80,17 @@ export class EventsService {
     if (event.organizerId !== user.id && user.role !== 'ADMIN') {
       throw new ForbiddenException('You do not have permission to update this event');
     }
-    Object.assign(event, dto);
-    if (dto.eventDate) event.eventDate = new Date(dto.eventDate);
+    
+    // Explicitly handle date fields to convert to Date objects
+    const updateData = { ...dto };
+    if (dto.eventDate) {
+      updateData.eventDate = new Date(dto.eventDate) as any;
+    }
+    if (dto.eventClosingDate) {
+      updateData.eventClosingDate = new Date(dto.eventClosingDate) as any;
+    }
+    
+    Object.assign(event, updateData);
     return await this.eventsRepository.save(event);
   }
 
