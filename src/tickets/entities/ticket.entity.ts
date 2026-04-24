@@ -7,93 +7,58 @@ import {
   UpdateDateColumn,
   JoinColumn,
 } from "typeorm";
-import { Event } from "../../events/entities/event.entity";
-import { Conference } from "src/conference/entities/conference.entity";
-import { User } from "../../users/entities/user.entity";
+import { TicketStatus } from "../enums/ticket-status.enum";
 
 @Entity("tickets")
 export class Ticket {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
+  @Column({ unique: true })
+  qrCode: string;
+
+  @Column({ type: "text", nullable: true })
+  qrCodeImage: string;
+
   @Column()
-  conferenceId: string;
+  ticketTypeId: string;
+
+  @Column()
+  eventId: string;
+
+  @Column({ nullable: true })
+  orderId: string;
 
   @Column()
   userId: string;
 
-  @Column("decimal", { precision: 10, scale: 2 })
-  pricePerTicket: number;
+  @Column()
+  attendeeName: string;
 
-  @Column("decimal", { precision: 10, scale: 2 })
-  totalAmount: number;
+  @Column()
+  attendeeEmail: string;
 
-  @Column({ default: false })
-  isPaid: boolean;
-
-  @Column({ nullable: true })
-  paymentIntentId: string;
+  @Column({ type: "enum", enum: TicketStatus, default: TicketStatus.ISSUED })
+  status: TicketStatus;
 
   @Column({ nullable: true })
-  receiptId: string;
+  scannedAt: Date;
 
-  @ManyToOne(() => User)
-  user: User;
+  @Column({ nullable: true })
+  cancelledAt: Date;
 
-  @ManyToOne(() => Conference)
-  conference: Conference;
+  @Column({ type: "text", nullable: true })
+  cancellationReason: string;
+
+  @Column({ nullable: true })
+  refundedAt: Date;
+
+  @Column({ type: "int", default: 0 })
+  transferCount: number;
 
   @CreateDateColumn()
   createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;
-
-  @Column()
-  name: string;
-
-  @ManyToOne(() => Event, (event) => event.tickets, { onDelete: "CASCADE" })
-  @JoinColumn({ name: "eventId" })
-  event: Event;
-
-  @Column()
-  eventId: string;
-
-  @Column({ type: "int" })
-  quantity: number;
-
-  @Column({ type: "decimal", precision: 10, scale: 2 })
-  price: number;
-
-  @Column({ type: "text" })
-  description: string;
-
-  @Column({ type: "timestamp" })
-  deadlineDate: Date;
-
-  @Column({ default: false })
-  isReserved: boolean;
-
-  @Column({ default: false })
-  isUsed: boolean;
-
-  // new fields for ticket history and receipt
-  @Column({ nullable: true })
-  transactionId: string;
-
-  @CreateDateColumn()
-  purchaseDate: Date;
-
-  @Column()
-  status: string;
-
-  @Column({ nullable: true })
-  scannedAt: Date;
-
-  @Column({ nullable: true })
-  qrCode: string;
-
-  @Column({ nullable: true })
-token: string;
-
 }
