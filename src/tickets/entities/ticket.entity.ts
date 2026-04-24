@@ -61,4 +61,13 @@ export class Ticket {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  // Relations
+  @ManyToOne(() => Event)
+  @JoinColumn({ name: "eventId" })
+  event: Event;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: "userId" })
+  user: User;
 }
