@@ -42,7 +42,7 @@ describe('OrdersService', () => {
     };
 
     ticketTypeService = {
-      findById: jest.fn(),
+      findOne: jest.fn(),
       reserveTickets: jest.fn(),
       releaseTickets: jest.fn(),
     };

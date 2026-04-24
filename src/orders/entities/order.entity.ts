@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { OrderStatus } from '../enums/order-status.enum';
 import { OrderItem } from './order-item.entity';
+import { Ticket } from 'src/tickets/entities/ticket.entity';
 
 @Entity('orders')
 export class Order {
@@ -50,6 +51,9 @@ export class Order {
 
   @OneToMany(() => OrderItem, (item) => item.order, { cascade: true })
   items: OrderItem[];
+
+  @OneToMany(() => Ticket, (ticket) => ticket.order)
+  tickets: Ticket[];
 
   @CreateDateColumn()
   createdAt: Date;
