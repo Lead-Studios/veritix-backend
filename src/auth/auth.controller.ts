@@ -1,10 +1,14 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Delete, UseGuards, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { UserResponseDto } from './dto/user-response.dto';
+import { DeleteAccountDto } from './dto/delete-account.dto';
+import { AuthService } from './auth.service';
 
 @Controller('auth')
 export class AuthController {
+  constructor(private readonly authService: AuthService) {}
+
   @Get('me')
   @UseGuards(JwtAuthGuard)
   async getCurrentUser(@CurrentUser() user: any): Promise<UserResponseDto> {
@@ -20,5 +24,15 @@ export class AuthController {
     });
 
     return userResponse;
+  }
+
+  @Delete('account')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteAccount(
+    @CurrentUser() user: any,
+    @Body() deleteAccountDto: DeleteAccountDto,
+  ): Promise<void> {
+    await this.authService.deleteAccount(user.userId, deleteAccountDto);
   }
 }
