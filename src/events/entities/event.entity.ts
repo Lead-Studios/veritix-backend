@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { TicketType } from '../../ticket-types/entities/ticket-type.entity';
 import { User } from '../../users/entities/user.entity';
+import { TicketType } from '../../ticket-types/entities/ticket-type.entity';
 import { EventStatus } from '../enums/event-status.enum';
 
 @Entity('events')
@@ -23,26 +24,24 @@ export class Event {
   @Column('text', { nullable: true })
   description: string;
 
-  @Column()
-  venue: string;
+  @Column({
+    type: 'enum',
+    enum: EventStatus,
+    default: EventStatus.DRAFT,
+  })
+  status: EventStatus;
 
-  @Column()
-  address: string;
-
-  @Column('timestamp')
-  eventDate: Date;
-
-  @Column({ default: true })
-  isActive: boolean;
-
-  @Column('decimal', { precision: 10, scale: 2, nullable: true })
-  maxCapacity: number;
+  @Column({ type: 'uuid' })
+  organizerId: string;
 
   @OneToMany(() => TicketType, (ticketType) => ticketType.event)
   ticketTypes: TicketType[];
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'organizerId' })
+  organizer: User;
 
   @Column()
-  location: string;
+  venue: string;
 
   @Column({ nullable: true })
   city: string;
@@ -59,9 +58,20 @@ export class Event {
     default: EventStatus.DRAFT,
   })
   status: EventStatus;
+  @Column({ nullable: true })
+  imageUrl: string;
+
+  @Column({ type: 'timestamptz' })
+  eventDate: Date;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  eventClosingDate: Date;
 
   @Column({ type: 'int', default: 0 })
   capacity: number;
+
+  @Column('text', { array: true, nullable: true, default: () => "'{}'" })
+  tags: string[];
 
   @Column({ default: false })
   isArchived: boolean;
@@ -72,6 +82,8 @@ export class Event {
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'organizerId' })
   organizer: User;
+  @OneToMany(() => TicketType, (ticketType) => ticketType.event)
+  ticketTypes: TicketType[];
 
   @CreateDateColumn()
   createdAt: Date;

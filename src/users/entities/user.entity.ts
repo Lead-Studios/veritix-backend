@@ -32,6 +32,9 @@ export class User {
   @Column({ default: false })
   isVerified: boolean;
 
+  @Column({ default: 0 })
+  tokenVersion: number;
+
   @CreateDateColumn()
   createdAt: Date;
 

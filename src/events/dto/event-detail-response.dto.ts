@@ -11,15 +11,21 @@ export class TicketTypeResponseDto {
 export class EventDetailResponseDto {
   id: string;
   title: string;
-  description: string;
-  location: string;
+  description?: string;
+  venue: string;
+  city?: string;
+  countryCode?: string;
+  isVirtual: boolean;
+  imageUrl?: string;
   eventDate: Date;
-  status: EventStatus;
+  eventClosingDate?: Date;
   capacity: number;
+  tags?: string[];
   isArchived: boolean;
+  status: EventStatus;
   organizerId: string;
   organizer: { id: string; fullName: string; email: string };
-  ticketTypes: TicketTypeResponseDto[];
+  ticketTypes?: TicketTypeResponseDto[];
   createdAt: Date;
   updatedAt: Date;
 }
