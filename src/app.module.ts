@@ -11,6 +11,8 @@ import { envValidationSchema } from './config/env.validation';
 import { AuthModule } from './auth/auth.module';
 import { HealthModule } from './health/health.module';
 import { EventsModule } from './events/events.module';
+import { OrdersModule } from './orders/orders.module';
+import { TicketsModule } from './tickets/tickets.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 
@@ -46,6 +48,8 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
     AuthModule,
     HealthModule,
     EventsModule,
+    OrdersModule,
+    TicketsModule,
   ],
   controllers: [AppController],
   providers: [

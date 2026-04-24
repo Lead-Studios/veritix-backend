@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   Delete,
-  ForbiddenException,
   Get,
   HttpCode,
   HttpStatus,
@@ -13,28 +12,15 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { OrdersService } from './orders.service';
-import { CreateOrderInput } from './dto/order.dto';
-import { JwtAuthGuard } from 'src/auth/guard/jwt.auth.guard';
-import { RolesGuard } from 'src/auth/guard/roles.guard';
-import { Roles } from 'src/auth/decorators/roles.decorators';
-import { CurrentUser } from 'src/auth/decorators/current.user.decorators';
-import { UserRole } from 'src/auth/common/enum/user-role-enum';
-import { User } from 'src/auth/entities/user.entity';
+import { CreateOrderDto } from './dto/create-order.dto';
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/common/guards/roles.guard';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import { UserRole } from 'src/users/enums/user-role.enum';
+import { User } from 'src/users/entities/user.entity';
 import { Order } from './orders.entity';
-import { StellarConfig } from 'src/stellar/stellar.config';
 
-/**
- * OrdersController
- *
- * All routes require a valid JWT. The authenticated user's ID is read from
- * the CurrentUser decorator so users can only act on their own orders.
- *
- * Route summary:
- *   POST   /orders       → createOrder (SUBSCRIBER role required)
- *   GET    /orders/my    → findMyOrders (current user)
- *   GET    /orders/:id   → findById (owner or ADMIN only)
- *   DELETE /orders/:id   → cancelOrder (owner or ADMIN only)
- */
 @Controller('orders')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class OrdersController {
@@ -48,22 +34,16 @@ export class OrdersController {
   @HttpCode(HttpStatus.CREATED)
   async createOrder(
     @CurrentUser() user: User,
-    @Body() body: { eventId: string; items: { ticketTypeId: string; quantity: number }[] },
+    @Body() body: CreateOrderDto,
   ) {
-    const input: CreateOrderInput = {
-      userId: user.id,
-      eventId: body.eventId,
-      items: body.items,
-    };
-    const result = await this.ordersService.createOrder(input);
-    
-    const stellarConfig = this.configService.get<StellarConfig>('stellar');
-    
+    const result = await this.ordersService.create(body, user);
+    const destinationAddress = this.configService.get<string>('STELLAR_PLATFORM_ADDRESS');
+
     return {
       ...result.order,
-      destinationAddress: stellarConfig?.platformAddress,
+      destinationAddress,
       memo: result.stellarMemo,
-      amountXLM: result.order.totalAmountXLM,
+      amountXLM: result.amountXLM,
     };
   }
 
