@@ -1,14 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { DataSource, LessThan, Repository } from 'typeorm';
 import { OrderConfig } from './order.config';
 import { Order } from './orders.entity';
-import { TicketTypeService } from 'src/tickets-inventory/services/ticket-type.service';
+import { TicketTypesService } from 'src/ticket-types/ticket-types.service';
 import { OrderStatus } from './enums/order-status.enum';
 
-/** Shape of the summary emitted after each run. */
 export interface ExpiryRunSummary {
   checkedAt: Date;
   expiredCount: number;
@@ -23,19 +21,11 @@ export class OrdersScheduler {
   constructor(
     @InjectRepository(Order)
     private readonly orderRepo: Repository<Order>,
-    private readonly ticketTypeService: TicketTypeService,
+    private readonly ticketTypeService: TicketTypesService,
     private readonly config: ConfigService,
     private readonly dataSource: DataSource,
   ) {}
 
-  /**
-   * Finds all PENDING orders whose `expiresAt` is in the past, releases
-   * their reserved inventory, and marks them CANCELLED.
-   *
-   * Errors from individual orders are caught and isolated so one bad row
-   * never aborts the rest of the batch.
-   */
-  @Cron(CronExpression.EVERY_5_MINUTES, { name: 'order-expiry-cleanup' })
   async handleOrderExpiry(): Promise<ExpiryRunSummary> {
     const checkedAt = new Date();
     this.logger.log('Order expiry job started');
@@ -52,7 +42,6 @@ export class OrdersScheduler {
     let ticketsReleased = 0;
     const failedOrderIds: string[] = [];
 
-    // Process each order independently so one failure doesn't block others.
     for (const order of expiredOrders) {
       try {
         const released = await this.cancelAndRelease(order);
@@ -84,7 +73,6 @@ export class OrdersScheduler {
     return summary;
   }
 
-  /** Query the DB for all PENDING orders past their expiry timestamp. */
   async findExpiredOrders(asOf: Date): Promise<Order[]> {
     return this.orderRepo.find({
       where: {
@@ -95,18 +83,10 @@ export class OrdersScheduler {
     });
   }
 
-  /**
-   * Release inventory for a single order, then mark it CANCELLED.
-   * Returns the number of tickets released.
-   *
-   * Wrapped in a transaction to ensure both inventory and status
-   * are updated together.
-   */
   async cancelAndRelease(order: Order): Promise<number> {
     let released = 0;
 
     await this.dataSource.transaction(async (manager) => {
-      // 1. Release each line item back to its ticket-type pool.
       for (const item of order.items ?? []) {
         await this.ticketTypeService.releaseTickets(
           item.ticketType.id,
@@ -116,7 +96,6 @@ export class OrdersScheduler {
         released += item.quantity;
       }
 
-      // 2. Mark the order as CANCELLED.
       await manager.update(Order, order.id, {
         status: OrderStatus.CANCELLED,
       });
@@ -125,15 +104,8 @@ export class OrdersScheduler {
     return released;
   }
 
-  /**
-   * Compute the expiry timestamp for a new order.
-   *
-   * Reads `order.expiryMinutes` from config (default 15) so the window
-   * is never hardcoded in business logic.
-   */
   computeExpiresAt(from: Date = new Date()): Date {
-    const minutes =
-      this.config.get<OrderConfig>('order')?.expiryMinutes ?? 15;
+    const minutes = this.config.get<OrderConfig>('order')?.expiryMinutes ?? 15;
     return new Date(from.getTime() + minutes * 60 * 1_000);
   }
 }

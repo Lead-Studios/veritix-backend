@@ -8,20 +8,18 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { DataSource, Repository } from 'typeorm';
-import { randomBytes } from 'crypto';
+import { randomUUID } from 'crypto';
 import {
-  CreateOrderInput,
+  CreateOrderDto,
   CreateOrderResult,
-  OrderError,
-  OrderErrorCode,
-} from './dto/order.dto';
+} from './dto/create-order.dto';
 import { OrderConfig } from './order.config';
 import { Order, OrderItem } from './orders.entity';
-import { TicketTypeService } from 'src/tickets-inventory/services/ticket-type.service';
-import { Ticket } from 'src/tickets-inventory/entities/ticket.entity';
+import { Ticket } from 'src/tickets/entities/ticket.entity';
+import { TicketTypesService } from 'src/ticket-types/ticket-types.service';
 import { OrderStatus } from './enums/order-status.enum';
-import { User } from 'src/auth/entities/user.entity';
-import { UserRole } from 'src/auth/common/enum/user-role-enum';
+import { User } from 'src/users/entities/user.entity';
+import { UserRole } from 'src/users/enums/user-role.enum';
 
 @Injectable()
 export class OrdersService {
@@ -32,123 +30,97 @@ export class OrdersService {
     private readonly orderRepo: Repository<Order>,
     @InjectRepository(Ticket)
     private readonly ticketRepo: Repository<Ticket>,
-    private readonly ticketTypeService: TicketTypeService,
+    private readonly ticketTypeService: TicketTypesService,
     private readonly config: ConfigService,
     private readonly dataSource: DataSource,
   ) {}
 
-  // ------------------------------------------------------------------
-  // createOrder
-  // ------------------------------------------------------------------
-
-  /**
-   * Validate inventory, soft-reserve tickets, and persist the order.
-   *
-   * DOES NOT issue tickets — that happens in Issue 10 after Stellar
-   * payment confirmation.
-   *
-   * Steps:
-   *  1. Guard: at least one item, all quantities > 0.
-   *  2. Load each TicketType and check availability.
-   *  3. Open a DB transaction:
-   *     a. Insert Order row with PENDING status and computed expiresAt.
-   *     b. Insert OrderItem rows with snapshotted prices.
-   *     c. Call TicketTypeService.reserveTickets per item.
-   *  4. Return order + stellarMemo.
-   */
-  async createOrder(input: CreateOrderInput): Promise<CreateOrderResult> {
-    const { userId, eventId, items } = input;
+  async create(dto: CreateOrderDto, user: User): Promise<CreateOrderResult> {
+    const { eventId, items } = dto;
 
     if (!items || items.length === 0) {
-      throw new OrderError('Order must contain at least one item', OrderErrorCode.EMPTY_ORDER);
+      throw new BadRequestException('Order must contain at least one item');
     }
 
-    for (const item of items) {
-      if (!Number.isInteger(item.quantity) || item.quantity < 1) {
-        throw new OrderError(
-          `Invalid quantity ${item.quantity} for ticketType ${item.ticketTypeId}`,
-          OrderErrorCode.INVALID_QUANTITY,
-        );
-      }
-    }
-
-    // Load ticket types and validate inventory before opening a transaction.
     const ticketTypes = await Promise.all(
-      items.map((item) =>
-        this.ticketTypeService
-          .findById(item.ticketTypeId)
-          .then((tt) => {
-            if (!tt) {
-              throw new OrderError(
-                `TicketType ${item.ticketTypeId} not found`,
-                OrderErrorCode.TICKET_TYPE_NOT_FOUND,
-              );
-            }
-            if (tt.totalQuantity < item.quantity) {
-              throw new OrderError(
-                `Insufficient inventory for ticketType ${item.ticketTypeId}: ` +
-                  `requested ${item.quantity}, available ${tt.totalQuantity}`,
-                OrderErrorCode.INSUFFICIENT_INVENTORY,
-              );
-            }
-            return tt;
-          }),
-      ),
+      items.map(async (item) => {
+        if (!Number.isInteger(item.quantity) || item.quantity < 1) {
+          throw new BadRequestException(
+            `Invalid quantity ${item.quantity} for ticketType ${item.ticketTypeId}`,
+          );
+        }
+
+        const ticketType = await this.ticketTypeService.findOne(item.ticketTypeId);
+        if (!ticketType) {
+          throw new NotFoundException(`TicketType ${item.ticketTypeId} not found`);
+        }
+
+        if (ticketType.soldQuantity + item.quantity > ticketType.totalQuantity) {
+          throw new BadRequestException(
+            `Insufficient inventory for ticketType ${item.ticketTypeId}: requested ${item.quantity}, available ${ticketType.totalQuantity - ticketType.soldQuantity}`,
+          );
+        }
+
+        return ticketType;
+      }),
     );
 
-    const expiryMinutes =
-      this.config.get<OrderConfig>('order')?.expiryMinutes ?? 15;
-    const expiresAt = new Date(Date.now() + expiryMinutes * 60 * 1_000);
-    const stellarMemo = this.generateMemo();
+    const orderId = randomUUID();
+    const stellarMemo = orderId.slice(0, 8);
+    const expiryMinutes = this.config.get<OrderConfig>('order')?.expiryMinutes ?? 15;
+    const expiresAt = new Date(Date.now() + expiryMinutes * 60_000);
 
-    // Compute totals from snapshotted prices.
-    let totalAmountXLM = 0;
     let totalAmountUSD = 0;
+    let totalAmountXLM = 0;
 
-    const orderItems: Partial<OrderItem>[] = items.map((item, idx) => {
-      const tt = ticketTypes[idx];
-      const subtotalXLM = tt.price * item.quantity;
-      const subtotalUSD = tt.price * item.quantity;
-      totalAmountXLM += subtotalXLM;
-      totalAmountUSD += subtotalUSD;
+    const orderItems = items.map((item, idx) => {
+      const ticketType = ticketTypes[idx];
+      const unitPrice = Number(ticketType.price);
+      const subtotal = unitPrice * item.quantity;
+      totalAmountUSD += subtotal;
+      totalAmountXLM += subtotal;
 
       return {
         ticketTypeId: item.ticketTypeId,
         quantity: item.quantity,
-        unitPriceXLM: tt.price,
-        subtotalXLM,
+        unitPriceUSD: unitPrice,
+        subtotalUSD: subtotal,
       };
     });
 
-    // Run everything inside a transaction so a failed reservation rolls back
-    // the order row automatically.
     const order = await this.dataSource.transaction(async (manager) => {
+      const orderData: Partial<Order> = {
+        id: orderId,
+        userId: user.id,
+        eventId,
+        status: OrderStatus.PENDING,
+        totalAmountUSD,
+        totalAmountXLM,
+        stellarMemo,
+        stellarTxHash: null,
+        refundTxHash: null,
+        expiresAt,
+        paidAt: null,
+      };
+
       const savedOrder = await manager.save(
-        manager.create(Order, {
-          userId,
-          eventId,
-          status: OrderStatus.PENDING,
-          totalAmountXLM,
-          totalAmountUSD,
-          stellarMemo,
-          expiresAt,
-          paidAt: null,
-          stellarTxHash: null,
-          metadata: null,
+        manager.create(Order, orderData),
+      );
+
+      const itemsToSave = orderItems.map((item) =>
+        manager.create(OrderItem, {
+          ...item,
+          orderId: savedOrder.id,
         }),
       );
 
-      const itemEntities = orderItems.map((item) =>
-        manager.create(OrderItem, { ...item, orderId: savedOrder.id }),
-      );
-      savedOrder.items = await manager.save(itemEntities);
+      savedOrder.items = await manager.save(itemsToSave);
 
-      // Soft-reserve inventory. If any reservation fails the transaction
-      // rolls back and the order is never persisted.
       for (const item of items) {
         await this.ticketTypeService.reserveTickets(
           item.ticketTypeId,
           item.quantity,
+          manager.queryRunner,
         );
       }
 
@@ -156,21 +128,16 @@ export class OrdersService {
     });
 
     this.logger.log(
-      `Order ${order.id} created for user ${userId} — ` +
-        `${items.length} item(s), ${totalAmountXLM} XLM, memo=${stellarMemo}`,
+      `Order ${order.id} created for user ${user.id} — ${items.length} item(s), ${totalAmountXLM} XLM, memo=${stellarMemo}`,
     );
 
-    return { order, stellarMemo };
+    return {
+      order,
+      stellarMemo,
+      amountXLM: totalAmountXLM,
+    };
   }
 
-  /**
-   * Find an order by ID.
-   *
-   * @param orderId - ID of the order to find
-   * @param user - Authenticated user (required for permission check)
-   * @throws NotFoundException if the order doesn't exist
-   * @throws ForbiddenException if the user is not the owner or an ADMIN
-   */
   async findById(orderId: string, user: User): Promise<Order> {
     const order = await this.orderRepo.findOne({
       where: { id: orderId },
@@ -181,11 +148,8 @@ export class OrdersService {
       throw new NotFoundException(`Order ${orderId} not found`);
     }
 
-    // Permission Check: Owner or ADMIN
     if (order.userId !== user.id && user.role !== UserRole.ADMIN) {
-      throw new ForbiddenException(
-        'You do not have permission to view this order',
-      );
+      throw new ForbiddenException('You do not have permission to view this order');
     }
 
     return order;
@@ -194,53 +158,31 @@ export class OrdersService {
   async findByUser(userId: string): Promise<Order[]> {
     return this.orderRepo.find({
       where: { userId },
-      relations: ['items'],
+      relations: ['items', 'items.ticketType'],
       order: { createdAt: 'DESC' },
     });
   }
 
-  /**
-   * Fetch all tickets associated with a specific order.
-   *
-   * @param orderId - ID of the order
-   * @param user - Authenticated user (required for permission check)
-   * @returns List of ticket summaries
-   */
   async getOrderTickets(orderId: string, user: User) {
-    // 1. Authorization check: ensure order exists and user has permission
     await this.findById(orderId, user);
 
-    // 2. Fetch all tickets for this order
     const tickets = await this.ticketRepo.find({
       where: { orderReference: orderId },
       relations: ['ticketType', 'event'],
       order: { createdAt: 'ASC' },
     });
 
-    // 3. Map to the requested summary format
-    return tickets.map((t) => ({
-      id: t.id,
-      qrCodeImage: t.qrCode, // Placeholder for actual image generation
-      attendeeName: t.attendeeName,
-      attendeeEmail: t.attendeeEmail,
-      status: t.status,
-      ticketTypeName: t.ticketType?.name,
-      eventTitle: t.event?.title,
-      eventDate: t.event?.eventDate,
+    return tickets.map((ticket) => ({
+      id: ticket.id,
+      attendeeName: ticket['attendeeName'],
+      attendeeEmail: ticket['attendeeEmail'],
+      status: ticket.status,
+      ticketTypeName: ticket.ticketType?.name,
+      eventTitle: ticket.event?.title,
+      eventDate: ticket.event?.eventDate,
     }));
   }
 
-  /**
-   * Cancel a PENDING order and release its reserved inventory.
-   *
-   * Only the order owner or an ADMIN can perform this action.
-   *
-   * @param id - Order ID to cancel
-   * @param user - Authenticated user performing the action
-   * @throws NotFoundException if the order doesn't exist
-   * @throws ForbiddenException if user is not authorized
-   * @throws BadRequestException if order status is not PENDING
-   */
   async cancel(id: string, user: User): Promise<Order> {
     const order = await this.orderRepo.findOne({
       where: { id },
@@ -251,26 +193,15 @@ export class OrdersService {
       throw new NotFoundException(`Order ${id} not found`);
     }
 
-    // Permission Check: Owner or ADMIN
     if (order.userId !== user.id && user.role !== UserRole.ADMIN) {
-      throw new ForbiddenException(
-        'You do not have permission to cancel this order',
-      );
+      throw new ForbiddenException('You do not have permission to cancel this order');
     }
 
-    // Status Check: Must be PENDING
     if (order.status !== OrderStatus.PENDING) {
-      throw new BadRequestException(
-        `Order ${id} cannot be cancelled — status is ${order.status}`,
-      );
+      throw new BadRequestException(`Order ${id} cannot be cancelled — status is ${order.status}`);
     }
 
-    // Release inventory and update status in a single transaction
     await this.dataSource.transaction(async (manager) => {
-      // 1. Mark as CANCELLED
-      await manager.update(Order, id, { status: OrderStatus.CANCELLED });
-
-      // 2. Release tickets back to inventory
       for (const item of order.items) {
         await this.ticketTypeService.releaseTickets(
           item.ticketTypeId,
@@ -278,49 +209,15 @@ export class OrdersService {
           manager.queryRunner,
         );
       }
+
+      await manager.update(Order, id, {
+        status: OrderStatus.CANCELLED,
+      });
     });
 
-    this.logger.log(
-      `Order ${id} cancelled by user ${user.id} (${user.role}) — inventory released`,
-    );
+    this.logger.log(`Order ${id} cancelled by user ${user.id} (${user.role}) — inventory released`);
 
     order.status = OrderStatus.CANCELLED;
     return order;
-  }
-
-  /**
-   * Cancel a PENDING order that has not yet expired (LEGACY).
-   * @deprecated Use cancel(id, user) for manual cancellations with inventory release.
-   */
-  async cancelOrder(orderId: string): Promise<Order> {
-    const order = await this.findById(orderId);
-
-    if (order.status !== OrderStatus.PENDING) {
-      throw new OrderError(
-        `Order ${orderId} cannot be cancelled — status is ${order.status}`,
-        OrderErrorCode.ORDER_NOT_CANCELLABLE,
-      );
-    }
-
-    if (order.isExpired()) {
-      throw new OrderError(
-        `Order ${orderId} has already expired`,
-        OrderErrorCode.ORDER_NOT_CANCELLABLE,
-      );
-    }
-
-    await this.orderRepo.update(orderId, { status: OrderStatus.CANCELLED });
-    order.status = OrderStatus.CANCELLED;
-
-    this.logger.log(`Order ${orderId} manually cancelled`);
-    return order;
-  }
-
-  /**
-   * Generate a Stellar-compatible memo (≤ 28 chars, URL-safe).
-   * Format: VTX-<10 random hex chars>  e.g. "VTX-3f9a2b1c4d"
-   */
-  private generateMemo(): string {
-    return `VTX-${randomBytes(5).toString('hex')}`;
   }
 }

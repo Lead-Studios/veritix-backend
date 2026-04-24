@@ -4,17 +4,16 @@ import { ConfigService } from '@nestjs/config';
 import { DataSource } from 'typeorm';
 import { OrdersService } from './orders.service';
 import { Order, OrderItem } from './orders.entity';
-import { Ticket } from 'src/tickets-inventory/entities/ticket.entity';
-import { TicketTypeService } from 'src/tickets-inventory/services/ticket-type.service';
+import { Ticket } from 'src/tickets/entities/ticket.entity';
+import { TicketTypeService } from 'src/ticket-types/ticket-types.service';
 import { OrderStatus } from './enums/order-status.enum';
-import { User } from 'src/auth/entities/user.entity';
-import { UserRole } from 'src/auth/common/enum/user-role-enum';
+import { User } from 'src/users/entities/user.entity';
+import { UserRole } from 'src/users/enums/user-role.enum';
 import {
   BadRequestException,
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
-import { OrderError, OrderErrorCode } from './dto/order.dto';
 
 describe('OrdersService', () => {
   let service: OrdersService;
@@ -43,7 +42,7 @@ describe('OrdersService', () => {
     };
 
     ticketTypeService = {
-      findById: jest.fn(),
+      findOne: jest.fn(),
       reserveTickets: jest.fn(),
       releaseTickets: jest.fn(),
     };
@@ -89,31 +88,31 @@ describe('OrdersService', () => {
 
     it('should create an order successfully', async () => {
       const mockTicketType = { id: 'tt-1', price: 10, totalQuantity: 10 };
-      ticketTypeService.findById.mockResolvedValue(mockTicketType);
+      ticketTypeService.findOne.mockResolvedValue(mockTicketType);
       
       const mockOrder = { id: 'order-1', ...createInput, status: OrderStatus.PENDING };
       entityManager.create.mockReturnValue(mockOrder);
       entityManager.save.mockResolvedValue(mockOrder);
 
-      const result = await service.createOrder(createInput);
+      const result = await service.create(createInput, mockUser);
 
       expect(result.order).toBeDefined();
-      expect(result.stellarMemo).toMatch(/^VTX-[a-f0-9]{10}$/);
-      expect(ticketTypeService.reserveTickets).toHaveBeenCalledWith('tt-1', 2);
+      expect(result.stellarMemo).toHaveLength(8);
+      expect(ticketTypeService.reserveTickets).toHaveBeenCalledWith('tt-1', 2, expect.anything());
       expect(dataSource.transaction).toHaveBeenCalled();
     });
 
     it('should throw if items are empty', async () => {
       await expect(
-        service.createOrder({ ...createInput, items: [] }),
-      ).rejects.toThrow(OrderError);
+        service.create({ ...createInput, items: [] }, mockUser),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw if inventory is insufficient', async () => {
       const mockTicketType = { id: 'tt-1', price: 10, totalQuantity: 1 };
-      ticketTypeService.findById.mockResolvedValue(mockTicketType);
+      ticketTypeService.findOne.mockResolvedValue(mockTicketType);
 
-      await expect(service.createOrder(createInput)).rejects.toThrow(
+      await expect(service.create(createInput, mockUser)).rejects.toThrow(
         'Insufficient inventory',
       );
     });

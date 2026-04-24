@@ -36,10 +36,16 @@ export class TicketTypesService {
   }
 
   async findOne(id: string): Promise<TicketType> {
-    return this.ticketTypeRepository.findOne({
+    const ticketType = await this.ticketTypeRepository.findOne({
       where: { id },
-      relations: ["event"],
+      relations: ['event'],
     });
+
+    if (!ticketType) {
+      throw new BadRequestException(`Ticket type with ID ${id} not found`);
+    }
+
+    return ticketType;
   }
 
   async create(ticketTypeData: Partial<TicketType>): Promise<TicketType> {
@@ -83,7 +89,7 @@ export class TicketTypesService {
     const ticketType = await repository
       .createQueryBuilder("ticketType")
       .where("ticketType.id = :id", { id: ticketTypeId })
-      .setLock({ mode: "pessimistic_write" })
+      .setLock('pessimistic_write')
       .getOne();
 
     if (!ticketType) {
@@ -130,7 +136,7 @@ export class TicketTypesService {
     const ticketType = await repository
       .createQueryBuilder("ticketType")
       .where("ticketType.id = :id", { id: ticketTypeId })
-      .setLock({ mode: "pessimistic_write" })
+      .setLock('pessimistic_write')
       .getOne();
 
     if (!ticketType) {
