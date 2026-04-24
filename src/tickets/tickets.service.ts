@@ -19,7 +19,7 @@ import { ReceiptDto } from "./dto/receipt.dto";
 import { Conference } from "../conference/entities/conference.entity";
 import { StripePaymentService } from "src/payment/services/stripe-payment.service";
 import { PromoCodeService } from "src/promo-code/providers/promo-code.service";
-import { createEvent } from 'ics';
+import { TicketStatus } from "./enums/ticket-status.enum";
 
 
 @Injectable()
@@ -339,11 +339,11 @@ export class TicketService {
       throw new NotFoundException('Ticket not found');
     }
 
-    if (ticket.status === 'SCANNED') {
+    if (ticket.status === TicketStatus.SCANNED) {
       throw new ConflictException('Ticket already scanned');
     }
 
-    ticket.status = 'SCANNED';
+    ticket.status = TicketStatus.SCANNED;
     ticket.scannedAt = new Date();
 
     await this.ticketRepository.save(ticket);
