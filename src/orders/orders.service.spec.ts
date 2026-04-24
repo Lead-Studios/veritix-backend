@@ -88,7 +88,7 @@ describe('OrdersService', () => {
 
     it('should create an order successfully', async () => {
       const mockTicketType = { id: 'tt-1', price: 10, totalQuantity: 10 };
-      ticketTypeService.findById.mockResolvedValue(mockTicketType);
+      ticketTypeService.findOne.mockResolvedValue(mockTicketType);
       
       const mockOrder = { id: 'order-1', ...createInput, status: OrderStatus.PENDING };
       entityManager.create.mockReturnValue(mockOrder);
