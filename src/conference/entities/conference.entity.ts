@@ -1,6 +1,5 @@
 import { SpecialSpeaker } from "src/special-speaker/entities/special-speaker.entity";
 import { Collaborator } from "src/collaborator/entities/collaborator.entity";
-import { Ticket } from "src/tickets/entities/ticket.entity";
 import { User } from "src/users/entities/user.entity";
 import {
   Entity,
@@ -111,10 +110,6 @@ export class Conference {
   @ManyToOne(() => User, (user) => user.conferences) // Assuming you have a User entity
   @JoinColumn({ name: "organizerId" })
   organizer: User; // You can also define a relationship to the User entity (optional)
-
-  // One-to-many relation to tickets
-  @OneToMany(() => Ticket, (ticket) => ticket.conference)
-  tickets: Ticket[];
 
   @OneToMany(() => Collaborator, (collaborator) => collaborator.conference)
   collaborators: Collaborator[];

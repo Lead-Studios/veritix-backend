@@ -8,6 +8,8 @@ import {
   JoinColumn,
 } from "typeorm";
 import { TicketStatus } from "../enums/ticket-status.enum";
+import { Event } from "../../events/entities/event.entity";
+import { User } from "../../users/entities/user.entity";
 
 @Entity("tickets")
 export class Ticket {
