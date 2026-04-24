@@ -89,20 +89,22 @@ export class OrdersService {
     });
 
     const order = await this.dataSource.transaction(async (manager) => {
+      const orderData: Partial<Order> = {
+        id: orderId,
+        userId: user.id,
+        eventId,
+        status: OrderStatus.PENDING,
+        totalAmountUSD,
+        totalAmountXLM,
+        stellarMemo,
+        stellarTxHash: null,
+        refundTxHash: null,
+        expiresAt,
+        paidAt: null,
+      };
+
       const savedOrder = await manager.save(
-        manager.create(Order, {
-          id: orderId,
-          userId: user.id,
-          eventId,
-          status: OrderStatus.PENDING,
-          totalAmountUSD,
-          totalAmountXLM,
-          stellarMemo,
-          stellarTxHash: null,
-          refundTxHash: null,
-          expiresAt,
-          paidAt: null,
-        }),
+        manager.create(Order, orderData),
       );
 
       const itemsToSave = orderItems.map((item) =>

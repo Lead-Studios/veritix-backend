@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { DataSource, LessThan, Repository } from 'typeorm';
@@ -27,7 +26,6 @@ export class OrdersScheduler {
     private readonly dataSource: DataSource,
   ) {}
 
-  @Cron(CronExpression.EVERY_5_MINUTES, { name: 'order-expiry-cleanup' })
   async handleOrderExpiry(): Promise<ExpiryRunSummary> {
     const checkedAt = new Date();
     this.logger.log('Order expiry job started');

@@ -3,7 +3,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
-import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { envValidationSchema } from './config/env.validation';
@@ -18,9 +17,6 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
 
 @Module({
   imports: [
-    // Background Jobs
-    ScheduleModule.forRoot(),
-
     // Global configuration
     ConfigModule.forRoot({
       isGlobal: true,

@@ -36,10 +36,16 @@ export class TicketTypesService {
   }
 
   async findOne(id: string): Promise<TicketType | null> {
-    return this.ticketTypeRepository.findOne({
+    const ticketType = await this.ticketTypeRepository.findOne({
       where: { id },
-      relations: ["event"],
+      relations: ['event'],
     });
+
+    if (!ticketType) {
+      throw new BadRequestException(`Ticket type with ID ${id} not found`);
+    }
+
+    return ticketType;
   }
 
   async create(ticketTypeData: Partial<TicketType>): Promise<TicketType> {
