@@ -11,6 +11,7 @@ import { HealthModule } from './health/health.module';
 import { EventsModule } from './events/events.module';
 import { OrdersModule } from './orders/orders.module';
 import { TicketsModule } from './tickets/tickets.module';
+import { VerificationModule } from './verification/verification.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 
@@ -45,6 +46,7 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
     EventsModule,
     OrdersModule,
     TicketsModule,
+    VerificationModule,
   ],
   controllers: [AppController],
   providers: [
