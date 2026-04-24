@@ -16,6 +16,8 @@ import { PricingRule } from "./dynamic-pricing/pricing/entities/pricing-rule.ent
 import { SpecialSpeaker } from "./special-speaker/entities/special-speaker.entity";
 import { ConferenceGallery } from "./conference-gallery/entities/conference-gallery.entity";
 import { AuditLog } from "./audit-log/entities/audit-log.entity";
+import { Order } from "./orders/entities/order.entity";
+import { OrderItem } from "./orders/entities/order-item.entity";
 
 // Load environment variables from .env file
 config();
@@ -44,6 +46,8 @@ export const AppDataSource = new DataSource({
     GalleryItem,
     ConferenceGallery,
     AuditLog,
+    Order,
+    OrderItem,
   ],
   migrations: ["src/migrations/*.ts"],
   synchronize: false,
