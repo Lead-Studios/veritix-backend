@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { VerificationService } from './verification.service';
+import { VerificationController } from './verification.controller';
 import { VerificationLog } from './entities/verification-log.entity';
 import { Ticket } from '../tickets/entities/ticket.entity';
 import { Event } from '../events/entities/event.entity';
@@ -9,6 +10,7 @@ import { Event } from '../events/entities/event.entity';
   imports: [
     TypeOrmModule.forFeature([VerificationLog, Ticket, Event]),
   ],
+  controllers: [VerificationController],
   providers: [VerificationService],
   exports: [VerificationService],
 })
