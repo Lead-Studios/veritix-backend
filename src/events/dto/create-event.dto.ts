@@ -7,6 +7,8 @@ import {
   IsEnum,
   IsBoolean,
   Length,
+  IsArray,
+  ArrayUnique,
 } from 'class-validator';
 import { EventStatus } from '../enums/event-status.enum';
 
@@ -19,7 +21,7 @@ export class CreateEventDto {
   description?: string;
 
   @IsString()
-  location: string;
+  venue: string;
 
   @IsString()
   @IsOptional()
@@ -32,17 +34,31 @@ export class CreateEventDto {
 
   @IsBoolean()
   @IsOptional()
-  isVirtual?: boolean;
+  isVirtual?: boolean = false;
+
+  @IsString()
+  @IsOptional()
+  imageUrl?: string;
 
   @IsDateString()
   eventDate: string;
 
-  @IsEnum(EventStatus)
+  @IsDateString()
   @IsOptional()
-  status?: EventStatus;
+  eventClosingDate?: string;
 
   @IsNumber()
   @Min(0)
   @IsOptional()
-  capacity?: number;
+  capacity?: number = 0;
+
+  @IsArray()
+  @IsString({ each: true })
+  @ArrayUnique()
+  @IsOptional()
+  tags?: string[];
+
+  @IsEnum(EventStatus)
+  @IsOptional()
+  status?: EventStatus = EventStatus.DRAFT;
 }
