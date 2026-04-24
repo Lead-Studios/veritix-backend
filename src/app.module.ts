@@ -11,9 +11,9 @@ import { HealthModule } from './health/health.module';
 import { EventsModule } from './events/events.module';
 import { OrdersModule } from './orders/orders.module';
 import { TicketsModule } from './tickets/tickets.module';
+import { StellarModule } from './stellar/stellar.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
-
 
 @Module({
   imports: [
@@ -45,12 +45,11 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
     EventsModule,
     OrdersModule,
     TicketsModule,
+    StellarModule,
+    VerificationModule,
   ],
   controllers: [AppController],
-  providers: [
-    AppService,
-    { provide: APP_GUARD, useClass: ThrottlerGuard },
-  ],
+  providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

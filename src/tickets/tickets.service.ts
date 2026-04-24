@@ -53,4 +53,11 @@ export class TicketsService {
       total,
     };
   }
+
+  public async findOne(id: string) {
+    return this.ticketRepository.findOne({
+      where: { id },
+      relations: ['event', 'ticketType', 'order'],
+    });
+  }
 }
