@@ -12,7 +12,9 @@ export const envValidationSchema = Joi.object({
   ACCESS_TOKEN_EXPIRATION: Joi.string().default('15m'),
   REFRESH_TOKEN_EXPIRATION: Joi.string().default('7d'),
   ORDER_EXPIRY_MINUTES: Joi.number().default(15),
-  STELLAR_PLATFORM_ADDRESS: Joi.string().optional(),
+  STELLAR_NETWORK: Joi.string().valid('testnet', 'mainnet').default('testnet'),
+  STELLAR_RECEIVING_ADDRESS: Joi.string().optional(),
+  STELLAR_SECRET_KEY: Joi.string().optional(),
   SENDGRID_API_KEY: Joi.string().optional(),
   SENDGRID_FROM_EMAIL: Joi.string().email().optional(),
 });

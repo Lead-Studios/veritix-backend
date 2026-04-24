@@ -146,4 +146,16 @@ export class EventsService {
     if (!event) throw new NotFoundException('Event not found');
     return event;
   }
+
+  public async getEventStats(id: string): Promise<{ totalTickets: number; totalRevenue: number; averageTicketPrice: number }> {
+    const event = await this.eventsRepository.findOne({ where: { id } });
+    if (!event) throw new NotFoundException('Event not found');
+    return { totalTickets: 0, totalRevenue: 0, averageTicketPrice: 0 };
+  }
+
+  public async getAttendees(id: string, pagination: PaginationDto): Promise<{ data: any[]; total: number }> {
+    const event = await this.eventsRepository.findOne({ where: { id } });
+    if (!event) throw new NotFoundException('Event not found');
+    return { data: [], total: 0 };
+  }
 }
