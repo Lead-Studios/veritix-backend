@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ConflictException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
@@ -18,7 +19,7 @@ import { ReceiptDto } from "./dto/receipt.dto";
 import { Conference } from "../conference/entities/conference.entity";
 import { StripePaymentService } from "src/payment/services/stripe-payment.service";
 import { PromoCodeService } from "src/promo-code/providers/promo-code.service";
-import { createEvent } from 'ics';
+import { TicketStatus } from "./enums/ticket-status.enum";
 
 
 @Injectable()
@@ -328,4 +329,23 @@ export class TicketService {
 
   return value;
 }
+
+  async scan(ticketId: string): Promise<void> {
+    const ticket = await this.ticketRepository.findOne({
+      where: { id: ticketId },
+    });
+
+    if (!ticket) {
+      throw new NotFoundException('Ticket not found');
+    }
+
+    if (ticket.status === TicketStatus.SCANNED) {
+      throw new ConflictException('Ticket already scanned');
+    }
+
+    ticket.status = TicketStatus.SCANNED;
+    ticket.scannedAt = new Date();
+
+    await this.ticketRepository.save(ticket);
+  }
 }

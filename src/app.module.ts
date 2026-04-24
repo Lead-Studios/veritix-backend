@@ -30,6 +30,7 @@ import { JwtStrategy } from "../security/strategies/jwt.strategy";
 import { PromoCodeModule } from './promo-code/promo-code.module';
 import { WebhookModule } from "./webhook/webhook.module";
 import { StellarModule } from "./stellar/stellar.module";
+import { OrdersModule } from "./orders/orders.module";
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -77,6 +78,7 @@ import { StellarModule } from "./stellar/stellar.module";
     ConferenceGalleryModule,
     PromoCodeModule,
     AuditLogModule,
+    OrdersModule,
     StellarModule,
   ],
   controllers: [AppController],
