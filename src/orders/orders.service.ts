@@ -17,6 +17,7 @@ import { OrderConfig } from './order.config';
 import { Order, OrderItem } from './orders.entity';
 import { Ticket } from 'src/tickets/entities/ticket.entity';
 import { TicketTypesService } from 'src/ticket-types/ticket-types.service';
+import { WaitlistService } from 'src/events/waitlist.service';
 import { OrderStatus } from './enums/order-status.enum';
 import { User } from 'src/users/entities/user.entity';
 import { UserRole } from 'src/users/enums/user-role.enum';
@@ -33,6 +34,7 @@ export class OrdersService {
     private readonly ticketTypeService: TicketTypesService,
     private readonly config: ConfigService,
     private readonly dataSource: DataSource,
+    private readonly waitlistService: WaitlistService,
   ) {}
 
   async create(dto: CreateOrderDto, user: User): Promise<CreateOrderResult> {
@@ -216,6 +218,8 @@ export class OrdersService {
     });
 
     this.logger.log(`Order ${id} cancelled by user ${user.id} (${user.role}) — inventory released`);
+
+    await this.waitlistService.notifyNext(order.eventId, 1);
 
     order.status = OrderStatus.CANCELLED;
     return order;

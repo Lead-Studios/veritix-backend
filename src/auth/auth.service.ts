@@ -196,6 +196,11 @@ export class AuthService {
       passwordResetCodeExpiresAt: null,
       tokenVersion: user.tokenVersion + 1,
     });
+
+    await this.emailService.sendSecurityAlert(
+      email,
+      'Your password was recently changed.',
+    );
   }
 
   /**

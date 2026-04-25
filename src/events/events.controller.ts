@@ -10,6 +10,7 @@ import {
   Patch,
 } from '@nestjs/common';
 import { EventsService } from './events.service';
+import { WaitlistService } from './waitlist.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { EventQueryDto } from './dto/event-query.dto';
@@ -23,7 +24,10 @@ import { PaginationDto } from '../common/dto/pagination.dto';
 
 @Controller('events')
 export class EventsController {
-  constructor(private readonly eventsService: EventsService) {}
+  constructor(
+    private readonly eventsService: EventsService,
+    private readonly waitlistService: WaitlistService,
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -75,5 +79,22 @@ export class EventsController {
   async remove(@Param('id') id: string, @CurrentUser() user: User) {
     await this.eventsService.remove(id, user);
     return { message: 'Event archived successfully' };
+  }
+
+  @Post(':id/waitlist')
+  @UseGuards(JwtAuthGuard)
+  async joinWaitlist(
+    @Param('id') id: string,
+    @Body('ticketTypeId') ticketTypeId: string | undefined,
+    @CurrentUser() user: User,
+  ) {
+    return this.waitlistService.addToWaitlist(id, user.id, ticketTypeId);
+  }
+
+  @Delete(':id/waitlist')
+  @UseGuards(JwtAuthGuard)
+  async leaveWaitlist(@Param('id') id: string, @CurrentUser() user: User) {
+    await this.waitlistService.removeFromWaitlist(id, user.id);
+    return { message: 'Removed from waitlist' };
   }
 }

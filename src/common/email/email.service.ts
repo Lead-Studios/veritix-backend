@@ -1,5 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import * as fs from 'fs';
+import * as path from 'path';
 import * as sendgrid from '@sendgrid/mail';
 
 export interface SendEmailDto {
@@ -52,5 +54,46 @@ export class EmailService {
       this.logger.error(`Failed to send email to ${to}`, error.message);
       throw error;
     }
+  }
+
+  private loadTemplate(name: string): string {
+    return fs.readFileSync(path.join(__dirname, 'templates', name), 'utf-8');
+  }
+
+  async sendSecurityAlert(email: string, actionDescription: string): Promise<void> {
+    const html = this.loadTemplate('security-alert.html').replace(
+      '{{actionDescription}}',
+      actionDescription,
+    );
+    await this.sendEmail({ to: email, subject: 'Security Alert - Veritix', html });
+  }
+
+  async sendEventStatusChange(
+    organizerEmail: string,
+    eventTitle: string,
+    newStatus: string,
+    reason?: string,
+  ): Promise<void> {
+    const html = this.loadTemplate('event-status-change.html')
+      .replace('{{eventTitle}}', eventTitle)
+      .replace('{{newStatus}}', newStatus)
+      .replace('{{reason}}', reason ?? 'N/A');
+    await this.sendEmail({
+      to: organizerEmail,
+      subject: `Event Status Update: ${eventTitle} - Veritix`,
+      html,
+    });
+  }
+
+  async sendWaitlistNotification(email: string, eventTitle: string): Promise<void> {
+    const html = this.loadTemplate('waitlist-notification.html').replace(
+      '{{eventTitle}}',
+      eventTitle,
+    );
+    await this.sendEmail({
+      to: email,
+      subject: `Ticket Available: ${eventTitle} - Veritix`,
+      html,
+    });
   }
 }
