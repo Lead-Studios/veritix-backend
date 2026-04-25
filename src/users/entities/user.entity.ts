@@ -66,6 +66,11 @@ export class User {
   @Column({ nullable: true })
   stellarWalletAddress: string;
 
+  @Column({ nullable: true, type: 'timestamptz' })
+  suspendedAt: Date | null;
+
+  @Column({ nullable: true })
+  suspensionReason: string | null;
   @Column({ nullable: true })
   avatarUrl: string;
 }
