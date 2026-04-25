@@ -35,6 +35,9 @@ export class User {
   @Column({ default: 0 })
   tokenVersion: number;
 
+  @Column({ nullable: true })
+  currentRefreshTokenHash: string;
+
   @CreateDateColumn()
   createdAt: Date;
 

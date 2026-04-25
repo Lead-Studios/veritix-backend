@@ -1,4 +1,4 @@
-import { Controller, Get, Delete, UseGuards, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Delete, UseGuards, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { UserResponseDto } from './dto/user-response.dto';
@@ -24,6 +24,14 @@ export class AuthController {
     });
 
     return userResponse;
+  }
+
+  @Post('logout')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async logout(@CurrentUser() user: any): Promise<{ message: string }> {
+    await this.authService.logout(user.userId);
+    return { message: 'Logged out successfully' };
   }
 
   @Delete('account')

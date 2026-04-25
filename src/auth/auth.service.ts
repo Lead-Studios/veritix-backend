@@ -16,6 +16,23 @@ export class AuthService {
   ) {}
 
   /**
+   * Clear the refresh token hash for a user (logout)
+   * @param userId - ID of the user to logout
+   * @throws NotFoundException if user doesn't exist
+   */
+  async logout(userId: string): Promise<void> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    await this.userRepository.update(userId, {
+      currentRefreshTokenHash: null,
+    });
+  }
+
+  /**
    * Delete a user account with soft delete and PII anonymisation
    * @param userId - ID of the user to delete
    * @param input - Contains password for confirmation
