@@ -15,6 +15,7 @@ import { isValidTransition } from './event-transitions';
 import { User } from '../users/entities/user.entity';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { EmailService } from '../common/email/email.service';
+import { StorageService } from '../common/storage/storage.service';
 
 @Injectable()
 export class EventsService {
@@ -22,7 +23,20 @@ export class EventsService {
     @InjectRepository(Event)
     private eventsRepository: Repository<Event>,
     private readonly emailService: EmailService,
+    private readonly storageService: StorageService,
   ) {}
+
+  async uploadImage(id: string, file: Express.Multer.File, user: User): Promise<{ imageUrl: string }> {
+    const event = await this.eventsRepository.findOne({ where: { id } });
+    if (!event) throw new NotFoundException('Event not found');
+    if (event.organizerId !== user.id && user.role !== 'ADMIN') {
+      throw new ForbiddenException('You do not have permission to update this event');
+    }
+    const imageUrl = await this.storageService.upload(file);
+    event.imageUrl = imageUrl;
+    await this.eventsRepository.save(event);
+    return { imageUrl };
+  }
 
   async createEvent(dto: CreateEventDto, user: User): Promise<Event> {
     const event = this.eventsRepository.create({

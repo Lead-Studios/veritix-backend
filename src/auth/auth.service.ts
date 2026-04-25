@@ -7,6 +7,7 @@ import { EmailService } from '../common/email/email.service';
 import { RegisterDto } from './dto/register.dto';
 import { RegisterOrganizerDto } from './dto/register-organizer.dto';
 import { UserRole } from '../users/enums/user-role.enum';
+import { StorageService } from '../common/storage/storage.service';
 
 export interface DeleteAccountInput {
   password: string;
@@ -20,7 +21,16 @@ export class AuthService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly emailService: EmailService,
+    private readonly storageService: StorageService,
   ) {}
+
+  async uploadAvatar(userId: string, file: Express.Multer.File): Promise<{ avatarUrl: string }> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+    const avatarUrl = await this.storageService.upload(file);
+    await this.userRepository.update(userId, { avatarUrl });
+    return { avatarUrl };
+  }
 
   /**
    * Register a new user with subscriber role

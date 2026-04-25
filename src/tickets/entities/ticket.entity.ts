@@ -6,12 +6,16 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  Index,
 } from 'typeorm';
 import { Event } from '../../events/entities/event.entity';
 import { TicketType } from '../../ticket-types/entities/ticket-type.entity';
 import { Order } from '../../orders/entities/order.entity';
 
 @Entity('tickets')
+@Index(['userId'])
+@Index(['eventId', 'status'])
+@Index(['orderReference'])
 export class Ticket {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -39,6 +43,10 @@ export class Ticket {
   @ManyToOne(() => Order, (order) => order.tickets, { nullable: true })
   @JoinColumn({ name: 'orderReference' })
   order: Order;
+
+  @Index({ unique: true })
+  @Column({ nullable: true, unique: true })
+  qrCode: string;
 
   @Column({ default: 'ACTIVE' })
   status: string;

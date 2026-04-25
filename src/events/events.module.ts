@@ -9,6 +9,10 @@ import { EmailModule } from '../common/email/email.module';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Event, EventWaitlist]), EmailModule],
+import { StorageModule } from '../common/storage/storage.module';
+
+@Module({
+  imports: [TypeOrmModule.forFeature([Event]), StorageModule],
   controllers: [EventsController],
   providers: [EventsService, WaitlistService],
   exports: [EventsService, WaitlistService],
