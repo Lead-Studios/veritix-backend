@@ -13,6 +13,7 @@ import { OrdersModule } from './orders/orders.module';
 import { TicketsModule } from './tickets/tickets.module';
 import { VerificationModule } from './verification/verification.module';
 import { StellarModule } from './stellar/stellar.module';
+import { AdminModule } from './admin/admin.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 @Module({
@@ -46,6 +47,7 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
     OrdersModule,
     TicketsModule,
     StellarModule,
+    AdminModule,
     VerificationModule,
   ],
   controllers: [AppController],
