@@ -36,13 +36,13 @@ export class User {
   tokenVersion: number;
 
   @Column({ nullable: true })
-  currentRefreshTokenHash: string;
+  currentRefreshTokenHash: string | null;
 
   @Column({ nullable: true })
-  passwordResetCode: string;
+  passwordResetCode: string | null;
 
   @Column({ nullable: true })
-  passwordResetCodeExpiresAt: Date;
+  passwordResetCodeExpiresAt: Date | null;
 
   @Column({ nullable: true })
   organizationName: string;
