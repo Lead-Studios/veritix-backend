@@ -10,6 +10,8 @@ import {
 import { Event } from '../../events/entities/event.entity';
 import { Ticket } from '../../tickets/entities/ticket.entity';
 import { User } from '../../users/entities/user.entity';
+  CreateDateColumn,
+} from 'typeorm';
 
 @Entity('verification_logs')
 @Index(['eventId', 'verifiedAt'])
@@ -17,6 +19,9 @@ import { User } from '../../users/entities/user.entity';
 export class VerificationLog {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column('uuid', { nullable: true })
+  eventId: string;
 
   @Column('uuid')
   ticketId: string;
@@ -53,6 +58,8 @@ export class VerificationLog {
   @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'scannedBy' })
   user: User;
+  @CreateDateColumn()
+  createdAt: Date;
 
   @CreateDateColumn({ type: 'timestamptz' })
   verifiedAt: Date;

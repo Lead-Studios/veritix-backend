@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Ticket } from '../tickets/entities/ticket.entity';
@@ -7,6 +8,7 @@ import { VerificationLog } from './entities/verification-log.entity';
 import { VerificationStatus } from './enums/verification-status.enum';
 import { EventStatus } from '../events/enums/event-status.enum';
 import { VerificationQueryDto } from './dto/verification-query.dto';
+import { VerificationGateway } from './verification.gateway';
 
 @Injectable()
 export class VerificationService {
@@ -17,6 +19,7 @@ export class VerificationService {
     private eventRepository: Repository<Event>,
     @InjectRepository(VerificationLog)
     private verificationLogRepository: Repository<VerificationLog>,
+    @Optional() private readonly gateway?: VerificationGateway,
   ) {}
 
   async verifyTicket(
@@ -60,6 +63,10 @@ export class VerificationService {
 
     if (markAsUsed) {
       await this.ticketRepository.update(ticketId, { status: 'USED' });
+      // Emit real-time scan update via WebSocket
+      if (this.gateway) {
+        await this.gateway.emitScanUpdate(ticket.eventId);
+      }
     }
 
     await this.logVerification(ticketId, VerificationStatus.VALID, markAsUsed, verifiedBy);

@@ -74,6 +74,9 @@ export class Event {
   @Column({ default: false })
   isArchived: boolean;
 
+  @OneToMany(() => TicketType, (ticketType) => ticketType.event)
+  ticketTypes: TicketType[];
+
   @CreateDateColumn()
   createdAt: Date;
 

@@ -13,8 +13,10 @@ import { OrdersModule } from './orders/orders.module';
 import { TicketsModule } from './tickets/tickets.module';
 import { VerificationModule } from './verification/verification.module';
 import { StellarModule } from './stellar/stellar.module';
+import { AdminModule } from './admin/admin.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
+import { AdminModule } from './admin/admin.module';
 @Module({
   imports: [
     // Global configuration
@@ -46,7 +48,9 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
     OrdersModule,
     TicketsModule,
     StellarModule,
+    AdminModule,
     VerificationModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
