@@ -1,7 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, VirtualColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, VirtualColumn, Index } from 'typeorm';
 import { Event } from '../../events/entities/event.entity';
 
 @Entity('ticket_types')
+@Index(['eventId', 'isActive'])
 export class TicketType {
   @PrimaryGeneratedColumn('uuid')
   id: string;

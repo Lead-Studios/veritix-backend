@@ -17,4 +17,9 @@ export const envValidationSchema = Joi.object({
   STELLAR_SECRET_KEY: Joi.string().optional(),
   SENDGRID_API_KEY: Joi.string().optional(),
   SENDGRID_FROM_EMAIL: Joi.string().email().optional(),
+  STORAGE_PROVIDER: Joi.string().valid('local', 's3').default('local'),
+  S3_BUCKET: Joi.string().optional(),
+  S3_REGION: Joi.string().optional(),
+  S3_ACCESS_KEY_ID: Joi.string().optional(),
+  S3_SECRET_ACCESS_KEY: Joi.string().optional(),
 });

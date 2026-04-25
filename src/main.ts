@@ -2,12 +2,14 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import * as path from 'path';
 import { AppModule } from './app.module';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // Global request validation
   app.useGlobalPipes(
@@ -30,6 +32,11 @@ async function bootstrap() {
     .get<string>('ALLOWED_ORIGINS')!
     .split(',');
   app.enableCors({ origin: allowedOrigins });
+
+  // Serve uploaded files in local dev
+  if (process.env.STORAGE_PROVIDER !== 's3' && process.env.NODE_ENV !== 'production') {
+    app.useStaticAssets(path.join(process.cwd(), 'uploads'), { prefix: '/uploads' });
+  }
 
   // Swagger documentation
   if (process.env.NODE_ENV !== 'production') {

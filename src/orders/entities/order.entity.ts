@@ -5,12 +5,15 @@ import {
   OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
+  Index,
 } from 'typeorm';
 import { OrderStatus } from '../enums/order-status.enum';
 import { OrderItem } from './order-item.entity';
 import { Ticket } from '../../tickets/entities/ticket.entity';
 
 @Entity('orders')
+@Index(['userId', 'status'])
+@Index(['expiresAt', 'status'])
 export class Order {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -34,9 +37,11 @@ export class Order {
   @Column('decimal', { precision: 18, scale: 7, default: 0 })
   totalAmountXLM: number;
 
+  @Index({ unique: true })
   @Column({ unique: true })
   stellarMemo: string;
 
+  @Index()
   @Column({ nullable: true, unique: true })
   stellarTxHash: string | null;
 

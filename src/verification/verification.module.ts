@@ -7,20 +7,7 @@ import { Ticket } from '../tickets/entities/ticket.entity';
 import { Event } from '../events/entities/event.entity';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([VerificationLog, Ticket, Event]),
-  ],
-  controllers: [VerificationController],
-  providers: [VerificationService],
-  exports: [VerificationService],
-})
-export class VerificationModule {}
-import { VerificationController } from './verification.controller';
-import { VerificationLog } from './entities/verification-log.entity';
-import { Event } from '../events/entities/event.entity';
-
-@Module({
-  imports: [TypeOrmModule.forFeature([VerificationLog, Event])],
+  imports: [TypeOrmModule.forFeature([VerificationLog, Ticket, Event])],
   controllers: [VerificationController],
   providers: [VerificationService],
   exports: [VerificationService],

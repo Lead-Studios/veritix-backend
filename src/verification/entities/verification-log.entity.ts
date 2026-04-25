@@ -2,23 +2,27 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  CreateDateColumn,
-} from 'typeorm';
   ManyToOne,
   JoinColumn,
   CreateDateColumn,
+  Index,
 } from 'typeorm';
 import { Event } from '../../events/entities/event.entity';
 import { Ticket } from '../../tickets/entities/ticket.entity';
 import { User } from '../../users/entities/user.entity';
 
 @Entity('verification_logs')
+@Index(['eventId', 'verifiedAt'])
+@Index(['ticketId'])
 export class VerificationLog {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column('uuid')
   ticketId: string;
+
+  @Column({ nullable: true })
+  eventId: string;
 
   @Column()
   status: string;
@@ -29,36 +33,30 @@ export class VerificationLog {
   @Column('uuid', { nullable: true })
   verifiedBy: string;
 
-  @CreateDateColumn()
-  createdAt: Date;
-}
-  @Column()
-  eventId: string;
+  @Column({ nullable: true })
+  scannedBy: string;
 
-  @Column()
-  ticketId: string;
-
-  @Column()
-  scannedBy: string; // User ID who performed the scan
-
-  @Column({ type: 'boolean' })
-  verified: boolean; // Whether the ticket was verified as valid
+  @Column({ type: 'boolean', nullable: true })
+  verified: boolean;
 
   @Column({ nullable: true })
-  rejectionReason?: string; // Reason if verification failed
+  rejectionReason?: string;
 
-  @ManyToOne(() => Event)
+  @ManyToOne(() => Event, { nullable: true })
   @JoinColumn({ name: 'eventId' })
   event: Event;
 
-  @ManyToOne(() => Ticket)
+  @ManyToOne(() => Ticket, { nullable: true })
   @JoinColumn({ name: 'ticketId' })
   ticket: Ticket;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'scannedBy' })
   user: User;
 
   @CreateDateColumn({ type: 'timestamptz' })
   verifiedAt: Date;
+
+  @CreateDateColumn({ type: 'timestamptz' })
+  createdAt: Date;
 }

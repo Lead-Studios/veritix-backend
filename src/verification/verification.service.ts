@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Ticket } from '../tickets/entities/ticket.entity';
@@ -6,12 +6,7 @@ import { Event } from '../events/entities/event.entity';
 import { VerificationLog } from './entities/verification-log.entity';
 import { VerificationStatus } from './enums/verification-status.enum';
 import { EventStatus } from '../events/enums/event-status.enum';
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { VerificationLog } from './entities/verification-log.entity';
 import { VerificationQueryDto } from './dto/verification-query.dto';
-import { Event } from '../events/entities/event.entity';
 
 @Injectable()
 export class VerificationService {
@@ -63,7 +58,6 @@ export class VerificationService {
       return VerificationStatus.ALREADY_USED;
     }
 
-    // Valid
     if (markAsUsed) {
       await this.ticketRepository.update(ticketId, { status: 'USED' });
     }
@@ -94,25 +88,9 @@ export class VerificationService {
     });
   }
 
-
-//   public async getverificationByid(id: string | null): Promise<VerificationLog> {
-//     return await this.verificationLogRepository.findOne({ where: { id } });
-//   }
-}
-    @InjectRepository(VerificationLog)
-    private readonly verificationLogRepository: Repository<VerificationLog>,
-    @InjectRepository(Event)
-    private readonly eventRepository: Repository<Event>,
-  ) {}
-
   async getLogs(eventId: string, query: VerificationQueryDto) {
-    // Verify event exists
-    const event = await this.eventRepository.findOne({
-      where: { id: eventId },
-    });
-    if (!event) {
-      throw new NotFoundException(`Event with ID ${eventId} not found`);
-    }
+    const event = await this.eventRepository.findOne({ where: { id: eventId } });
+    if (!event) throw new NotFoundException(`Event with ID ${eventId} not found`);
 
     const page = Math.max(1, query.page ?? 1);
     const limit = Math.min(100, Math.max(1, query.limit ?? 20));
@@ -124,11 +102,6 @@ export class VerificationService {
       take: limit,
     });
 
-    return {
-      data: logs,
-      page,
-      limit,
-      total,
-    };
+    return { data: logs, page, limit, total };
   }
 }
