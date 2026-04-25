@@ -11,5 +11,14 @@ import { Order } from '../orders/entities/orders.entity';
   imports: [TypeOrmModule.forFeature([User, Event, Ticket, Order])],
   providers: [AdminService],
   controllers: [AdminController],
+import { Order } from '../orders/entities/order.entity';
+import { Ticket } from '../tickets/entities/ticket.entity';
+import { TicketType } from '../ticket-types/entities/ticket-type.entity';
+import { User } from '../users/entities/user.entity';
+
+@Module({
+  imports: [TypeOrmModule.forFeature([Order, Ticket, TicketType, User])],
+  controllers: [AdminController],
+  providers: [AdminService],
 })
 export class AdminModule {}

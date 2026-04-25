@@ -16,6 +16,7 @@ import { StellarModule } from './stellar/stellar.module';
 import { AdminModule } from './admin/admin.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
+import { AdminModule } from './admin/admin.module';
 @Module({
   imports: [
     // Global configuration
@@ -49,6 +50,7 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
     StellarModule,
     AdminModule,
     VerificationModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],

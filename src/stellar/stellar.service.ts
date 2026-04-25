@@ -15,6 +15,11 @@ import { EmailService } from '../common/email/email.service';
 export class StellarService implements OnModuleInit {
   private readonly logger = new Logger(StellarService.name);
   private server: StellarSdk.Server;
+import * as StellarSdk from '@stellar/stellar-sdk';
+
+@Injectable()
+export class StellarService implements OnModuleInit {
+  private server: StellarSdk.Horizon.Server;
   private networkPassphrase: string;
   private receivingAddress: string | null;
   private readonly emailTemplate: string;
@@ -42,10 +47,8 @@ export class StellarService implements OnModuleInit {
         ? StellarSdk.Networks.TESTNET
         : StellarSdk.Networks.PUBLIC;
 
-    this.receivingAddress = this.configService.get<string>(
-      'STELLAR_RECEIVING_ADDRESS',
-      null,
-    );
+    this.receivingAddress =
+      this.configService.get<string>('STELLAR_RECEIVING_ADDRESS') ?? null;
 
     if (this.receivingAddress) {
       if (!StellarSdk.StrKey.isValidEd25519PublicKey(this.receivingAddress)) {
@@ -58,7 +61,7 @@ export class StellarService implements OnModuleInit {
         ? 'https://horizon-testnet.stellar.org'
         : 'https://horizon.stellar.org';
 
-    this.server = new StellarSdk.Server(horizonUrl);
+    this.server = new StellarSdk.Horizon.Server(horizonUrl);
   }
 
   getNetworkPassphrase(): string {
@@ -73,7 +76,7 @@ export class StellarService implements OnModuleInit {
     return orderId.substring(0, 8);
   }
 
-  getServer(): StellarSdk.Server {
+  getServer(): StellarSdk.Horizon.Server {
     return this.server;
   }
 

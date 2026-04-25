@@ -37,15 +37,24 @@ export class StellarController {
     const userId = req.user?.id || req.user?.userId;
     if (!userId) throw new BadRequestException('User ID not found in request');
     return this.stellarService.getPaymentInstructions(orderId, userId.toString());
+    if (!userId) {
+      throw new BadRequestException('User ID not found in request');
+    }
+    return { address: this.stellarService.getReceivingAddress(), memo: this.stellarService.generateMemo(orderId) };
   }
 
   @Get('balance')
   @UseGuards(JwtAuthGuard)
   async getAccountBalance(@Request() req) {
     if (req.user.role !== UserRole.ADMIN) {
+    const user = req.user;
+    if (user.role !== UserRole.ADMIN) {
       throw new BadRequestException('Admin access required');
     }
-    return this.stellarService.getAccountBalance();
+    const address = this.stellarService.getReceivingAddress();
+    if (!address) throw new BadRequestException('STELLAR_RECEIVING_ADDRESS not configured');
+    const account = await this.stellarService.getServer().loadAccount(address);
+    return { balances: account.balances };
   }
 
   @Post('webhook/payment')
