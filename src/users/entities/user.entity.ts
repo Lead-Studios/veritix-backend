@@ -38,6 +38,12 @@ export class User {
   @Column({ nullable: true })
   currentRefreshTokenHash: string;
 
+  @Column({ nullable: true })
+  passwordResetCode: string;
+
+  @Column({ nullable: true })
+  passwordResetCodeExpiresAt: Date;
+
   @CreateDateColumn()
   createdAt: Date;
 

@@ -7,10 +7,12 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { User } from '../users/entities/user.entity';
+import { EmailModule } from '../common/email/email.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
+    EmailModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
