@@ -57,5 +57,8 @@ export class User {
   updatedAt: Date;
 
   @DeleteDateColumn()
-  deletedAt: Date;
+  deletedAt?: Date;
+
+  @Column({ nullable: true })
+  stellarWalletAddress: string;
 }

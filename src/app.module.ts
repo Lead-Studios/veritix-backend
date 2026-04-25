@@ -15,7 +15,6 @@ import { VerificationModule } from './verification/verification.module';
 import { StellarModule } from './stellar/stellar.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
-
 @Module({
   imports: [
     // Global configuration
