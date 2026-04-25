@@ -10,6 +10,9 @@ import { Event } from '../events/entities/event.entity';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
+  imports: [TypeOrmModule.forFeature([VerificationLog, Ticket, Event])],
+  controllers: [VerificationController],
+  providers: [VerificationService],
   imports: [
     TypeOrmModule.forFeature([VerificationLog, Ticket, TicketType, Event]),
     AuthModule,

@@ -1,4 +1,6 @@
-import { Controller, Get, Post, Delete, UseGuards, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Delete, UseGuards, Body, HttpCode, HttpStatus, UseInterceptors, UploadedFile, UnsupportedMediaTypeException, PayloadTooLargeException } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { UserResponseDto } from './dto/user-response.dto';
@@ -8,6 +10,9 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { RegisterDto } from './dto/register.dto';
 import { RegisterOrganizerDto } from './dto/register-organizer.dto';
 import { AuthService } from './auth.service';
+
+const ALLOWED_AVATAR_TYPES = ['image/png', 'image/jpeg'];
+const MAX_AVATAR_SIZE = 2 * 1024 * 1024; // 2MB
 
 @Controller('auth')
 export class AuthController {
@@ -95,5 +100,21 @@ export class AuthController {
     @Body() deleteAccountDto: DeleteAccountDto,
   ): Promise<void> {
     await this.authService.deleteAccount(user.userId, deleteAccountDto);
+  }
+
+  @Post('avatar')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FileInterceptor('avatar', { storage: memoryStorage() }))
+  async uploadAvatar(
+    @CurrentUser() user: any,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file || !ALLOWED_AVATAR_TYPES.includes(file.mimetype)) {
+      throw new UnsupportedMediaTypeException('Only PNG and JPG images are allowed');
+    }
+    if (file.size > MAX_AVATAR_SIZE) {
+      throw new PayloadTooLargeException('Avatar must be 2MB or less');
+    }
+    return this.authService.uploadAvatar(user.userId, file);
   }
 }

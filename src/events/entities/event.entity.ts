@@ -7,12 +7,16 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  Index,
 } from 'typeorm';
 import { TicketType } from '../../ticket-types/entities/ticket-type.entity';
 import { User } from '../../users/entities/user.entity';
 import { EventStatus } from '../enums/event-status.enum';
 
 @Entity('events')
+@Index(['status', 'eventDate'])
+@Index(['organizerId', 'status'])
+@Index(['isArchived', 'status'])
 export class Event {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -36,6 +40,9 @@ export class Event {
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'organizerId' })
   organizer: User;
+
+  @OneToMany(() => TicketType, (ticketType) => ticketType.event)
+  ticketTypes: TicketType[];
 
   @Column()
   venue: string;
