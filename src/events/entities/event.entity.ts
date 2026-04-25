@@ -3,105 +3,91 @@ import {
   PrimaryGeneratedColumn,
   Column,
   OneToMany,
-  ManyToMany,
-  DeleteDateColumn,
-} from "typeorm";
-import { Ticket } from "../../tickets/entities/ticket.entity";
-import { SpecialGuest } from "../../special-guests/entities/special-guest.entity";
-import { Sponsor } from "../../sponsors/sponsor.entity";
-import { Poster } from "../../posters/entities/poster.entity";
-import { Collaborator } from "../../collaborator/entities/collaborator.entity";
-import { EventGallery } from "src/event-gallery/entities/event-gallery.entity";
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { TicketType } from '../../ticket-types/entities/ticket-type.entity';
+import { User } from '../../users/entities/user.entity';
+import { TicketType } from '../../ticket-types/entities/ticket-type.entity';
+import { EventStatus } from '../enums/event-status.enum';
 
-@Entity()
+@Entity('events')
 export class Event {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column()
-  eventName: string;
+  title: string;
+
+  @Column('text', { nullable: true })
+  description: string;
+
+  @Column({
+    type: 'enum',
+    enum: EventStatus,
+    default: EventStatus.DRAFT,
+  })
+  status: EventStatus;
+
+  @Column({ type: 'uuid' })
+  organizerId: string;
+
+  @OneToMany(() => TicketType, (ticketType) => ticketType.event)
+  ticketTypes: TicketType[];
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'organizerId' })
+  organizer: User;
 
   @Column()
-  eventCategory: string;
+  venue: string;
 
-  @Column({ type: "timestamp" })
+  @Column({ nullable: true })
+  city: string;
+
+  @Column({ nullable: true, length: 2 })
+  countryCode: string;
+
+  @Column({ default: false })
+  isVirtual: boolean;
+
+  @Column({
+    type: 'enum',
+    enum: EventStatus,
+    default: EventStatus.DRAFT,
+  })
+  status: EventStatus;
+  @Column({ nullable: true })
+  imageUrl: string;
+
+  @Column({ type: 'timestamptz' })
   eventDate: Date;
 
-  @Column({ type: "timestamp" })
+  @Column({ type: 'timestamptz', nullable: true })
   eventClosingDate: Date;
 
-  @Column({ type: "text" })
-  eventDescription: string;
+  @Column({ type: 'int', default: 0 })
+  capacity: number;
 
-  @Column()
-  country: string;
-
-  @Column()
-  state: string;
-
-  @Column()
-  street: string;
-
-  @Column()
-  localGovernment: string;
-
-  @Column({ nullable: true })
-  direction: string;
-
-  @Column({ nullable: true })
-  eventImage: string;
-
-  @Column({ default: false })
-  hideEventLocation: boolean;
-
-  @Column({ default: false })
-  eventComingSoon: boolean;
-
-  @Column({ default: false })
-  transactionCharge: boolean;
-
-  @Column({ nullable: true })
-  bankName: string;
-
-  @Column({ nullable: true })
-  bankAccountNumber: string;
-
-  @Column({ nullable: true })
-  accountName: string;
-
-  @Column({ nullable: true })
-  facebook: string;
-
-  @Column({ nullable: true })
-  twitter: string;
-
-  @Column({ nullable: true })
-  instagram: string;
-
-  @ManyToMany(() => Sponsor, (sponsor) => sponsor.events)
-  sponsors: Sponsor[];
-
-  // Relations - Make them optional
-  @OneToMany(() => Ticket, (ticket) => ticket.event)
-  tickets: Ticket[];
-
-  @OneToMany(() => SpecialGuest, (specialGuest) => specialGuest.event, {
-    nullable: true,
-  })
-  specialGuests: SpecialGuest[] | null;
-
-  @OneToMany(() => Collaborator, (collaborator) => collaborator.event)
-  collaborators: Collaborator[];
+  @Column('text', { array: true, nullable: true, default: () => "'{}'" })
+  tags: string[];
 
   @Column({ default: false })
   isArchived: boolean;
 
-  @DeleteDateColumn()
-  deletedAt?: Date;
+  @Column({ type: 'uuid' })
+  organizerId: string;
 
-  @OneToMany(() => Poster, (poster) => poster.event)
-  posters: Poster[];
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'organizerId' })
+  organizer: User;
+  @OneToMany(() => TicketType, (ticketType) => ticketType.event)
+  ticketTypes: TicketType[];
 
-  @OneToMany(() => EventGallery, (eventGallery) => eventGallery.event)
-  eventGallery: EventGallery[];
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

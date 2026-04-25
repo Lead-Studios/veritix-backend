@@ -3,58 +3,49 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
-  CreateDateColumn,
   JoinColumn,
-} from "typeorm";
-import { Event } from "../../events/entities/event.entity";
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { Event } from '../../events/entities/event.entity';
+import { TicketType } from '../../ticket-types/entities/ticket-type.entity';
+import { Order } from '../../orders/entities/order.entity';
 
-@Entity()
+@Entity('tickets')
 export class Ticket {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
-  name: string;
-
-  @ManyToOne(() => Event, (event) => event.tickets, { onDelete: "CASCADE" })
-  @JoinColumn({ name: "eventId" })
-  event: Event;
-
-  @Column()
-  eventId: string;
-  
-  @Column({ type: "int" })
-  quantity: number;
-
-  @Column({ type: "decimal", precision: 10, scale: 2 })
-  price: number;
-
-  @Column({ type: "text" })
-  description: string;
-
-  @Column({ type: "timestamp" })
-  deadlineDate: Date;
-
-  @Column({ default: false })
-  isReserved: boolean;
-
-  @Column({ default: false })
-  isUsed: boolean;
-
-  // new fields for ticket history and receipt
-  @Column({ nullable: true })
-  transactionId: string;
-
-  @CreateDateColumn()
-  purchaseDate: Date;
-
-  @Column({ nullable: true })
+  @Column('uuid')
   userId: string;
 
-  @Column({
-    type: 'enum',
-    enum: ['ACTIVE', 'REFUNDED', 'CANCELLED'],
-    default: 'ACTIVE',
-  })
+  @Column('uuid')
+  eventId: string;
+
+  @ManyToOne(() => Event)
+  @JoinColumn({ name: 'eventId' })
+  event: Event;
+
+  @Column('uuid')
+  ticketTypeId: string;
+
+  @ManyToOne(() => TicketType)
+  @JoinColumn({ name: 'ticketTypeId' })
+  ticketType: TicketType;
+
+  @Column('uuid', { nullable: true })
+  orderReference: string;
+
+  @ManyToOne(() => Order, (order) => order.tickets, { nullable: true })
+  @JoinColumn({ name: 'orderReference' })
+  order: Order;
+
+  @Column({ default: 'ACTIVE' })
   status: string;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

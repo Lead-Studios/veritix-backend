@@ -1,107 +1,73 @@
-import { Injectable, NotFoundException, BadRequestException } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-import { Ticket } from "./entities/ticket.entity";
-import { CreateTicketDto } from "./dto/create-ticket.dto";
-import { PdfService } from "src/utils/pdf.service";
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Ticket } from './entities/ticket.entity';
+
+export interface TicketQuery {
+  page?: number;
+  pageSize?: number;
+  status?: string;
+}
 
 @Injectable()
-export class TicketService {
+export class TicketsService {
   constructor(
     @InjectRepository(Ticket)
-    private readonly ticketRepository: Repository<Ticket>, 
-
-    private readonly pdfService : PdfService
+    private readonly ticketRepository: Repository<Ticket>,
   ) {}
 
-  async createTicket(dto: CreateTicketDto): Promise<Ticket> {
-    const ticket = this.ticketRepository.create(dto);
-    return this.ticketRepository.save(ticket);
-  }
+  async findByUser(userId: string, query: TicketQuery) {
+    const page = Math.max(1, query.page ?? 1);
+    const pageSize = Math.min(100, Math.max(1, query.pageSize ?? 20));
 
-  async getAllTickets(): Promise<Ticket[]> {
-    return this.ticketRepository.find();
-  }
+    const qb = this.ticketRepository
+      .createQueryBuilder('ticket')
+      .leftJoinAndSelect('ticket.event', 'event')
+      .leftJoinAndSelect('ticket.ticketType', 'ticketType')
+      .where('ticket.userId = :userId', { userId });
 
-  async getTicketById(id: string): Promise<Ticket> {
-    const ticket = await this.ticketRepository.findOne({ where: { id } });
-    if (!ticket) throw new NotFoundException("Ticket not found");
-    return ticket;
-  }
-
-  async getTicketByIDAndEvent(id:string, eventId:string): Promise<Ticket> {
-    const ticket = await this.ticketRepository.findOne({
-      where: { 
-        id,
-        event: { id: eventId }
-      },
-      relations: ['event']
-    });
-    return ticket
-  }
-
-  async getTicketsByEvent(eventId: string): Promise<Ticket[]> {
-    return this.ticketRepository.find({ where: { event: { id: eventId } } });
-  }
-
-  async updateTicket(
-    id: string,
-    dto: Partial<CreateTicketDto>,
-  ): Promise<Ticket> {
-    const ticket = await this.getTicketById(id);
-    Object.assign(ticket, dto);
-    return this.ticketRepository.save(ticket);
-  }
-
-  async deleteTicket(id: string): Promise<void> {
-    const result = await this.ticketRepository.delete(id);
-    if (result.affected === 0) throw new NotFoundException("Ticket not found");
-  }
-
-    //fn to get all ticket history for a user
-    public async getUserTicketHistory(userId: string): Promise<Ticket[]> {
-      return this.ticketRepository.find({
-        where: { userId },
-        relations: ['event'],
-        order: { purchaseDate: 'DESC' },
-      });
+    if (query.status) {
+      qb.andWhere('ticket.status = :status', { status: query.status });
     }
 
-     // fn to get a single ticket history by ID
-  public async getUserTicketById(userId: string, id: string): Promise<Ticket> {
-    const ticket = await this.ticketRepository.findOne({
-      where: { id, userId },
-      relations: ['event'],
-    });
-    if (!ticket) throw new NotFoundException('Ticket not found');
-    return ticket;
+    const [tickets, total] = await qb
+      .orderBy('ticket.createdAt', 'DESC')
+      .skip((page - 1) * pageSize)
+      .take(pageSize)
+      .getManyAndCount();
+
+    const data = tickets.map((ticket) => ({
+      id: ticket.id,
+      status: ticket.status,
+      eventTitle: ticket.event?.title,
+      eventDate: ticket.event?.eventDate,
+      ticketTypeName: ticket.ticketType?.name,
+      createdAt: ticket.createdAt,
+      updatedAt: ticket.updatedAt,
+    }));
+
+    return {
+      data,
+      page,
+      pageSize,
+      total,
+    };
   }
 
-   // fn to get ticket details
-   public async getTicketDetails(id: string): Promise<Ticket> {
-    const ticket = await this.ticketRepository.findOne({
+  public async findOne(id: string) {
+    return this.ticketRepository.findOne({
       where: { id },
-      relations: ['event'],
+      relations: ['event', 'ticketType', 'order'],
     });
-    if (!ticket) throw new NotFoundException('Ticket details not found');
-    return ticket;
-  }
-
-  //fn to generat ticket
-  public async generateTicketReceipt(id: string): Promise<string> {
-    const ticket = await this.ticketRepository.findOne({
-      where: { id },
-      relations: ["event"],
-    });
-
-    if (!ticket) throw new NotFoundException("Ticket not found");
-
-    return this.pdfService.generateTicketReceipt(ticket);
   }
 
   public async refundTicket(ticketId: string): Promise<void> {
-    const ticket = await this.getTicketById(ticketId);
+    const ticket = await this.findOne(ticketId);
     
+    if (!ticket) {
+      throw new NotFoundException('Ticket not found');
+    }
+
     if (ticket.status === 'REFUNDED') {
       throw new BadRequestException('Ticket is already refunded');
     }

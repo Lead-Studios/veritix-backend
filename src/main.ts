@@ -1,38 +1,57 @@
 import { NestFactory } from '@nestjs/core';
+import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-import { HttpLogger } from './common/middlewares/httpLogger.middleware';
-import { Logger } from '@nestjs/common';
-import { DatabaseExceptionFilter } from './common/filters';
+import { ResponseInterceptor } from './common/interceptors/response.interceptor';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
-  const logger = new Logger('MAIN');
   const app = await NestFactory.create(AppModule);
 
-  const config = new DocumentBuilder()
-    .setTitle('Event Search API')
-    .setDescription('API for searching events with fuzzy matching')
-    .setVersion('1.0')
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+  // Global request validation
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
+  // Global response envelope
+  app.useGlobalInterceptors(new ResponseInterceptor());
+
+  // Global structured error format
+  app.useGlobalFilters(new HttpExceptionFilter());
+
+  // Enable CORS
+  const configService = app.get(ConfigService);
+  const allowedOrigins = configService
+    .get<string>('ALLOWED_ORIGINS')!
+    .split(',');
+  app.enableCors({ origin: allowedOrigins });
+
+  // Swagger documentation
   if (process.env.NODE_ENV !== 'production') {
-    import ('dotenv').then((dotenv) => {
-      dotenv.config();
-      logger.log('Environment variables loaded from .env file');
-    });
-    setInterval(() => {
-      const used = process.memoryUsage().heapUsed / 1024 / 1024;
-      logger.log(`Memory Usage: ${Math.round(used * 100) / 100} MB`);
-    }, 60000);
+    // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+    const pkg = require('../package.json');
+    const config = new DocumentBuilder()
+      .setTitle('VeriTix API')
+      .setVersion(pkg.version) // eslint-disable-line @typescript-eslint/no-unsafe-member-access
+      .addBearerAuth()
+      .addTag('auth')
+      .addTag('users')
+      .addTag('events')
+      .addTag('tickets')
+      .addTag('orders')
+      .addTag('verification')
+      .addTag('admin')
+      .addTag('stellar')
+      .build();
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api', app, document);
   }
 
-  app.use(new HttpLogger().use)
-  app.useGlobalFilters(new DatabaseExceptionFilter());
-
-  await app.listen(process.env.PORT, () =>
-    logger.log(`App running on port ${process.env.PORT}`),
-);
+  await app.listen(process.env.PORT ?? 3000);
 }
-void bootstrap();
+bootstrap();

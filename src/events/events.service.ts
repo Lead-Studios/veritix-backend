@@ -1,136 +1,161 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-import { Event } from "./entities/event.entity";
-import { CreateEventDto } from "./dto/create-event.dto";
-import { PaginatedResult } from "../common/interfaces/result.interface";
-import * as fuzzball from "fuzzball";
+import {
+  Injectable,
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Event } from './entities/event.entity';
+import { CreateEventDto } from './dto/create-event.dto';
+import { UpdateEventDto } from './dto/update-event.dto';
+import { EventQueryDto } from './dto/event-query.dto';
+import { EventStatus } from './enums/event-status.enum';
+import { isValidTransition } from './event-transitions';
+import { User } from '../users/entities/user.entity';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @Injectable()
 export class EventsService {
   constructor(
-    @InjectRepository(Event) private eventRepository: Repository<Event>,
+    @InjectRepository(Event)
+    private eventsRepository: Repository<Event>,
   ) {}
 
-  async createEvent(dto: CreateEventDto): Promise<Event> {
-    const newEvent = this.eventRepository.create(dto);
-    return this.eventRepository.save(newEvent);
-  }
-
-  async getAllEvents(
-    page?: number,
-    limit?: number,
-    filters?: { name?: string; category?: string; location?: string },
-  ): Promise<PaginatedResult<Event>> {
-    const query = this.eventRepository.createQueryBuilder("event");
-
-    // Filtering logic
-    if (filters.name) {
-      query.andWhere("LOWER(event.eventName) LIKE LOWER(:name)", {
-        name: `%${filters.name}%`,
-      });
-    }
-
-    if (filters.category) {
-      query.andWhere("LOWER(event.eventCategory) LIKE LOWER(:category)", {
-        category: `%${filters.category}%`,
-      });
-    }
-
-    if (filters.location) {
-      query.andWhere(
-        "LOWER(event.country) LIKE LOWER(:location) OR LOWER(event.state) LIKE LOWER(:location) OR LOWER(event.street) LIKE LOWER(:location) OR LOWER(event.localGovernment) LIKE LOWER(:location)",
-        { location: `%${filters.location}%` },
-      );
-    }
-
-    // Pagination logic
-    const total = await query.getCount();
-    const events = await query
-      .skip((page - 1) * limit)
-      .take(limit)
-      .getMany();
-
-    return {
-      data: events,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    };
-  }
-
-  async getEventById(id: string): Promise<Event> {
-    const event = await this.eventRepository.findOne({
-      where: { id },
-      relations: ["tickets", "specialGuests"],
+  async createEvent(dto: CreateEventDto, user: User): Promise<Event> {
+    const event = this.eventsRepository.create({
+      title: dto.title,
+      description: dto.description,
+      venue: dto.venue,
+      city: dto.city,
+      countryCode: dto.countryCode,
+      isVirtual: dto.isVirtual ?? false,
+      imageUrl: dto.imageUrl,
+      eventDate: new Date(dto.eventDate),
+      eventClosingDate: dto.eventClosingDate ? new Date(dto.eventClosingDate) : null,
+      capacity: dto.capacity ?? 0,
+      tags: dto.tags ?? [],
+      organizerId: user.id,
+      status: dto.status || EventStatus.DRAFT,
     });
-    if (!event) throw new NotFoundException("Event not found");
+    return await this.eventsRepository.save(event);
+  }
+
+  async findAll(query: EventQueryDto): Promise<{ data: Event[]; total: number; page: number; limit: number; totalPages: number }> {
+    const { search, status, city, countryCode, isVirtual, dateFrom, dateTo, sortBy = 'createdAt', sortOrder = 'desc', page = 1, limit = 20 } = query;
+
+    const qb = this.eventsRepository.createQueryBuilder('event')
+      .where('event.isArchived = false')
+      .andWhere('event.status = :status', { status: status ?? EventStatus.PUBLISHED });
+
+    if (search) {
+      qb.andWhere('(event.title ILIKE :search OR event.description ILIKE :search)', { search: `%${search}%` });
+    }
+    if (city) qb.andWhere('event.city ILIKE :city', { city: `%${city}%` });
+    if (countryCode) qb.andWhere('event.countryCode = :countryCode', { countryCode });
+    if (isVirtual !== undefined) qb.andWhere('event.isVirtual = :isVirtual', { isVirtual });
+    if (dateFrom) qb.andWhere('event.eventDate >= :dateFrom', { dateFrom });
+    if (dateTo) qb.andWhere('event.eventDate <= :dateTo', { dateTo });
+
+    qb.orderBy(`event.${sortBy}`, sortOrder.toUpperCase() as 'ASC' | 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    const [data, total] = await qb.getManyAndCount();
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
+  }
+
+  async getById(id: string): Promise<Event> {
+    const event = await this.eventsRepository.findOne({
+      where: { id },
+      relations: ['ticketTypes', 'organizer'],
+    });
+    if (!event) throw new NotFoundException('Event not found');
     return event;
   }
 
-  async updateEvent(id: string, dto: Partial<CreateEventDto>): Promise<Event> {
-    await this.eventRepository.update(id, dto);
-    return this.getEventById(id);
+  async update(id: string, dto: UpdateEventDto, user: User): Promise<Event> {
+    const event = await this.eventsRepository.findOne({ where: { id } });
+    if (!event) throw new NotFoundException('Event not found');
+    if (event.organizerId !== user.id && user.role !== 'ADMIN') {
+      throw new ForbiddenException('You do not have permission to update this event');
+    }
+    
+    // Explicitly handle date fields to convert to Date objects
+    const updateData = { ...dto };
+    if (dto.eventDate) {
+      updateData.eventDate = new Date(dto.eventDate) as any;
+    }
+    if (dto.eventClosingDate) {
+      updateData.eventClosingDate = new Date(dto.eventClosingDate) as any;
+    }
+    
+    Object.assign(event, updateData);
+    return await this.eventsRepository.save(event);
   }
 
-  async archiveEvent(id: string) {
-    const event = await this.eventRepository.findOne({ where: { id } });
-    if (!event) {
-      throw new NotFoundException("Event not Found");
+  async changeStatus(id: string, newStatus: EventStatus, user: User): Promise<Event> {
+    const event = await this.eventsRepository.findOne({ where: { id } });
+    if (!event) throw new NotFoundException('Event not found');
+    if (event.organizerId !== user.id && user.role !== 'ADMIN') {
+      throw new ForbiddenException('You do not have permission to change this event status');
+    }
+    if (!isValidTransition(event.status, newStatus)) {
+      throw new BadRequestException(`Cannot transition from ${event.status} to ${newStatus}`);
+    }
+    event.status = newStatus;
+    return await this.eventsRepository.save(event);
+  }
+
+  async remove(id: string, user: User): Promise<void> {
+    const event = await this.eventsRepository.findOne({ where: { id } });
+    if (!event) throw new NotFoundException('Event not found');
+    if (event.organizerId !== user.id && user.role !== 'ADMIN') {
+      throw new ForbiddenException('You do not have permission to delete this event');
+    }
+    if (event.status !== EventStatus.DRAFT && event.status !== EventStatus.CANCELLED) {
+      throw new BadRequestException('Only events in DRAFT or CANCELLED status can be deleted');
     }
     event.isArchived = true;
-    return this.eventRepository.softDelete(id);
+    await this.eventsRepository.save(event);
   }
 
-  async deleteEvent(id: string): Promise<void> {
-    const result = await this.eventRepository.delete(id);
-    if (!result.affected) throw new NotFoundException("Event not found");
+  async getCapacity(id: string): Promise<{ capacity: number; totalSold: number; remaining: number; isSoldOut: boolean }> {
+    const event = await this.eventsRepository.findOne({ where: { id } });
+    if (!event) throw new NotFoundException('Event not found');
+    const capacity = event.capacity;
+    const totalSold = 0;
+    const remaining = capacity - totalSold;
+    return { capacity, totalSold, remaining, isSoldOut: remaining <= 0 };
   }
 
-  async searchEvents(
-    query: string,
-    category?: string,
-    location?: string,
-    page = 1,
-    limit = 10,
-  ) {
-    const offset = (page - 1) * limit;
-
-    // Fetch events from the database
-    const events = await this.eventRepository.find({
-      where: {
-        ...(category && { category }),
-        ...(location && { location }),
-      } as Partial<Event>, // Ensure TypeORM understands the structure
+  async findByOrganizer(organizerId: string, pagination: PaginationDto): Promise<{ data: Event[]; total: number }> {
+    const page = pagination.page || 1;
+    const limit = pagination.limit || 20;
+    const [data, total] = await this.eventsRepository.findAndCount({
+      where: { organizerId, isArchived: false },
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
     });
-
-    // Apply fuzzy matching on the event name
-    const filteredEvents = events.filter((event) => {
-      const score = fuzzball.ratio(
-        query.toLowerCase(),
-        event.eventName.toLowerCase(),
-      );
-      return score > 70; // Threshold for fuzzy matching
-    });
-
-    // Sort by relevance (descending score)
-    filteredEvents.sort(
-      (a, b) =>
-        fuzzball.ratio(query.toLowerCase(), b.eventName.toLowerCase()) -
-        fuzzball.ratio(query.toLowerCase(), a.eventName.toLowerCase()),
-    );
-
-    // Paginate results
-    const paginatedEvents = filteredEvents.slice(offset, offset + limit);
-
-    return {
-      data: paginatedEvents,
-      total: filteredEvents.length,
-      page,
-      limit,
-    };
+    return { data, total };
   }
 
-  c853433e47ca51f47fb67b7d9df970af4d574;
+  async findOne(id: string): Promise<Event> {
+    const event = await this.eventsRepository.findOne({ where: { id } });
+    if (!event) throw new NotFoundException('Event not found');
+    return event;
+  }
+
+  public async getEventStats(id: string): Promise<{ totalTickets: number; totalRevenue: number; averageTicketPrice: number }> {
+    const event = await this.eventsRepository.findOne({ where: { id } });
+    if (!event) throw new NotFoundException('Event not found');
+    return { totalTickets: 0, totalRevenue: 0, averageTicketPrice: 0 };
+  }
+
+  public async getAttendees(id: string, pagination: PaginationDto): Promise<{ data: any[]; total: number }> {
+    const event = await this.eventsRepository.findOne({ where: { id } });
+    if (!event) throw new NotFoundException('Event not found');
+    return { data: [], total: 0 };
+  }
 }

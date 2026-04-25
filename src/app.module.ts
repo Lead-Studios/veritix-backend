@@ -1,61 +1,58 @@
-import { Module } from "@nestjs/common";
-import { TypeOrmModule } from "@nestjs/typeorm";
-import { AppController } from "./app.controller";
-import { AppService } from "./app.service";
-// import { DatabaseModule } from "./database.module";
-import { AuthModule } from "./auth/auth.module";
-import { SponsorsModule } from "./sponsors/sponsors.module";
-import { UsersModule } from "./users/users.module";
-import { ConfigModule, ConfigService } from "@nestjs/config";
-import { PdfService } from "./utils/pdf.service";
-import { TicketModule } from "./tickets/tickets.module";
-import { SpecialGuestModule } from "./special-guests/special-guests.module";
-import { NotificationModule } from './notification/notification.module';
-import { EventsModule } from "./events/events.module";
-import { PostersModule } from "./posters/posters.module";
-import databaseConfig from "src/config/database.config";
-import jwtConfig from "src/config/jwt.config";
-import { EventDashboardModule } from "./dashboard/dashboard.module";
-import { EventGalleryModule } from "./event-gallery/event-gallery.module";
-import { ContactUsModule } from './contact-us/contact-us.module';
-import { StellarModule } from "./stellar/stellar.module";
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { envValidationSchema } from './config/env.validation';
+import { AuthModule } from './auth/auth.module';
+import { HealthModule } from './health/health.module';
+import { EventsModule } from './events/events.module';
+import { OrdersModule } from './orders/orders.module';
+import { TicketsModule } from './tickets/tickets.module';
+import { VerificationModule } from './verification/verification.module';
+import { StellarModule } from './stellar/stellar.module';
+import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
+import { LoggerMiddleware } from './common/middleware/logger.middleware';
 @Module({
   imports: [
+    // Global configuration
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ".env",
-      load: [databaseConfig, jwtConfig], 
+      validationSchema: envValidationSchema,
     }),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 100,
+      },
+    ]),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        type: configService.get<"postgres">("database.type"),
-        url: configService.get<string>("database.url"),
-        host: configService.get<string>("database.host"),
-        port: configService.get<number>("database.port"),
-        username: configService.get<string>("database.username"),
-        password: configService.get<string>("database.password"),
-        database: configService.get<string>("database.database"),
-        synchronize: configService.get<boolean>("database.synchronize"),
+        type: 'postgres',
+        url: configService.get<string>('DATABASE_URL'),
+        synchronize: false,
+        runMigrations: true,
+        migrationsTableName: 'migrations',
         autoLoadEntities: true,
       }),
     }),
-    SponsorsModule,
-    UsersModule,
     AuthModule,
-    TicketModule,
-    SpecialGuestModule,
+    HealthModule,
     EventsModule,
-    PostersModule,
-    NotificationModule,
-    EventDashboardModule,
-    EventGalleryModule,
-    ContactUsModule,
+    OrdersModule,
+    TicketsModule,
     StellarModule,
+    VerificationModule,
   ],
   controllers: [AppController],
-  providers: [AppService, PdfService],
-  exports: [PdfService, AppService],
+  providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RequestIdMiddleware, LoggerMiddleware).forRoutes('*');
+  }
+}

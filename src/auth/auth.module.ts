@@ -1,58 +1,32 @@
-import { forwardRef, Module } from "@nestjs/common";
-import { AuthService } from "./providers/auth.service";
-import { AuthController } from "./auth.controller";
-import { HashingProvider } from "./providers/hashing-provider";
-import { BcryptProvider } from "./providers/bcrypt-provider";
-import { UsersModule } from "src/users/users.module";
-import { SignInProvider } from "./providers/sign-in.provider";
-import { GenerateTokenProvider } from "../common/utils/generate-token.provider";
-import jwtConfig from "src/config/jwt.config";
-import { ConfigModule, ConfigService } from "@nestjs/config";
-import { JwtModule } from "@nestjs/jwt";
-import { RefreshTokenProvider } from "./providers/refresh-token.provider";
-import { PassportModule } from "@nestjs/passport";
-import { JwtStrategy } from "../../security/strategies/jwt.strategy";
-import { TokenVerificationProvider } from "./providers/verification.provider";
+import { Module } from '@nestjs/common';
+import { PassportModule } from '@nestjs/passport';
+import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { JwtStrategy } from './strategies/jwt.strategy';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
+import { User } from '../users/entities/user.entity';
+import { EmailModule } from '../common/email/email.module';
 
 @Module({
   imports: [
-    forwardRef(() => UsersModule),
-    ConfigModule.forFeature(jwtConfig),
-    PassportModule.register({ defaultStrategy: "jwt" }),
+    TypeOrmModule.forFeature([User]),
+    EmailModule,
+    PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>("jwt.secret"),
+      useFactory: async (configService: ConfigService): Promise<JwtModuleOptions> => ({
+        secret: configService.get<string>('ACCESS_TOKEN_SECRET'),
         signOptions: {
-          expiresIn: configService.get<string>("jwt.expiresIn"),
-          issuer: configService.get<string>("jwt.issuer"),
-          audience: configService.get<string>("jwt.audience"),
+          expiresIn: configService.get<string>('ACCESS_TOKEN_EXPIRATION') as any,
         },
       }),
     }),
   ],
-
+  providers: [JwtStrategy, AuthService],
   controllers: [AuthController],
-  providers: [
-    AuthService,
-    JwtStrategy,
-    {
-      provide: HashingProvider,
-      useClass: BcryptProvider,
-    },
-    SignInProvider,
-    GenerateTokenProvider,
-    RefreshTokenProvider,
-    TokenVerificationProvider,
-  ],
-  exports: [
-    AuthService,
-    HashingProvider,
-    PassportModule,
-    JwtModule,
-    JwtStrategy,
-    GenerateTokenProvider,
-  ],
+  exports: [JwtModule, PassportModule, AuthService],
 })
 export class AuthModule {}

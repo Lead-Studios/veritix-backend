@@ -1,51 +1,57 @@
-import { UserRole } from "src/common/enums/users-roles.enum";
 import {
-  Column,
-  CreateDateColumn,
-  DeleteDateColumn,
   Entity,
   PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
   UpdateDateColumn,
-} from "typeorm";
+  DeleteDateColumn,
+} from 'typeorm';
+import { UserRole } from '../enums/user-role.enum';
 
-@Entity()
+@Entity('users')
 export class User {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-  @Column("varchar", { unique: true, nullable: false })
-  userName: string;
-
-  @Column("varchar", { unique: true, nullable: false })
+  @Column({ unique: true })
   email: string;
 
-  @Column("varchar", { nullable: false })
+  @Column()
+  fullName: string;
+
+  @Column()
   password: string;
 
-  @Column("varchar", { nullable: true })
-  firstName: string;
-
-  @Column("varchar", { nullable: true })
-  lastName: string;
-
-  @Column("varchar", { nullable: true, default: '' })
-  profileImageUrl: string;
-
   @Column({
-    type: "enum",
+    type: 'enum',
     enum: UserRole,
-    default: UserRole.User,
+    default: UserRole.SUBSCRIBER,
   })
   role: UserRole;
 
-  @Column("boolean", { default: true })
-  isActive: boolean;
-
-  @Column("boolean", { default: false })
+  @Column({ default: false })
   isVerified: boolean;
 
+  @Column({ default: 0 })
+  tokenVersion: number;
+
+  @Column({ nullable: true })
+  currentRefreshTokenHash: string;
+
+  @Column({ nullable: true })
+  passwordResetCode: string;
+
+  @Column({ nullable: true })
+  passwordResetCodeExpiresAt: Date;
+
+  @Column({ nullable: true })
+  organizationName: string;
+
+  @Column({ nullable: true })
+  organizationWebsite: string;
+
   @CreateDateColumn()
-  createdAt:Date;
+  createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;

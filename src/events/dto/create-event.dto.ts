@@ -1,63 +1,64 @@
 import {
   IsString,
-  IsDateString,
-  IsBoolean,
-  IsObject,
   IsOptional,
-  IsNotEmpty,
-} from "class-validator";
+  IsNumber,
+  IsDateString,
+  Min,
+  IsEnum,
+  IsBoolean,
+  Length,
+  IsArray,
+  ArrayUnique,
+} from 'class-validator';
+import { EventStatus } from '../enums/event-status.enum';
 
 export class CreateEventDto {
   @IsString()
-  @IsNotEmpty()
-  eventName: string;
+  title: string;
 
   @IsString()
-  @IsNotEmpty()
-  category: string;
-
-  @IsDateString()
-  eventDate: Date;
-
-  @IsDateString()
-  closingDate: Date;
+  @IsOptional()
+  description?: string;
 
   @IsString()
-  description: string;
+  venue: string;
 
-  @IsObject()
-  location: {
-    country: string;
-    state: string;
-    street: string;
-    localGovernment: string;
-    direction: string;
-  };
+  @IsString()
+  @IsOptional()
+  city?: string;
+
+  @IsString()
+  @IsOptional()
+  @Length(2, 2)
+  countryCode?: string;
 
   @IsBoolean()
   @IsOptional()
-  hideLocation?: boolean;
+  isVirtual?: boolean = false;
 
-  @IsBoolean()
+  @IsString()
   @IsOptional()
-  comingSoon?: boolean;
+  imageUrl?: string;
 
-  @IsBoolean()
+  @IsDateString()
+  eventDate: string;
+
+  @IsDateString()
   @IsOptional()
-  transactionCharge?: boolean;
+  eventClosingDate?: string;
 
-  @IsObject()
-  bankDetails: {
-    bankName: string;
-    accountNumber: string;
-    accountName: string;
-  };
-
-  @IsObject()
+  @IsNumber()
+  @Min(0)
   @IsOptional()
-  socialMediaLinks?: {
-    facebook?: string;
-    twitter?: string;
-    instagram?: string;
-  };
+  capacity?: number = 0;
+
+  @IsArray()
+  @IsString({ each: true })
+  @ArrayUnique()
+  @IsOptional()
+  tags?: string[];
+
+  @IsEnum(EventStatus)
+  @IsOptional()
+  status?: EventStatus = EventStatus.DRAFT;
 }

@@ -1,50 +1,20 @@
-import { plainToClass } from "class-transformer";
-import { IsString, IsNumber, validateSync } from "class-validator";
-import { Transform } from "class-transformer";
+import * as Joi from 'joi';
 
-class EnvironmentVariables {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  @IsString()
-  DB_HOST: string;
-
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  @Transform(({ value }) => Number(value))
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  @IsNumber()
-  DB_PORT: number;
-
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  @IsString()
-  DB_USERNAME: string;
-
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  @IsString()
-  DB_PASSWORD: string;
-
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  @IsString()
-  JWT_SECRET: string;
-
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  @IsString()
-  JWT_EXPIRATION: string;
-
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  @IsString()
-  CONTRACT_ADDRESS: string;
-}
-
-export function validate(config: Record<string, unknown>) {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-  const validatedConfig = plainToClass(EnvironmentVariables, config);
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-  const errors = validateSync(validatedConfig);
-
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-  if (errors.length > 0) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    throw new Error(`Environment validation failed: ${errors.toString()}`);
-  }
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  return validatedConfig;
-}
+export const envValidationSchema = Joi.object({
+  NODE_ENV: Joi.string()
+    .valid('development', 'production', 'test', 'staging')
+    .default('development'),
+  PORT: Joi.number().default(3000),
+  DATABASE_URL: Joi.string().required(),
+  ALLOWED_ORIGINS: Joi.string().default('http://localhost:3000'),
+  ACCESS_TOKEN_SECRET: Joi.string().min(32).required(),
+  REFRESH_TOKEN_SECRET: Joi.string().min(32).required(),
+  ACCESS_TOKEN_EXPIRATION: Joi.string().default('15m'),
+  REFRESH_TOKEN_EXPIRATION: Joi.string().default('7d'),
+  ORDER_EXPIRY_MINUTES: Joi.number().default(15),
+  STELLAR_NETWORK: Joi.string().valid('testnet', 'mainnet').default('testnet'),
+  STELLAR_RECEIVING_ADDRESS: Joi.string().optional(),
+  STELLAR_SECRET_KEY: Joi.string().optional(),
+  SENDGRID_API_KEY: Joi.string().optional(),
+  SENDGRID_FROM_EMAIL: Joi.string().email().optional(),
+});
