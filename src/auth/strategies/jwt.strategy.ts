@@ -51,6 +51,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Token has been revoked');
     }
 
+    // Check if account is suspended
+    if (user.suspendedAt) {
+      throw new UnauthorizedException(`Account suspended: ${user.suspensionReason}`);
+    }
+
     return {
       userId: payload.sub,
       email: user.email,
