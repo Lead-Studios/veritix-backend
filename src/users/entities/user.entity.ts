@@ -44,6 +44,12 @@ export class User {
   @Column({ nullable: true })
   passwordResetCodeExpiresAt: Date;
 
+  @Column({ nullable: true })
+  organizationName: string;
+
+  @Column({ nullable: true })
+  organizationWebsite: string;
+
   @CreateDateColumn()
   createdAt: Date;
 

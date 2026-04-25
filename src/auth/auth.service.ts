@@ -4,6 +4,9 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User } from '../users/entities/user.entity';
 import { EmailService } from '../common/email/email.service';
+import { RegisterDto } from './dto/register.dto';
+import { RegisterOrganizerDto } from './dto/register-organizer.dto';
+import { UserRole } from '../users/enums/user-role.enum';
 
 export interface DeleteAccountInput {
   password: string;
@@ -18,6 +21,60 @@ export class AuthService {
     private readonly userRepository: Repository<User>,
     private readonly emailService: EmailService,
   ) {}
+
+  /**
+   * Register a new user with subscriber role
+   * @param registerDto - Contains email, fullName, and password
+   * @throws BadRequestException if email already exists
+   */
+  async register(registerDto: RegisterDto): Promise<User> {
+    const existingUser = await this.userRepository.findOne({
+      where: { email: registerDto.email },
+    });
+
+    if (existingUser) {
+      throw new BadRequestException('Email already in use');
+    }
+
+    const hashedPassword = await bcrypt.hash(registerDto.password, 10);
+
+    const user = this.userRepository.create({
+      email: registerDto.email,
+      fullName: registerDto.fullName,
+      password: hashedPassword,
+      role: UserRole.SUBSCRIBER,
+    });
+
+    return this.userRepository.save(user);
+  }
+
+  /**
+   * Register a new organizer with ORGANIZER role
+   * @param registerOrganizerDto - Contains email, fullName, password, organizationName, and organizationWebsite
+   * @throws BadRequestException if email already exists
+   */
+  async registerOrganizer(registerOrganizerDto: RegisterOrganizerDto): Promise<User> {
+    const existingUser = await this.userRepository.findOne({
+      where: { email: registerOrganizerDto.email },
+    });
+
+    if (existingUser) {
+      throw new BadRequestException('Email already in use');
+    }
+
+    const hashedPassword = await bcrypt.hash(registerOrganizerDto.password, 10);
+
+    const user = this.userRepository.create({
+      email: registerOrganizerDto.email,
+      fullName: registerOrganizerDto.fullName,
+      password: hashedPassword,
+      role: UserRole.ORGANIZER,
+      organizationName: registerOrganizerDto.organizationName,
+      organizationWebsite: registerOrganizerDto.organizationWebsite,
+    });
+
+    return this.userRepository.save(user);
+  }
 
   /**
    * Generate a 6-digit OTP and send password reset email

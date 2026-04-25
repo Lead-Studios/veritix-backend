@@ -5,6 +5,8 @@ import { UserResponseDto } from './dto/user-response.dto';
 import { DeleteAccountDto } from './dto/delete-account.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { RegisterDto } from './dto/register.dto';
+import { RegisterOrganizerDto } from './dto/register-organizer.dto';
 import { AuthService } from './auth.service';
 
 @Controller('auth')
@@ -26,6 +28,36 @@ export class AuthController {
     });
 
     return userResponse;
+  }
+
+  @Post('register')
+  @HttpCode(HttpStatus.CREATED)
+  async register(@Body() registerDto: RegisterDto): Promise<UserResponseDto> {
+    const user = await this.authService.register(registerDto);
+    return new UserResponseDto({
+      id: user.id,
+      email: user.email,
+      fullName: user.fullName,
+      role: user.role,
+      isVerified: user.isVerified,
+      organizationName: user.organizationName,
+      createdAt: user.createdAt,
+    });
+  }
+
+  @Post('register-organizer')
+  @HttpCode(HttpStatus.CREATED)
+  async registerOrganizer(@Body() registerOrganizerDto: RegisterOrganizerDto): Promise<UserResponseDto> {
+    const user = await this.authService.registerOrganizer(registerOrganizerDto);
+    return new UserResponseDto({
+      id: user.id,
+      email: user.email,
+      fullName: user.fullName,
+      role: user.role,
+      isVerified: user.isVerified,
+      organizationName: user.organizationName,
+      createdAt: user.createdAt,
+    });
   }
 
   @Post('forgot-password')
