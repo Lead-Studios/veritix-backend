@@ -8,7 +8,13 @@ import {
   Get,
   Query,
   Patch,
+  UseInterceptors,
+  UploadedFile,
+  UnsupportedMediaTypeException,
+  PayloadTooLargeException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { EventsService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
@@ -20,6 +26,9 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { User } from '../users/entities/user.entity';
 import { PaginationDto } from '../common/dto/pagination.dto';
+
+const ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 
 @Controller('events')
 export class EventsController {
@@ -75,5 +84,22 @@ export class EventsController {
   async remove(@Param('id') id: string, @CurrentUser() user: User) {
     await this.eventsService.remove(id, user);
     return { message: 'Event archived successfully' };
+  }
+
+  @Post(':id/image')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FileInterceptor('image', { storage: memoryStorage() }))
+  async uploadImage(
+    @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUser() user: User,
+  ) {
+    if (!file || !ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
+      throw new UnsupportedMediaTypeException('Only PNG, JPG, and WEBP images are allowed');
+    }
+    if (file.size > MAX_IMAGE_SIZE) {
+      throw new PayloadTooLargeException('Image must be 5MB or less');
+    }
+    return this.eventsService.uploadImage(id, file, user);
   }
 }

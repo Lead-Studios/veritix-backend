@@ -16,6 +16,7 @@ import { StellarModule } from './stellar/stellar.module';
 import { AdminModule } from './admin/admin.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
+import { AdminModule } from './admin/admin.module';
 @Module({
   imports: [
     // Global configuration
@@ -47,6 +48,7 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
     OrdersModule,
     TicketsModule,
     StellarModule,
+    AdminModule,
     VerificationModule,
     AdminModule,
   ],

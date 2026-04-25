@@ -5,14 +5,18 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
+  Index,
 } from 'typeorm';
 import { UserRole } from '../enums/user-role.enum';
 
 @Entity('users')
+@Index(['isVerified', 'deletedAt'])
+@Index(['role'])
 export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Index({ unique: true })
   @Column({ unique: true })
   email: string;
 
@@ -36,13 +40,13 @@ export class User {
   tokenVersion: number;
 
   @Column({ nullable: true })
-  currentRefreshTokenHash: string;
+  currentRefreshTokenHash: string | null;
 
   @Column({ nullable: true })
-  passwordResetCode: string;
+  passwordResetCode: string | null;
 
   @Column({ nullable: true })
-  passwordResetCodeExpiresAt: Date;
+  passwordResetCodeExpiresAt: Date | null;
 
   @Column({ nullable: true })
   organizationName: string;
@@ -67,4 +71,6 @@ export class User {
 
   @Column({ nullable: true })
   suspensionReason: string | null;
+  @Column({ nullable: true })
+  avatarUrl: string;
 }
