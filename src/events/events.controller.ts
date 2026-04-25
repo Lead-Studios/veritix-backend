@@ -16,6 +16,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { EventsService } from './events.service';
+import { WaitlistService } from './waitlist.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { EventQueryDto } from './dto/event-query.dto';
@@ -32,7 +33,10 @@ const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 
 @Controller('events')
 export class EventsController {
-  constructor(private readonly eventsService: EventsService) {}
+  constructor(
+    private readonly eventsService: EventsService,
+    private readonly waitlistService: WaitlistService,
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -86,6 +90,21 @@ export class EventsController {
     return { message: 'Event archived successfully' };
   }
 
+  @Post(':id/waitlist')
+  @UseGuards(JwtAuthGuard)
+  async joinWaitlist(
+    @Param('id') id: string,
+    @Body('ticketTypeId') ticketTypeId: string | undefined,
+    @CurrentUser() user: User,
+  ) {
+    return this.waitlistService.addToWaitlist(id, user.id, ticketTypeId);
+  }
+
+  @Delete(':id/waitlist')
+  @UseGuards(JwtAuthGuard)
+  async leaveWaitlist(@Param('id') id: string, @CurrentUser() user: User) {
+    await this.waitlistService.removeFromWaitlist(id, user.id);
+    return { message: 'Removed from waitlist' };
   @Post(':id/image')
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('image', { storage: memoryStorage() }))

@@ -14,6 +14,7 @@ import { EventStatus } from './enums/event-status.enum';
 import { isValidTransition } from './event-transitions';
 import { User } from '../users/entities/user.entity';
 import { PaginationDto } from '../common/dto/pagination.dto';
+import { EmailService } from '../common/email/email.service';
 import { StorageService } from '../common/storage/storage.service';
 
 @Injectable()
@@ -21,6 +22,7 @@ export class EventsService {
   constructor(
     @InjectRepository(Event)
     private eventsRepository: Repository<Event>,
+    private readonly emailService: EmailService,
     private readonly storageService: StorageService,
   ) {}
 
@@ -108,8 +110,11 @@ export class EventsService {
     return await this.eventsRepository.save(event);
   }
 
-  async changeStatus(id: string, newStatus: EventStatus, user: User): Promise<Event> {
-    const event = await this.eventsRepository.findOne({ where: { id } });
+  async changeStatus(id: string, newStatus: EventStatus, user: User, reason?: string): Promise<Event> {
+    const event = await this.eventsRepository.findOne({
+      where: { id },
+      relations: ['organizer'],
+    });
     if (!event) throw new NotFoundException('Event not found');
     if (event.organizerId !== user.id && user.role !== 'ADMIN') {
       throw new ForbiddenException('You do not have permission to change this event status');
@@ -118,7 +123,19 @@ export class EventsService {
       throw new BadRequestException(`Cannot transition from ${event.status} to ${newStatus}`);
     }
     event.status = newStatus;
-    return await this.eventsRepository.save(event);
+    const saved = await this.eventsRepository.save(event);
+
+    const organizerEmail = event.organizer?.email;
+    if (organizerEmail) {
+      await this.emailService.sendEventStatusChange(
+        organizerEmail,
+        event.title,
+        newStatus,
+        reason,
+      );
+    }
+
+    return saved;
   }
 
   async remove(id: string, user: User): Promise<void> {
