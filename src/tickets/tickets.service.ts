@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, NotFoundException, BadRequestException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Ticket } from "./entities/ticket.entity";
@@ -97,5 +97,16 @@ export class TicketService {
     if (!ticket) throw new NotFoundException("Ticket not found");
 
     return this.pdfService.generateTicketReceipt(ticket);
+  }
+
+  public async refundTicket(ticketId: string): Promise<void> {
+    const ticket = await this.getTicketById(ticketId);
+    
+    if (ticket.status === 'REFUNDED') {
+      throw new BadRequestException('Ticket is already refunded');
+    }
+
+    ticket.status = 'REFUNDED';
+    await this.ticketRepository.save(ticket);
   }
 }

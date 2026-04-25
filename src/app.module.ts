@@ -18,6 +18,7 @@ import jwtConfig from "src/config/jwt.config";
 import { EventDashboardModule } from "./dashboard/dashboard.module";
 import { EventGalleryModule } from "./event-gallery/event-gallery.module";
 import { ContactUsModule } from './contact-us/contact-us.module';
+import { StellarModule } from "./stellar/stellar.module";
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -50,7 +51,8 @@ import { ContactUsModule } from './contact-us/contact-us.module';
     NotificationModule,
     EventDashboardModule,
     EventGalleryModule,
-    ContactUsModule
+    ContactUsModule,
+    StellarModule,
   ],
   controllers: [AppController],
   providers: [AppService, PdfService],

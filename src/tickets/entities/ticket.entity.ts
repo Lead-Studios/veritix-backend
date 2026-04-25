@@ -50,4 +50,11 @@ export class Ticket {
 
   @Column({ nullable: true })
   userId: string;
+
+  @Column({
+    type: 'enum',
+    enum: ['ACTIVE', 'REFUNDED', 'CANCELLED'],
+    default: 'ACTIVE',
+  })
+  status: string;
 }
