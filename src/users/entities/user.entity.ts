@@ -35,6 +35,15 @@ export class User {
   @Column({ default: 0 })
   tokenVersion: number;
 
+  @Column({ nullable: true })
+  currentRefreshTokenHash: string;
+
+  @Column({ nullable: true })
+  passwordResetCode: string;
+
+  @Column({ nullable: true })
+  passwordResetCodeExpiresAt: Date;
+
   @CreateDateColumn()
   createdAt: Date;
 
