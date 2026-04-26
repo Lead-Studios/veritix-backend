@@ -33,31 +33,56 @@ export class VerificationService {
     });
 
     if (!ticket) {
-      await this.logVerification(ticketId, VerificationStatus.INVALID, markAsUsed, verifiedBy);
+      await this.logVerification(
+        ticketId,
+        VerificationStatus.INVALID,
+        markAsUsed,
+        verifiedBy,
+      );
       return VerificationStatus.INVALID;
     }
 
     const event = ticket.event;
 
     if (event.status === EventStatus.CANCELLED) {
-      await this.logVerification(ticketId, VerificationStatus.CANCELLED, markAsUsed, verifiedBy);
+      await this.logVerification(
+        ticketId,
+        VerificationStatus.CANCELLED,
+        markAsUsed,
+        verifiedBy,
+      );
       return VerificationStatus.CANCELLED;
     }
 
     const now = new Date();
 
     if (now < event.eventDate) {
-      await this.logVerification(ticketId, VerificationStatus.EVENT_NOT_STARTED, markAsUsed, verifiedBy);
+      await this.logVerification(
+        ticketId,
+        VerificationStatus.EVENT_NOT_STARTED,
+        markAsUsed,
+        verifiedBy,
+      );
       return VerificationStatus.EVENT_NOT_STARTED;
     }
 
     if (event.eventClosingDate && now > event.eventClosingDate) {
-      await this.logVerification(ticketId, VerificationStatus.EVENT_ENDED, markAsUsed, verifiedBy);
+      await this.logVerification(
+        ticketId,
+        VerificationStatus.EVENT_ENDED,
+        markAsUsed,
+        verifiedBy,
+      );
       return VerificationStatus.EVENT_ENDED;
     }
 
     if (ticket.status === 'USED') {
-      await this.logVerification(ticketId, VerificationStatus.ALREADY_USED, markAsUsed, verifiedBy);
+      await this.logVerification(
+        ticketId,
+        VerificationStatus.ALREADY_USED,
+        markAsUsed,
+        verifiedBy,
+      );
       return VerificationStatus.ALREADY_USED;
     }
 
@@ -69,7 +94,12 @@ export class VerificationService {
       }
     }
 
-    await this.logVerification(ticketId, VerificationStatus.VALID, markAsUsed, verifiedBy);
+    await this.logVerification(
+      ticketId,
+      VerificationStatus.VALID,
+      markAsUsed,
+      verifiedBy,
+    );
     return VerificationStatus.VALID;
   }
 
@@ -88,7 +118,9 @@ export class VerificationService {
     await this.verificationLogRepository.save(log);
   }
 
-  public async getVerificationLogsForTicket(ticketId: string): Promise<VerificationLog[]> {
+  public async getVerificationLogsForTicket(
+    ticketId: string,
+  ): Promise<VerificationLog[]> {
     return this.verificationLogRepository.find({
       where: { ticketId },
       order: { createdAt: 'DESC' },
@@ -96,8 +128,11 @@ export class VerificationService {
   }
 
   async getLogs(eventId: string, query: VerificationQueryDto) {
-    const event = await this.eventRepository.findOne({ where: { id: eventId } });
-    if (!event) throw new NotFoundException(`Event with ID ${eventId} not found`);
+    const event = await this.eventRepository.findOne({
+      where: { id: eventId },
+    });
+    if (!event)
+      throw new NotFoundException(`Event with ID ${eventId} not found`);
 
     const page = Math.max(1, query.page ?? 1);
     const limit = Math.min(100, Math.max(1, query.limit ?? 20));

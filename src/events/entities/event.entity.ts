@@ -50,6 +50,12 @@ export class Event {
   @Column({ nullable: true })
   city: string;
 
+  @Column({ nullable: true, type: 'decimal', precision: 10, scale: 8 })
+  latitude: number;
+
+  @Column({ nullable: true, type: 'decimal', precision: 11, scale: 8 })
+  longitude: number;
+
   @Column({ nullable: true, length: 2 })
   countryCode: string;
 

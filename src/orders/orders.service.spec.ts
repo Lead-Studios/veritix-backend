@@ -89,8 +89,12 @@ describe('OrdersService', () => {
     it('should create an order successfully', async () => {
       const mockTicketType = { id: 'tt-1', price: 10, totalQuantity: 10 };
       ticketTypeService.findOne.mockResolvedValue(mockTicketType);
-      
-      const mockOrder = { id: 'order-1', ...createInput, status: OrderStatus.PENDING };
+
+      const mockOrder = {
+        id: 'order-1',
+        ...createInput,
+        status: OrderStatus.PENDING,
+      };
       entityManager.create.mockReturnValue(mockOrder);
       entityManager.save.mockResolvedValue(mockOrder);
 
@@ -98,7 +102,11 @@ describe('OrdersService', () => {
 
       expect(result.order).toBeDefined();
       expect(result.stellarMemo).toHaveLength(8);
-      expect(ticketTypeService.reserveTickets).toHaveBeenCalledWith('tt-1', 2, expect.anything());
+      expect(ticketTypeService.reserveTickets).toHaveBeenCalledWith(
+        'tt-1',
+        2,
+        expect.anything(),
+      );
       expect(dataSource.transaction).toHaveBeenCalled();
     });
 
@@ -119,7 +127,11 @@ describe('OrdersService', () => {
   });
 
   describe('findById', () => {
-    const mockOrder = { id: 'order-1', userId: 'user-1', status: OrderStatus.PENDING } as Order;
+    const mockOrder = {
+      id: 'order-1',
+      userId: 'user-1',
+      status: OrderStatus.PENDING,
+    } as Order;
 
     it('should return order if user is the owner', async () => {
       orderRepo.findOne.mockResolvedValue(mockOrder);

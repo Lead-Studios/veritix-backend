@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Ticket } from './entities/ticket.entity';
+import { TicketTransfer } from './entities/ticket-transfer.entity';
 
 export interface TicketQuery {
   page?: number;
@@ -13,6 +14,8 @@ export interface TicketQuery {
 export class TicketsService {
   constructor(
     @InjectRepository(Ticket)
+    @InjectRepository(TicketTransfer)
+    private readonly ticketTransferRepository: Repository<TicketTransfer>,
     private readonly ticketRepository: Repository<Ticket>,
   ) {}
 
@@ -72,6 +75,41 @@ export class TicketsService {
       throw new BadRequestException('Ticket is already refunded');
     }
 
+
+  public async transfer(ticketId: string, fromUserId: string, toUserId: string, resalePriceUSD?: number): Promise<void> {
+    const ticket = await this.findOne(ticketId);
+
+    if (!ticket) {
+      throw new NotFoundException('Ticket not found');
+    }
+
+    if (ticket.userId !== fromUserId) {
+      throw new BadRequestException('Ticket does not belong to the user');
+    }
+
+    if (ticket.status !== 'ACTIVE') {
+      throw new BadRequestException('Ticket is not active');
+    }
+
+    // Check resale price cap
+    if (ticket.ticketType?.maxResalePriceUSD && resalePriceUSD && resalePriceUSD > ticket.ticketType.maxResalePriceUSD) {
+      throw new BadRequestException('Resale price exceeds the maximum allowed');
+    }
+
+    // Create transfer record
+    const transfer = this.ticketTransferRepository.create({
+      ticketId,
+      fromUserId,
+      toUserId,
+      resalePriceUSD,
+      status: 'COMPLETED',
+    });
+    await this.ticketTransferRepository.save(transfer);
+
+    // Update ticket owner
+    ticket.userId = toUserId;
+    await this.ticketRepository.save(ticket);
+  }
     ticket.status = 'REFUNDED';
     await this.ticketRepository.save(ticket);
   }

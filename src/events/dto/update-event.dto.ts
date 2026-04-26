@@ -1,8 +1,18 @@
 import { PartialType, OmitType } from '@nestjs/mapped-types';
 import { CreateEventDto } from './create-event.dto';
-import { IsDateString, IsOptional, IsString, IsNumber, IsBoolean, IsArray, Length } from 'class-validator';
+import {
+  IsDateString,
+  IsOptional,
+  IsString,
+  IsNumber,
+  IsBoolean,
+  IsArray,
+  Length,
+} from 'class-validator';
 
-export class UpdateEventDto extends PartialType(OmitType(CreateEventDto, ['status'] as const)) {
+export class UpdateEventDto extends PartialType(
+  OmitType(CreateEventDto, ['status'] as const),
+) {
   @IsString()
   @IsOptional()
   title?: string;

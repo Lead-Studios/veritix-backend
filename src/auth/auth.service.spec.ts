@@ -56,7 +56,9 @@ describe('AuthService', () => {
   describe('deleteAccount', () => {
     describe('success cases', () => {
       it('should delete account successfully with correct password', async () => {
-        const deleteInput: DeleteAccountInput = { password: 'correct-password' };
+        const deleteInput: DeleteAccountInput = {
+          password: 'correct-password',
+        };
         userRepository.findOne.mockResolvedValue(mockUser);
         (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 
@@ -78,7 +80,9 @@ describe('AuthService', () => {
       });
 
       it('should increment tokenVersion on account deletion', async () => {
-        const deleteInput: DeleteAccountInput = { password: 'correct-password' };
+        const deleteInput: DeleteAccountInput = {
+          password: 'correct-password',
+        };
         const userWithVersion3 = { ...mockUser, tokenVersion: 3 };
         userRepository.findOne.mockResolvedValue(userWithVersion3);
         (bcrypt.compare as jest.Mock).mockResolvedValue(true);
@@ -94,7 +98,9 @@ describe('AuthService', () => {
       });
 
       it('should anonymise PII correctly on deletion', async () => {
-        const deleteInput: DeleteAccountInput = { password: 'correct-password' };
+        const deleteInput: DeleteAccountInput = {
+          password: 'correct-password',
+        };
         userRepository.findOne.mockResolvedValue(mockUser);
         (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 
@@ -163,7 +169,9 @@ describe('AuthService', () => {
 
     describe('edge cases', () => {
       it('should handle users with very high tokenVersion', async () => {
-        const deleteInput: DeleteAccountInput = { password: 'correct-password' };
+        const deleteInput: DeleteAccountInput = {
+          password: 'correct-password',
+        };
         const userWithHighVersion = { ...mockUser, tokenVersion: 999999 };
         userRepository.findOne.mockResolvedValue(userWithHighVersion);
         (bcrypt.compare as jest.Mock).mockResolvedValue(true);
@@ -179,7 +187,9 @@ describe('AuthService', () => {
       });
 
       it('should set proper deletedAt timestamp', async () => {
-        const deleteInput: DeleteAccountInput = { password: 'correct-password' };
+        const deleteInput: DeleteAccountInput = {
+          password: 'correct-password',
+        };
         userRepository.findOne.mockResolvedValue(mockUser);
         (bcrypt.compare as jest.Mock).mockResolvedValue(true);
         const beforeTime = new Date();
@@ -190,8 +200,12 @@ describe('AuthService', () => {
         const updateCall = userRepository.update.mock.calls[0];
         const deletedAtTime = updateCall[1].deletedAt;
 
-        expect(deletedAtTime.getTime()).toBeGreaterThanOrEqual(beforeTime.getTime());
-        expect(deletedAtTime.getTime()).toBeLessThanOrEqual(afterTime.getTime());
+        expect(deletedAtTime.getTime()).toBeGreaterThanOrEqual(
+          beforeTime.getTime(),
+        );
+        expect(deletedAtTime.getTime()).toBeLessThanOrEqual(
+          afterTime.getTime(),
+        );
       });
 
       it('should handle password comparison with special characters', async () => {
@@ -220,7 +234,9 @@ describe('AuthService', () => {
       });
 
       it('should handle repository update errors gracefully', async () => {
-        const deleteInput: DeleteAccountInput = { password: 'correct-password' };
+        const deleteInput: DeleteAccountInput = {
+          password: 'correct-password',
+        };
         userRepository.findOne.mockResolvedValue(mockUser);
         (bcrypt.compare as jest.Mock).mockResolvedValue(true);
         userRepository.update.mockRejectedValue(
@@ -233,7 +249,9 @@ describe('AuthService', () => {
       });
 
       it('should work with already deleted users (null deletedAt becomes set)', async () => {
-        const deleteInput: DeleteAccountInput = { password: 'correct-password' };
+        const deleteInput: DeleteAccountInput = {
+          password: 'correct-password',
+        };
         const alreadyDeletedUser = { ...mockUser, deletedAt: null };
         userRepository.findOne.mockResolvedValue(alreadyDeletedUser);
         (bcrypt.compare as jest.Mock).mockResolvedValue(true);
@@ -251,7 +269,9 @@ describe('AuthService', () => {
 
     describe('security considerations', () => {
       it('should use bcrypt.compare for password verification (not equality)', async () => {
-        const deleteInput: DeleteAccountInput = { password: 'correct-password' };
+        const deleteInput: DeleteAccountInput = {
+          password: 'correct-password',
+        };
         userRepository.findOne.mockResolvedValue(mockUser);
         (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 
@@ -261,21 +281,23 @@ describe('AuthService', () => {
       });
 
       it('should not expose password in error messages', async () => {
-        const deleteInput: DeleteAccountInput = { password: 'sensitive-password' };
+        const deleteInput: DeleteAccountInput = {
+          password: 'sensitive-password',
+        };
         userRepository.findOne.mockResolvedValue(mockUser);
         (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
         try {
           await service.deleteAccount(mockUserId, deleteInput);
         } catch (error) {
-          expect((error as Error).message).not.toContain(
-            'sensitive-password',
-          );
+          expect((error as Error).message).not.toContain('sensitive-password');
         }
       });
 
       it('should anonymise email with user ID for traceability', async () => {
-        const deleteInput: DeleteAccountInput = { password: 'correct-password' };
+        const deleteInput: DeleteAccountInput = {
+          password: 'correct-password',
+        };
         const customUserId = 'custom-user-id-456';
         userRepository.findOne.mockResolvedValue(mockUser);
         (bcrypt.compare as jest.Mock).mockResolvedValue(true);
@@ -293,19 +315,23 @@ describe('AuthService', () => {
 
     describe('repository interactions', () => {
       it('should query user before updating', async () => {
-        const deleteInput: DeleteAccountInput = { password: 'correct-password' };
+        const deleteInput: DeleteAccountInput = {
+          password: 'correct-password',
+        };
         userRepository.findOne.mockResolvedValue(mockUser);
         (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 
         await service.deleteAccount(mockUserId, deleteInput);
 
         expect(userRepository.findOne).toHaveBeenCalledBefore(
-          userRepository.update as any,
+          userRepository.update,
         );
       });
 
       it('should only call update once', async () => {
-        const deleteInput: DeleteAccountInput = { password: 'correct-password' };
+        const deleteInput: DeleteAccountInput = {
+          password: 'correct-password',
+        };
         userRepository.findOne.mockResolvedValue(mockUser);
         (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 
@@ -315,7 +341,9 @@ describe('AuthService', () => {
       });
 
       it('should pass correct user ID to update', async () => {
-        const deleteInput: DeleteAccountInput = { password: 'correct-password' };
+        const deleteInput: DeleteAccountInput = {
+          password: 'correct-password',
+        };
         const customUserId = 'another-user-id';
         userRepository.findOne.mockResolvedValue(mockUser);
         (bcrypt.compare as jest.Mock).mockResolvedValue(true);
@@ -352,7 +380,9 @@ describe('AuthService', () => {
 
       it('should handle very long password strings', async () => {
         const longPassword = 'a'.repeat(1000);
-        const longPasswordInput: DeleteAccountInput = { password: longPassword };
+        const longPasswordInput: DeleteAccountInput = {
+          password: longPassword,
+        };
         userRepository.findOne.mockResolvedValue(mockUser);
         (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 

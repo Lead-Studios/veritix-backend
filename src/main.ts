@@ -34,13 +34,18 @@ async function bootstrap() {
   app.enableCors({ origin: allowedOrigins });
 
   // Serve uploaded files in local dev
-  if (process.env.STORAGE_PROVIDER !== 's3' && process.env.NODE_ENV !== 'production') {
-    app.useStaticAssets(path.join(process.cwd(), 'uploads'), { prefix: '/uploads' });
+  if (
+    process.env.STORAGE_PROVIDER !== 's3' &&
+    process.env.NODE_ENV !== 'production'
+  ) {
+    app.useStaticAssets(path.join(process.cwd(), 'uploads'), {
+      prefix: '/uploads',
+    });
   }
 
   // Swagger documentation
   if (process.env.NODE_ENV !== 'production') {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+    // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
     const pkg = require('../package.json');
     const config = new DocumentBuilder()
       .setTitle('VeriTix API')

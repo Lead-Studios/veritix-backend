@@ -1,4 +1,17 @@
-import { Controller, Get, Post, Delete, UseGuards, Body, HttpCode, HttpStatus, UseInterceptors, UploadedFile, UnsupportedMediaTypeException, PayloadTooLargeException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  UseGuards,
+  Body,
+  HttpCode,
+  HttpStatus,
+  UseInterceptors,
+  UploadedFile,
+  UnsupportedMediaTypeException,
+  PayloadTooLargeException,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -52,7 +65,9 @@ export class AuthController {
 
   @Post('register-organizer')
   @HttpCode(HttpStatus.CREATED)
-  async registerOrganizer(@Body() registerOrganizerDto: RegisterOrganizerDto): Promise<UserResponseDto> {
+  async registerOrganizer(
+    @Body() registerOrganizerDto: RegisterOrganizerDto,
+  ): Promise<UserResponseDto> {
     const user = await this.authService.registerOrganizer(registerOrganizerDto);
     return new UserResponseDto({
       id: user.id,
@@ -67,21 +82,31 @@ export class AuthController {
 
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
-  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto): Promise<{ message: string }> {
+  async forgotPassword(
+    @Body() forgotPasswordDto: ForgotPasswordDto,
+  ): Promise<{ message: string }> {
     await this.authService.requestPasswordReset(forgotPasswordDto.email);
     // Always return success to prevent user enumeration
-    return { message: 'If an account with that email exists, a password reset OTP has been sent.' };
+    return {
+      message:
+        'If an account with that email exists, a password reset OTP has been sent.',
+    };
   }
 
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
-  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto): Promise<{ message: string }> {
+  async resetPassword(
+    @Body() resetPasswordDto: ResetPasswordDto,
+  ): Promise<{ message: string }> {
     await this.authService.resetPassword(
       resetPasswordDto.email,
       resetPasswordDto.otp,
       resetPasswordDto.newPassword,
     );
-    return { message: 'Password has been reset successfully. Please login with your new password.' };
+    return {
+      message:
+        'Password has been reset successfully. Please login with your new password.',
+    };
   }
 
   @Post('logout')
@@ -110,7 +135,9 @@ export class AuthController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     if (!file || !ALLOWED_AVATAR_TYPES.includes(file.mimetype)) {
-      throw new UnsupportedMediaTypeException('Only PNG and JPG images are allowed');
+      throw new UnsupportedMediaTypeException(
+        'Only PNG and JPG images are allowed',
+      );
     }
     if (file.size > MAX_AVATAR_SIZE) {
       throw new PayloadTooLargeException('Avatar must be 2MB or less');

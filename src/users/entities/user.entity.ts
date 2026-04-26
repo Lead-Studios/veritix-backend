@@ -54,6 +54,12 @@ export class User {
   @Column({ nullable: true })
   organizationWebsite: string;
 
+  @Column({ nullable: true })
+  bio: string;
+
+  @Column({ nullable: true })
+  country: string;
+
   @CreateDateColumn()
   createdAt: Date;
 

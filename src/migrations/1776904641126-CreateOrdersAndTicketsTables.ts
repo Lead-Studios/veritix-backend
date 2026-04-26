@@ -4,7 +4,9 @@ export class CreateOrdersAndTicketsTables1776904641126 implements MigrationInter
   name = 'CreateOrdersAndTicketsTables1776904641126';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`CREATE TYPE "public"."orders_status_enum" AS ENUM('PENDING','PAID','FAILED','REFUNDED','CANCELLED')`);
+    await queryRunner.query(
+      `CREATE TYPE "public"."orders_status_enum" AS ENUM('PENDING','PAID','FAILED','REFUNDED','CANCELLED')`,
+    );
     await queryRunner.query(`CREATE TABLE "orders" (
       "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
       "userId" uuid NOT NULL,
@@ -44,19 +46,39 @@ export class CreateOrdersAndTicketsTables1776904641126 implements MigrationInter
       "updatedAt" TIMESTAMP NOT NULL DEFAULT now(),
       CONSTRAINT "PK_16d42a05b49f3471d1a3efd7e56" PRIMARY KEY ("id")
     )`);
-    await queryRunner.query(`ALTER TABLE "order_items" ADD CONSTRAINT "FK_order_items_order" FOREIGN KEY ("orderId") REFERENCES "orders"("id") ON DELETE CASCADE`);
-    await queryRunner.query(`ALTER TABLE "order_items" ADD CONSTRAINT "FK_order_items_ticketType" FOREIGN KEY ("ticketTypeId") REFERENCES "ticket_types"("id") ON DELETE NO ACTION`);
-    await queryRunner.query(`ALTER TABLE "tickets" ADD CONSTRAINT "FK_tickets_event" FOREIGN KEY ("eventId") REFERENCES "events"("id") ON DELETE NO ACTION`);
-    await queryRunner.query(`ALTER TABLE "tickets" ADD CONSTRAINT "FK_tickets_ticketType" FOREIGN KEY ("ticketTypeId") REFERENCES "ticket_types"("id") ON DELETE NO ACTION`);
-    await queryRunner.query(`ALTER TABLE "tickets" ADD CONSTRAINT "FK_tickets_order" FOREIGN KEY ("orderReference") REFERENCES "orders"("id") ON DELETE SET NULL`);
+    await queryRunner.query(
+      `ALTER TABLE "order_items" ADD CONSTRAINT "FK_order_items_order" FOREIGN KEY ("orderId") REFERENCES "orders"("id") ON DELETE CASCADE`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "order_items" ADD CONSTRAINT "FK_order_items_ticketType" FOREIGN KEY ("ticketTypeId") REFERENCES "ticket_types"("id") ON DELETE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tickets" ADD CONSTRAINT "FK_tickets_event" FOREIGN KEY ("eventId") REFERENCES "events"("id") ON DELETE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tickets" ADD CONSTRAINT "FK_tickets_ticketType" FOREIGN KEY ("ticketTypeId") REFERENCES "ticket_types"("id") ON DELETE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tickets" ADD CONSTRAINT "FK_tickets_order" FOREIGN KEY ("orderReference") REFERENCES "orders"("id") ON DELETE SET NULL`,
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`ALTER TABLE "tickets" DROP CONSTRAINT "FK_tickets_order"`);
-    await queryRunner.query(`ALTER TABLE "tickets" DROP CONSTRAINT "FK_tickets_ticketType"`);
-    await queryRunner.query(`ALTER TABLE "tickets" DROP CONSTRAINT "FK_tickets_event"`);
-    await queryRunner.query(`ALTER TABLE "order_items" DROP CONSTRAINT "FK_order_items_ticketType"`);
-    await queryRunner.query(`ALTER TABLE "order_items" DROP CONSTRAINT "FK_order_items_order"`);
+    await queryRunner.query(
+      `ALTER TABLE "tickets" DROP CONSTRAINT "FK_tickets_order"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tickets" DROP CONSTRAINT "FK_tickets_ticketType"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tickets" DROP CONSTRAINT "FK_tickets_event"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "order_items" DROP CONSTRAINT "FK_order_items_ticketType"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "order_items" DROP CONSTRAINT "FK_order_items_order"`,
+    );
     await queryRunner.query(`DROP TABLE "tickets"`);
     await queryRunner.query(`DROP TABLE "order_items"`);
     await queryRunner.query(`DROP TABLE "orders"`);

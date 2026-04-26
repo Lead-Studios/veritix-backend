@@ -32,12 +32,11 @@ export class OrdersController {
   @Post()
   @Roles(UserRole.SUBSCRIBER)
   @HttpCode(HttpStatus.CREATED)
-  async createOrder(
-    @CurrentUser() user: User,
-    @Body() body: CreateOrderDto,
-  ) {
+  async createOrder(@CurrentUser() user: User, @Body() body: CreateOrderDto) {
     const result = await this.ordersService.create(body, user);
-    const destinationAddress = this.configService.get<string>('STELLAR_PLATFORM_ADDRESS');
+    const destinationAddress = this.configService.get<string>(
+      'STELLAR_PLATFORM_ADDRESS',
+    );
 
     return {
       ...result.order,

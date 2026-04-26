@@ -21,8 +21,6 @@ export class HealthController {
   @ApiResponse({ status: 200, description: 'Health check passed' })
   @ApiResponse({ status: 503, description: 'Health check failed' })
   async check(): Promise<HealthCheckResult> {
-    return this.health.check([
-      async () => this.db.pingCheck('database'),
-    ]);
+    return this.health.check([async () => this.db.pingCheck('database')]);
   }
 }

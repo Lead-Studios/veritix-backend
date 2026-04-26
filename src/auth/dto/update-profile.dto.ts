@@ -1,4 +1,11 @@
-import { IsString, IsOptional, IsUrl, IsPhoneNumber, MaxLength, Validate } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsUrl,
+  IsPhoneNumber,
+  MaxLength,
+  Validate,
+} from 'class-validator';
 import { IsStellarPublicKey } from '../../common/validators/stellar-public-key.validator';
 
 export class UpdateProfileDto {

@@ -1,16 +1,16 @@
-    export enum EventsStatus {
-      DRAFT = 'DRAFT',
-      PUBLISHED = 'PUBLISHED',
-      CANCELLED = 'CANCELLED',
-      COMPLETED = 'COMPLETED',
-      POSTPONED = 'POSTPONED',
-    }
+export enum EventsStatus {
+  DRAFT = 'DRAFT',
+  PUBLISHED = 'PUBLISHED',
+  CANCELLED = 'CANCELLED',
+  COMPLETED = 'COMPLETED',
+  POSTPONED = 'POSTPONED',
+}
 
-    export enum EventType {
-      CONFERENCE = 'CONFERENCE',
-      WORKSHOP = 'WORKSHOP',
-      MEETUP = 'MEETUP',
-      WEBINAR = 'WEBINAR',
-      HACKATHON = 'HACKATHON',
-      OTHER = 'OTHER',
-    }
+export enum EventType {
+  CONFERENCE = 'CONFERENCE',
+  WORKSHOP = 'WORKSHOP',
+  MEETUP = 'MEETUP',
+  WEBINAR = 'WEBINAR',
+  HACKATHON = 'HACKATHON',
+  OTHER = 'OTHER',
+}

@@ -19,10 +19,14 @@ import { StorageModule } from '../common/storage/storage.module';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: async (configService: ConfigService): Promise<JwtModuleOptions> => ({
+      useFactory: async (
+        configService: ConfigService,
+      ): Promise<JwtModuleOptions> => ({
         secret: configService.get<string>('ACCESS_TOKEN_SECRET'),
         signOptions: {
-          expiresIn: configService.get<string>('ACCESS_TOKEN_EXPIRATION') as any,
+          expiresIn: configService.get<string>(
+            'ACCESS_TOKEN_EXPIRATION',
+          ) as any,
         },
       }),
     }),

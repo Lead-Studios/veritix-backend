@@ -1,4 +1,9 @@
-import { Injectable, BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
@@ -24,7 +29,10 @@ export class AuthService {
     private readonly storageService: StorageService,
   ) {}
 
-  async uploadAvatar(userId: string, file: Express.Multer.File): Promise<{ avatarUrl: string }> {
+  async uploadAvatar(
+    userId: string,
+    file: Express.Multer.File,
+  ): Promise<{ avatarUrl: string }> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
     const avatarUrl = await this.storageService.upload(file);
@@ -63,7 +71,9 @@ export class AuthService {
    * @param registerOrganizerDto - Contains email, fullName, password, organizationName, and organizationWebsite
    * @throws BadRequestException if email already exists
    */
-  async registerOrganizer(registerOrganizerDto: RegisterOrganizerDto): Promise<User> {
+  async registerOrganizer(
+    registerOrganizerDto: RegisterOrganizerDto,
+  ): Promise<User> {
     const existingUser = await this.userRepository.findOne({
       where: { email: registerOrganizerDto.email },
     });
@@ -174,7 +184,11 @@ export class AuthService {
    * @throws BadRequestException if OTP is invalid or expired
    * @throws NotFoundException if user doesn't exist
    */
-  async resetPassword(email: string, otp: string, newPassword: string): Promise<void> {
+  async resetPassword(
+    email: string,
+    otp: string,
+    newPassword: string,
+  ): Promise<void> {
     const user = await this.userRepository.findOne({ where: { email } });
 
     if (!user) {
@@ -183,7 +197,9 @@ export class AuthService {
 
     // Check if OTP exists
     if (!user.passwordResetCode) {
-      throw new BadRequestException('No password reset request found. Please request a password reset first.');
+      throw new BadRequestException(
+        'No password reset request found. Please request a password reset first.',
+      );
     }
 
     // Check if OTP matches
@@ -192,8 +208,13 @@ export class AuthService {
     }
 
     // Check if OTP has expired
-    if (!user.passwordResetCodeExpiresAt || new Date() > user.passwordResetCodeExpiresAt) {
-      throw new BadRequestException('OTP code has expired. Please request a new password reset.');
+    if (
+      !user.passwordResetCodeExpiresAt ||
+      new Date() > user.passwordResetCodeExpiresAt
+    ) {
+      throw new BadRequestException(
+        'OTP code has expired. Please request a new password reset.',
+      );
     }
 
     // Hash new password
@@ -237,7 +258,10 @@ export class AuthService {
    * @throws ForbiddenException if password is incorrect
    * @throws NotFoundException if user doesn't exist
    */
-  async deleteAccount(userId: string, input: DeleteAccountInput): Promise<void> {
+  async deleteAccount(
+    userId: string,
+    input: DeleteAccountInput,
+  ): Promise<void> {
     // Find the user
     const user = await this.userRepository.findOne({ where: { id: userId } });
 

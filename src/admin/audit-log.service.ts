@@ -19,12 +19,21 @@ export class AuditLogService {
     details?: Record<string, unknown>,
   ): Promise<void> {
     await this.repo.save(
-      this.repo.create({ actorId, actorEmail, action, targetType, targetId, details }),
+      this.repo.create({
+        actorId,
+        actorEmail,
+        action,
+        targetType,
+        targetId,
+        details,
+      }),
     );
   }
 
   async findAll(page = 1, limit = 20, action?: AuditAction) {
-    const qb = this.repo.createQueryBuilder('log').orderBy('log.performedAt', 'DESC');
+    const qb = this.repo
+      .createQueryBuilder('log')
+      .orderBy('log.performedAt', 'DESC');
     if (action) qb.where('log.action = :action', { action });
     const [data, total] = await qb
       .skip((page - 1) * limit)
