@@ -68,7 +68,11 @@ describe('VerificationService', () => {
   it('should return INVALID when ticket not found', async () => {
     ticketRepository.findOne.mockResolvedValue(null);
 
-    const result = await service.verifyTicket(mockTicketId, false, mockVerifiedBy);
+    const result = await service.verifyTicket(
+      mockTicketId,
+      false,
+      mockVerifiedBy,
+    );
 
     expect(result).toBe(VerificationStatus.INVALID);
     expect(ticketRepository.findOne).toHaveBeenCalledWith({
@@ -89,7 +93,11 @@ describe('VerificationService', () => {
     const ticketWithCancelledEvent = { ...mockTicket, event: cancelledEvent };
     ticketRepository.findOne.mockResolvedValue(ticketWithCancelledEvent);
 
-    const result = await service.verifyTicket(mockTicketId, false, mockVerifiedBy);
+    const result = await service.verifyTicket(
+      mockTicketId,
+      false,
+      mockVerifiedBy,
+    );
 
     expect(result).toBe(VerificationStatus.CANCELLED);
     expect(verificationLogRepository.create).toHaveBeenCalledWith({
@@ -102,11 +110,18 @@ describe('VerificationService', () => {
   });
 
   it('should return EVENT_NOT_STARTED when event has not started', async () => {
-    const futureEvent = { ...mockEvent, eventDate: new Date(Date.now() + 1000 * 60 * 60) }; // 1 hour from now
+    const futureEvent = {
+      ...mockEvent,
+      eventDate: new Date(Date.now() + 1000 * 60 * 60),
+    }; // 1 hour from now
     const ticketWithFutureEvent = { ...mockTicket, event: futureEvent };
     ticketRepository.findOne.mockResolvedValue(ticketWithFutureEvent);
 
-    const result = await service.verifyTicket(mockTicketId, false, mockVerifiedBy);
+    const result = await service.verifyTicket(
+      mockTicketId,
+      false,
+      mockVerifiedBy,
+    );
 
     expect(result).toBe(VerificationStatus.EVENT_NOT_STARTED);
     expect(verificationLogRepository.create).toHaveBeenCalledWith({
@@ -119,11 +134,18 @@ describe('VerificationService', () => {
   });
 
   it('should return EVENT_ENDED when event has ended', async () => {
-    const pastEvent = { ...mockEvent, eventClosingDate: new Date(Date.now() - 1000 * 60 * 60) }; // 1 hour ago
+    const pastEvent = {
+      ...mockEvent,
+      eventClosingDate: new Date(Date.now() - 1000 * 60 * 60),
+    }; // 1 hour ago
     const ticketWithPastEvent = { ...mockTicket, event: pastEvent };
     ticketRepository.findOne.mockResolvedValue(ticketWithPastEvent);
 
-    const result = await service.verifyTicket(mockTicketId, false, mockVerifiedBy);
+    const result = await service.verifyTicket(
+      mockTicketId,
+      false,
+      mockVerifiedBy,
+    );
 
     expect(result).toBe(VerificationStatus.EVENT_ENDED);
     expect(verificationLogRepository.create).toHaveBeenCalledWith({
@@ -139,7 +161,11 @@ describe('VerificationService', () => {
     const usedTicket = { ...mockTicket, status: 'USED' };
     ticketRepository.findOne.mockResolvedValue(usedTicket);
 
-    const result = await service.verifyTicket(mockTicketId, false, mockVerifiedBy);
+    const result = await service.verifyTicket(
+      mockTicketId,
+      false,
+      mockVerifiedBy,
+    );
 
     expect(result).toBe(VerificationStatus.ALREADY_USED);
     expect(verificationLogRepository.create).toHaveBeenCalledWith({
@@ -154,7 +180,11 @@ describe('VerificationService', () => {
   it('should return VALID when ticket is valid and markAsUsed is false', async () => {
     ticketRepository.findOne.mockResolvedValue(mockTicket);
 
-    const result = await service.verifyTicket(mockTicketId, false, mockVerifiedBy);
+    const result = await service.verifyTicket(
+      mockTicketId,
+      false,
+      mockVerifiedBy,
+    );
 
     expect(result).toBe(VerificationStatus.VALID);
     expect(ticketRepository.update).not.toHaveBeenCalled();
@@ -170,10 +200,16 @@ describe('VerificationService', () => {
   it('should return VALID and update ticket status when markAsUsed is true', async () => {
     ticketRepository.findOne.mockResolvedValue(mockTicket);
 
-    const result = await service.verifyTicket(mockTicketId, true, mockVerifiedBy);
+    const result = await service.verifyTicket(
+      mockTicketId,
+      true,
+      mockVerifiedBy,
+    );
 
     expect(result).toBe(VerificationStatus.VALID);
-    expect(ticketRepository.update).toHaveBeenCalledWith(mockTicketId, { status: 'USED' });
+    expect(ticketRepository.update).toHaveBeenCalledWith(mockTicketId, {
+      status: 'USED',
+    });
     expect(verificationLogRepository.create).toHaveBeenCalledWith({
       ticketId: mockTicketId,
       status: VerificationStatus.VALID,

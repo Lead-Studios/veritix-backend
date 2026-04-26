@@ -10,7 +10,11 @@ import { EmailModule } from '../common/email/email.module';
 
 @Global()
 @Module({
-  imports: [ConfigModule, TypeOrmModule.forFeature([Order, Ticket, User]), EmailModule],
+  imports: [
+    ConfigModule,
+    TypeOrmModule.forFeature([Order, Ticket, User]),
+    EmailModule,
+  ],
   providers: [StellarService],
   controllers: [StellarController],
   exports: [StellarService],

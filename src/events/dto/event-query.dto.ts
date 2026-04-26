@@ -1,4 +1,12 @@
-import { IsOptional, IsString, IsBoolean, IsDateString, IsEnum, IsIn } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsBoolean,
+  IsDateString,
+  IsEnum,
+  IsIn,
+  IsNumber,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { EventStatus } from '../enums/event-status.enum';
@@ -32,6 +40,31 @@ export class EventQueryDto extends PaginationDto {
   @IsOptional()
   @IsDateString()
   dateTo?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  minTicketPrice?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  maxTicketPrice?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  lat?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  lng?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  radiusKm?: number;
 
   @IsOptional()
   @IsIn(['eventDate', 'createdAt'])

@@ -60,12 +60,19 @@ export class EmailService {
     return fs.readFileSync(path.join(__dirname, 'templates', name), 'utf-8');
   }
 
-  async sendSecurityAlert(email: string, actionDescription: string): Promise<void> {
+  async sendSecurityAlert(
+    email: string,
+    actionDescription: string,
+  ): Promise<void> {
     const html = this.loadTemplate('security-alert.html').replace(
       '{{actionDescription}}',
       actionDescription,
     );
-    await this.sendEmail({ to: email, subject: 'Security Alert - Veritix', html });
+    await this.sendEmail({
+      to: email,
+      subject: 'Security Alert - Veritix',
+      html,
+    });
   }
 
   async sendEventStatusChange(
@@ -85,7 +92,10 @@ export class EmailService {
     });
   }
 
-  async sendWaitlistNotification(email: string, eventTitle: string): Promise<void> {
+  async sendWaitlistNotification(
+    email: string,
+    eventTitle: string,
+  ): Promise<void> {
     const html = this.loadTemplate('waitlist-notification.html').replace(
       '{{eventTitle}}',
       eventTitle,

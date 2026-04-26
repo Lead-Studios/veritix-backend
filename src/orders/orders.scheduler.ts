@@ -34,10 +34,17 @@ export class OrdersScheduler {
 
     if (expiredOrders.length === 0) {
       this.logger.log('Order expiry job: no expired orders found');
-      return { checkedAt, expiredCount: 0, ticketsReleased: 0, failedOrderIds: [] };
+      return {
+        checkedAt,
+        expiredCount: 0,
+        ticketsReleased: 0,
+        failedOrderIds: [],
+      };
     }
 
-    this.logger.log(`Found ${expiredOrders.length} expired order(s) — processing`);
+    this.logger.log(
+      `Found ${expiredOrders.length} expired order(s) — processing`,
+    );
 
     let ticketsReleased = 0;
     const failedOrderIds: string[] = [];

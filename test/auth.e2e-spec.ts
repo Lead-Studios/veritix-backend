@@ -14,13 +14,12 @@ describe('Auth E2E Flow', () => {
 
   let accessToken: string;
   let refreshToken: string;
-  let otpCode = '123456';
+  const otpCode = '123456';
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule =
-      await Test.createTestingModule({
-        imports: [AppModule],
-      }).compile();
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
 
     app = moduleFixture.createNestApplication();
 

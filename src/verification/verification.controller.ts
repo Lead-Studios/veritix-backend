@@ -1,5 +1,21 @@
-import { Controller, Post, Get, Body, Param, Query, UseGuards } from '@nestjs/common';
-import { Controller, Post, Body, Get, Param, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Param,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { VerificationService } from './verification.service';
 import { CheckInDto } from './dto/check-in.dto';
 import { VerificationStatus } from './enums/verification-status.enum';
@@ -18,7 +34,9 @@ export class VerificationController {
   @Post('check-in')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ORGANIZER, UserRole.ADMIN)
-  async checkIn(@Body() checkInDto: CheckInDto): Promise<{ status: VerificationStatus }> {
+  async checkIn(
+    @Body() checkInDto: CheckInDto,
+  ): Promise<{ status: VerificationStatus }> {
     const status = await this.verificationService.verifyTicket(
       checkInDto.ticketCode,
       true,

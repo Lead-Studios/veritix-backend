@@ -1,7 +1,7 @@
-import { Injectable, BadRequestException } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Repository, DataSource, QueryRunner } from "typeorm";
-import { TicketType } from "./entities/ticket-type.entity";
+import { Injectable, BadRequestException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, DataSource, QueryRunner } from 'typeorm';
+import { TicketType } from './entities/ticket-type.entity';
 
 @Injectable()
 export class TicketTypesService {
@@ -14,7 +14,7 @@ export class TicketTypesService {
   async findByEventId(eventId: string): Promise<TicketType[]> {
     return this.ticketTypeRepository.find({
       where: { eventId },
-      relations: ["event"],
+      relations: ['event'],
     });
   }
 
@@ -25,7 +25,7 @@ export class TicketTypesService {
   > {
     const ticketTypes = await this.ticketTypeRepository.find({
       where: { eventId },
-      relations: ["event"],
+      relations: ['event'],
     });
 
     return ticketTypes.map((ticketType) => ({
@@ -78,7 +78,7 @@ export class TicketTypesService {
     queryRunner?: QueryRunner,
   ): Promise<TicketType> {
     if (quantity <= 0) {
-      throw new BadRequestException("Quantity must be greater than 0");
+      throw new BadRequestException('Quantity must be greater than 0');
     }
 
     const repository = queryRunner
@@ -87,8 +87,8 @@ export class TicketTypesService {
 
     // Use SELECT ... FOR UPDATE to lock the row and prevent race conditions
     const ticketType = await repository
-      .createQueryBuilder("ticketType")
-      .where("ticketType.id = :id", { id: ticketTypeId })
+      .createQueryBuilder('ticketType')
+      .where('ticketType.id = :id', { id: ticketTypeId })
       .setLock('pessimistic_write')
       .getOne();
 
@@ -125,7 +125,7 @@ export class TicketTypesService {
     queryRunner?: QueryRunner,
   ): Promise<TicketType> {
     if (quantity <= 0) {
-      throw new BadRequestException("Quantity must be greater than 0");
+      throw new BadRequestException('Quantity must be greater than 0');
     }
 
     const repository = queryRunner
@@ -134,8 +134,8 @@ export class TicketTypesService {
 
     // Use SELECT ... FOR UPDATE to lock the row and prevent race conditions
     const ticketType = await repository
-      .createQueryBuilder("ticketType")
-      .where("ticketType.id = :id", { id: ticketTypeId })
+      .createQueryBuilder('ticketType')
+      .where('ticketType.id = :id', { id: ticketTypeId })
       .setLock('pessimistic_write')
       .getOne();
 

@@ -9,10 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { DataSource, Repository } from 'typeorm';
 import { randomUUID } from 'crypto';
-import {
-  CreateOrderDto,
-  CreateOrderResult,
-} from './dto/create-order.dto';
+import { CreateOrderDto, CreateOrderResult } from './dto/create-order.dto';
 import { OrderConfig } from './order.config';
 import { Order, OrderItem } from './orders.entity';
 import { Ticket } from 'src/tickets/entities/ticket.entity';
@@ -52,12 +49,19 @@ export class OrdersService {
           );
         }
 
-        const ticketType = await this.ticketTypeService.findOne(item.ticketTypeId);
+        const ticketType = await this.ticketTypeService.findOne(
+          item.ticketTypeId,
+        );
         if (!ticketType) {
-          throw new NotFoundException(`TicketType ${item.ticketTypeId} not found`);
+          throw new NotFoundException(
+            `TicketType ${item.ticketTypeId} not found`,
+          );
         }
 
-        if (ticketType.soldQuantity + item.quantity > ticketType.totalQuantity) {
+        if (
+          ticketType.soldQuantity + item.quantity >
+          ticketType.totalQuantity
+        ) {
           throw new BadRequestException(
             `Insufficient inventory for ticketType ${item.ticketTypeId}: requested ${item.quantity}, available ${ticketType.totalQuantity - ticketType.soldQuantity}`,
           );
@@ -69,7 +73,8 @@ export class OrdersService {
 
     const orderId = randomUUID();
     const stellarMemo = orderId.slice(0, 8);
-    const expiryMinutes = this.config.get<OrderConfig>('order')?.expiryMinutes ?? 15;
+    const expiryMinutes =
+      this.config.get<OrderConfig>('order')?.expiryMinutes ?? 15;
     const expiresAt = new Date(Date.now() + expiryMinutes * 60_000);
 
     let totalAmountUSD = 0;
@@ -105,9 +110,7 @@ export class OrdersService {
         paidAt: null,
       };
 
-      const savedOrder = await manager.save(
-        manager.create(Order, orderData),
-      );
+      const savedOrder = await manager.save(manager.create(Order, orderData));
 
       const itemsToSave = orderItems.map((item) =>
         manager.create(OrderItem, {
@@ -151,7 +154,9 @@ export class OrdersService {
     }
 
     if (order.userId !== user.id && user.role !== UserRole.ADMIN) {
-      throw new ForbiddenException('You do not have permission to view this order');
+      throw new ForbiddenException(
+        'You do not have permission to view this order',
+      );
     }
 
     return order;
@@ -196,11 +201,15 @@ export class OrdersService {
     }
 
     if (order.userId !== user.id && user.role !== UserRole.ADMIN) {
-      throw new ForbiddenException('You do not have permission to cancel this order');
+      throw new ForbiddenException(
+        'You do not have permission to cancel this order',
+      );
     }
 
     if (order.status !== OrderStatus.PENDING) {
-      throw new BadRequestException(`Order ${id} cannot be cancelled — status is ${order.status}`);
+      throw new BadRequestException(
+        `Order ${id} cannot be cancelled — status is ${order.status}`,
+      );
     }
 
     await this.dataSource.transaction(async (manager) => {
@@ -217,7 +226,9 @@ export class OrdersService {
       });
     });
 
-    this.logger.log(`Order ${id} cancelled by user ${user.id} (${user.role}) — inventory released`);
+    this.logger.log(
+      `Order ${id} cancelled by user ${user.id} (${user.role}) — inventory released`,
+    );
 
     await this.waitlistService.notifyNext(order.eventId, 1);
 

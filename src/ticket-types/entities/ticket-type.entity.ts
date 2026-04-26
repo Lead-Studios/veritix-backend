@@ -1,4 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, VirtualColumn, Index } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
+  VirtualColumn,
+  Index,
+} from 'typeorm';
 import { Event } from '../../events/entities/event.entity';
 
 @Entity('ticket_types')
@@ -36,40 +45,37 @@ export class TicketType {
   })
   remainingQuantity: number;
 
-  @ManyToOne(() => Event, event => event.ticketTypes)
+  @ManyToOne(() => Event, (event) => event.ticketTypes)
   event: Event;
 
   @Column()
   eventId: string;
 
-  @CreateDateColumn()
-  createdAt: Date;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
+  @Column('decimal', { precision: 10, scale: 2, nullable: true })
+  maxResalePriceUSD: number | null;
 
   get isAvailableNow(): boolean {
     const now = new Date();
-    
+
     // Check if ticket type is active
     if (!this.isActive) {
       return false;
     }
-    
+
     // Check if there are tickets remaining
     if (this.soldQuantity >= this.totalQuantity) {
       return false;
     }
-    
+
     // Check sale window if specified
     if (this.saleStartsAt && now < this.saleStartsAt) {
       return false;
     }
-    
+
     if (this.saleEndsAt && now > this.saleEndsAt) {
       return false;
     }
-    
+
     return true;
   }
 }

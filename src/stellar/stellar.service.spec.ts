@@ -103,7 +103,10 @@ describe('StellarService', () => {
       await service.processConfirmedPayment('tx1', 'GABC', 'abc12345', '10');
 
       expect(mockOrderRepo.save).toHaveBeenCalledWith(
-        expect.objectContaining({ status: OrderStatus.PAID, stellarTxHash: 'tx1' }),
+        expect.objectContaining({
+          status: OrderStatus.PAID,
+          stellarTxHash: 'tx1',
+        }),
       );
     });
 
@@ -116,7 +119,10 @@ describe('StellarService', () => {
     });
 
     it('skips duplicate txHash (idempotent)', async () => {
-      mockOrderRepo.findOne.mockResolvedValue({ ...baseOrder, stellarTxHash: 'tx1' });
+      mockOrderRepo.findOne.mockResolvedValue({
+        ...baseOrder,
+        stellarTxHash: 'tx1',
+      });
 
       await service.processConfirmedPayment('tx1', 'GABC', 'abc12345', '10');
 

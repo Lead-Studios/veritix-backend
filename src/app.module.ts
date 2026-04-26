@@ -14,6 +14,7 @@ import { TicketsModule } from './tickets/tickets.module';
 import { VerificationModule } from './verification/verification.module';
 import { StellarModule } from './stellar/stellar.module';
 import { AdminModule } from './admin/admin.module';
+import { UsersModule } from './users/users.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { AdminModule } from './admin/admin.module';
@@ -49,6 +50,7 @@ import { AdminModule } from './admin/admin.module';
     TicketsModule,
     StellarModule,
     AdminModule,
+    UsersModule,
     VerificationModule,
     AdminModule,
   ],
