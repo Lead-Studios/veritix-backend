@@ -3,6 +3,8 @@ import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import type { NextFunction, Request, Response } from 'express';
+import helmet from 'helmet';
 import * as path from 'path';
 import { AppModule } from './app.module';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
@@ -10,6 +12,12 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  app.use(helmet());
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    next();
+  });
 
   // Global request validation
   app.useGlobalPipes(
@@ -62,6 +70,15 @@ async function bootstrap() {
       .build();
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('api', app, document);
+
+    app.use(
+      '/api',
+      (req: Request, res: Response, next: NextFunction) => {
+        res.removeHeader('Content-Security-Policy');
+        res.removeHeader('Content-Security-Policy-Report-Only');
+        next();
+      },
+    );
   }
 
   await app.listen(process.env.PORT ?? 3000);

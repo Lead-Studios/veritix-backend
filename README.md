@@ -1,156 +1,208 @@
+# VeriTix Backend
 
-```md
-# Veritix Backend
+VeriTix Backend is the NestJS API for the VeriTix ticketing platform. It handles authentication, event publishing, ticket inventory, orders, blockchain payment flows, verification, and admin operations.
 
-Veritix Backend is the core **server-side application** powering the Veritix ticketing platform.  
-It provides secure, scalable, and blockchain-anchored APIs for managing events, ticketing flows, authentication, payments, scans, analytics, and integrations with the **Stellar ecosystem**.
-
-The backend implements business logic, smart contract orchestration data workflows, and security controls — all designed to support Veritix’s decentralized ticketing vision.
-
----
+A new contributor should be able to clone the repo, configure PostgreSQL, run migrations, and start the API in under 15 minutes with the guide below.
 
 ## Overview
 
-Veritix is a blockchain-powered ticketing platform that uses decentralized technologies to eliminate fraud, double-spending, and unauthorized reselling.  
-The backend is built with **NestJS (TypeScript)** and leverages **Stellar** for secure on-chain anchoring of ticket metadata and transaction proofs.
+VeriTix is a ticketing platform built around secure event operations and Stellar-based payment flows. The backend is responsible for user accounts, event and ticket lifecycle management, waitlists, payment instructions, webhook processing, and operational tooling for admins.
 
-Key responsibilities include:
-- Event & ticket lifecycle APIs  
-- Authentication & role-based access control  
-- Payment and revenue logic  
-- Ticket scanning & validation endpoints  
-- Audit-ready blockchain anchoring  
-- Reporting & analytics  
-- Integration with other Veritix clients (Web, Mobile)  
+### Tech stack
 
+- NestJS 11
+- PostgreSQL 15+
+- TypeORM
+- Stellar SDK
+- SendGrid
 
+## Prerequisites
 
-## Repository Contents
----
+- Node.js 20 or newer
+- npm 10 or newer
+- PostgreSQL 15 or newer
+- A local database user with permission to create and migrate databases
 
-veritix-backend/
-├── src/
-│   ├── app.module.ts
-│   ├── main.ts
-│   ├── modules/
-│   │   ├── auth/
-│   │   ├── events/
-│   │   ├── tickets/
-│   │   ├── users/
-│   │   └── analytics/
-├── test/
-├── .env.example
-├── nest-cli.json
-├── package.json
-├── tsconfig.json
-└── README.md
+## Local Setup
 
----
-
-
-## Getting Started
-
-### Requirements
-- Node.js 18+  
-- npm, yarn, or pnpm  
-- PostgreSQL (or other supported SQL database)  
-- Stellar network access (testnet or mainnet)  
-
-### Install Dependencies
+### 1. Clone and install
 
 ```bash
 git clone https://github.com/Lead-Studios/veritix-backend.git
 cd veritix-backend
 npm install
-````
-
-### Environment
-
-Create `.env` based on `.env.example` and fill in:
-
-```
-DATABASE_URL=postgres://...
-JWT_SECRET=...
-STELLAR_NETWORK=testnet
-STELLAR_SECRET=...
-STELLAR_PUBLIC_KEY=...
 ```
 
-### Run in Dev Mode
+### 2. Create the local database
+
+Create a PostgreSQL database for development and, if you plan to run e2e tests, another one for tests.
+
+```sql
+CREATE DATABASE veritix;
+CREATE DATABASE veritix_test;
+```
+
+### 3. Create your environment file
+
+Windows PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+macOS/Linux:
+
+```bash
+cp .env.example .env
+```
+
+Update the required values in `.env`, especially `DATABASE_URL`, `ACCESS_TOKEN_SECRET`, and `REFRESH_TOKEN_SECRET`.
+
+### 4. Run database migrations
+
+```bash
+npm run migration:run
+```
+
+### 5. Start the API
 
 ```bash
 npm run start:dev
 ```
 
-Server starts at `http://localhost:3000`.
+The API will be available at `http://localhost:3000`.
 
----
+### 6. Open Swagger
 
-## Core Features
+Interactive API docs are available at `http://localhost:3000/api`.
 
-### Event & Ticket Management
+## Environment Variables
 
-* CRUD APIs for events and tickets
-* Organizer controls (pricing, limits, capacity)
+| Variable | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `NODE_ENV` | `development \| production \| test \| staging` | Optional | `development` | Controls runtime mode and a few conditional behaviors such as Swagger exposure. |
+| `PORT` | `number` | Optional | `3000` | Port used by the NestJS HTTP server. |
+| `ALLOWED_ORIGINS` | `string` | Optional | `http://localhost:3000` | Comma-separated list of origins allowed by CORS. |
+| `DATABASE_URL` | `string` | Required | None | PostgreSQL connection string for the main application database. |
+| `TEST_DATABASE_URL` | `string` | Optional | None | PostgreSQL connection string used by test workflows. |
+| `ACCESS_TOKEN_SECRET` | `string` | Required | None | Secret used to sign access tokens. Must be at least 32 characters. |
+| `REFRESH_TOKEN_SECRET` | `string` | Required | None | Secret used to sign refresh tokens. Must be at least 32 characters. |
+| `ACCESS_TOKEN_EXPIRATION` | `string` | Optional | `15m` | Access token lifetime passed to JWT signing. |
+| `REFRESH_TOKEN_EXPIRATION` | `string` | Optional | `7d` | Refresh token lifetime passed to JWT signing. |
+| `ORDER_EXPIRY_MINUTES` | `number` | Optional | `15` | Number of minutes before a pending order expires. |
+| `STELLAR_NETWORK` | `testnet \| mainnet` | Optional | `testnet` | Selects the Horizon endpoint and Stellar network passphrase. |
+| `STELLAR_RECEIVING_ADDRESS` | `string` | Optional | None | Wallet address buyers send payment to for Stellar-based orders. |
+| `STELLAR_SECRET_KEY` | `string` | Optional | None | Secret key used for refund operations and other platform-signed Stellar transactions. |
+| `STELLAR_WEBHOOK_SECRET` | `string` | Optional | None | Shared secret used to validate Stellar payment webhook signatures. |
+| `SENDGRID_API_KEY` | `string` | Optional | None | Enables real email delivery through SendGrid when present. |
+| `SENDGRID_FROM_EMAIL` | `string` | Optional | `noreply@veritix.com` | Default sender address for outgoing emails. |
+| `GOOGLE_CLIENT_ID` | `string` | Optional | None | OAuth client ID for Google social login. |
+| `GOOGLE_CLIENT_SECRET` | `string` | Optional | None | OAuth client secret for Google social login. |
+| `GITHUB_CLIENT_ID` | `string` | Optional | None | OAuth client ID for GitHub social login. |
+| `GITHUB_CLIENT_SECRET` | `string` | Optional | None | OAuth client secret for GitHub social login. |
+| `OAUTH_CALLBACK_BASE_URL` | `string (URL)` | Optional | None | Base URL used to build Google and GitHub OAuth callback URLs, for example `http://localhost:3000`. |
+| `STORAGE_PROVIDER` | `local \| s3` | Optional | `local` | Chooses whether uploads are stored on the local filesystem or in S3. |
+| `S3_BUCKET` | `string` | Optional | None | S3 bucket name for uploaded assets when `STORAGE_PROVIDER=s3`. |
+| `S3_REGION` | `string` | Optional | None | AWS region for the configured S3 bucket. |
+| `S3_ACCESS_KEY_ID` | `string` | Optional | None | Access key used to authenticate S3 uploads. |
+| `S3_SECRET_ACCESS_KEY` | `string` | Optional | None | Secret key used to authenticate S3 uploads. |
 
-### Authentication
+## Database Migrations
 
-* JWT auth with role-based access control
-* Admin, organizer, attendee roles
+Run all pending migrations:
 
-### Payments & Revenue
+```bash
+npm run migration:run
+```
 
-* Integrated payment processing
-* Revenue share calculation rules
+Generate a new migration:
 
-### Ticket Validation
+```bash
+npm run migration:generate -- src/migrations/YourMigrationName
+```
 
-* QR code generation/validation
-* On-chain metadata verification
+Revert the last migration:
 
-### Analytics & Reporting
+```bash
+npm run migration:revert
+```
 
-* Ticket scans and usage metrics
-* Sales and event performance
+## API Docs
 
-### 🔗 Stellar Integration
+Swagger is served locally at `http://localhost:3000/api` when the app is not running in production.
 
-* Anchor important events on Stellar
-* Store ticket proofs & audit trail
+## Tests
 
----
-
-## Contract Integration
-
-Veritix uses a companion smart-contract repository: **veritix-contract**. This repo contains the on-chain contract logic (e.g., for decentralized ticket rules, transfers, anchoring logic) that interacts with the backend.
-You can find it at:
-
-🔗 [https://github.com/Lead-Studios/veritix-contract](https://github.com/Lead-Studios/veritix-contract) ([GitHub][1])
-
-Clone and build it alongside the backend to coordinate contract deployments and backend anchoring logic.
-
----
-
-## Testing
+Run the main automated checks with:
 
 ```bash
 npm test
+npm run test:e2e
+npm run test:cov
 ```
 
-Includes unit and integration tests using Jest.
+## Module Overview
 
-## Contribution
+- `admin/`: Admin-only operations for moderation, refunds, analytics, and audit trails.
+- `auth/`: Registration, password recovery, JWT auth, avatar upload, and OAuth login flows.
+- `common/`: Shared guards, decorators, middleware, filters, interceptors, storage, validators, and email helpers.
+- `config/`: Environment schema and configuration validation.
+- `events/`: Event creation, lifecycle management, publication rules, and waitlist handling.
+- `health/`: Basic health check endpoints for uptime monitoring.
+- `orders/`: Checkout, payment instructions, order expiry, reservation, and retry-payment flows.
+- `stellar/`: Stellar network integration, webhook handling, and payment confirmation processing.
+- `ticket-types/`: Ticket type catalog management, capacity tracking, and reservation helpers.
+- `tickets/`: Ticket issuance, status tracking, transfers, and verification data.
+- `users/`: User entity management and user-facing domain data.
+- `verification/`: Ticket verification workflows and related API endpoints.
 
-We welcome contributions!
-Please open issues and pull requests for improvements, bugs, and feature requests.
+## Contributing
 
-Before contributing:
+### Branch naming
 
-* Read `CONTRIBUTING.md` if present
-* Follow existing code structure and formatting
-* Write tests for new features
+Use one of these prefixes for feature branches:
 
----
+- `feat/`
+- `fix/`
+- `test/`
+- `perf/`
 
+Examples:
 
-[1]: https://github.com/Lead-Studios/veritix-contract "GitHub - Lead-Studios/veritix-contract"
+- `feat/retry-payment`
+- `fix/swagger-csp`
+- `test/orders-service`
+
+### Commit format
+
+Use a conventional-style commit message:
+
+```text
+type(scope): short summary
+```
+
+Examples:
+
+- `feat(auth): add google and github oauth login`
+- `docs(readme): complete contributor setup guide`
+
+### Pull request checklist
+
+- Confirm the branch name follows the expected prefix.
+- Explain the user-facing or operational change.
+- Link the relevant issue.
+- Include screenshots or request/response examples when API behavior changes.
+- Run the relevant tests locally.
+- Add or update migrations when schema changes are included.
+- Update docs and `.env.example` when configuration changes.
+
+## Useful Commands
+
+```bash
+npm run start:dev
+npm run build
+npm run migration:run
+npm test
+npm run test:e2e
+npm run test:cov
+```

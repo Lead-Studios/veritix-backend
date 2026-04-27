@@ -35,7 +35,27 @@ export class OrdersController {
   async createOrder(@CurrentUser() user: User, @Body() body: CreateOrderDto) {
     const result = await this.ordersService.create(body, user);
     const destinationAddress = this.configService.get<string>(
-      'STELLAR_PLATFORM_ADDRESS',
+      'STELLAR_RECEIVING_ADDRESS',
+    );
+
+    return {
+      ...result.order,
+      destinationAddress,
+      memo: result.stellarMemo,
+      amountXLM: result.amountXLM,
+    };
+  }
+
+  @Post(':id/retry-payment')
+  @Roles(UserRole.SUBSCRIBER)
+  @HttpCode(HttpStatus.CREATED)
+  async retryPayment(
+    @CurrentUser() user: User,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    const result = await this.ordersService.retryPayment(id, user);
+    const destinationAddress = this.configService.get<string>(
+      'STELLAR_RECEIVING_ADDRESS',
     );
 
     return {

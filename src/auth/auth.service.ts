@@ -4,13 +4,17 @@ import {
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { randomUUID } from 'crypto';
 import { User } from '../users/entities/user.entity';
 import { EmailService } from '../common/email/email.service';
 import { RegisterDto } from './dto/register.dto';
 import { RegisterOrganizerDto } from './dto/register-organizer.dto';
+import { UserResponseDto } from './dto/user-response.dto';
+import { OAuthUserProfile } from './interfaces/oauth-user-profile.interface';
 import { UserRole } from '../users/enums/user-role.enum';
 import { StorageService } from '../common/storage/storage.service';
 
@@ -25,9 +29,61 @@ export class AuthService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly jwtService: JwtService,
     private readonly emailService: EmailService,
     private readonly storageService: StorageService,
   ) {}
+
+  async handleOAuthLogin(profile: OAuthUserProfile): Promise<{
+    accessToken: string;
+    user: UserResponseDto;
+  }> {
+    let user = await this.findUserForOAuthProfile(profile);
+
+    if (!user) {
+      const generatedPassword = await bcrypt.hash(randomUUID(), 10);
+      user = await this.userRepository.save(
+        this.userRepository.create({
+          email: profile.email,
+          fullName: profile.fullName,
+          password: generatedPassword,
+          role: UserRole.SUBSCRIBER,
+          isVerified: true,
+          googleId: profile.googleId ?? null,
+          githubId: profile.githubId ?? null,
+          avatarUrl: profile.avatarUrl ?? null,
+        }),
+      );
+    } else {
+      const updates: Partial<User> = {};
+
+      if (profile.googleId && user.googleId !== profile.googleId) {
+        updates.googleId = profile.googleId;
+      }
+
+      if (profile.githubId && user.githubId !== profile.githubId) {
+        updates.githubId = profile.githubId;
+      }
+
+      if (!user.avatarUrl && profile.avatarUrl) {
+        updates.avatarUrl = profile.avatarUrl;
+      }
+
+      if (!user.isVerified) {
+        updates.isVerified = true;
+      }
+
+      if (Object.keys(updates).length > 0) {
+        await this.userRepository.update(user.id, updates);
+        user = Object.assign(user, updates);
+      }
+    }
+
+    return {
+      accessToken: await this.signAccessToken(user),
+      user: this.toUserResponse(user),
+    };
+  }
 
   async uploadAvatar(
     userId: string,
@@ -281,6 +337,53 @@ export class AuthService {
       fullName: 'Deleted User',
       deletedAt: new Date(),
       tokenVersion: user.tokenVersion + 1,
+    });
+  }
+
+  private async findUserForOAuthProfile(
+    profile: OAuthUserProfile,
+  ): Promise<User | null> {
+    if (profile.googleId) {
+      const googleUser = await this.userRepository.findOne({
+        where: { googleId: profile.googleId },
+      });
+      if (googleUser) {
+        return googleUser;
+      }
+    }
+
+    if (profile.githubId) {
+      const githubUser = await this.userRepository.findOne({
+        where: { githubId: profile.githubId },
+      });
+      if (githubUser) {
+        return githubUser;
+      }
+    }
+
+    return this.userRepository.findOne({
+      where: { email: profile.email },
+    });
+  }
+
+  private signAccessToken(user: User): Promise<string> {
+    return this.jwtService.signAsync({
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+      tokenVersion: user.tokenVersion,
+    });
+  }
+
+  private toUserResponse(user: User): UserResponseDto {
+    return new UserResponseDto({
+      id: user.id,
+      email: user.email,
+      fullName: user.fullName,
+      role: user.role,
+      isVerified: user.isVerified,
+      organizationName: user.organizationName,
+      createdAt: user.createdAt,
     });
   }
 }

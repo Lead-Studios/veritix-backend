@@ -8,6 +8,7 @@ import {
   Index,
 } from 'typeorm';
 import { OrderStatus } from '../enums/order-status.enum';
+import { CancelledReason } from '../enums/cancelled-reason.enum';
 import { OrderItem } from './order-item.entity';
 import { Ticket } from '../../tickets/entities/ticket.entity';
 
@@ -53,6 +54,13 @@ export class Order {
 
   @Column({ type: 'timestamp', nullable: true })
   paidAt: Date | null;
+
+  @Column({
+    type: 'enum',
+    enum: CancelledReason,
+    nullable: true,
+  })
+  cancelledReason: CancelledReason | null;
 
   @OneToMany(() => OrderItem, (item) => item.order, { cascade: true })
   items: OrderItem[];
