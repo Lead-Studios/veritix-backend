@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Req,
   Delete,
   UseGuards,
   Body,
@@ -23,6 +24,8 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { RegisterDto } from './dto/register.dto';
 import { RegisterOrganizerDto } from './dto/register-organizer.dto';
 import { AuthService } from './auth.service';
+import { GoogleOAuthGuard } from './guards/google-oauth.guard';
+import { GithubOAuthGuard } from './guards/github-oauth.guard';
 
 const ALLOWED_AVATAR_TYPES = ['image/png', 'image/jpeg'];
 const MAX_AVATAR_SIZE = 2 * 1024 * 1024; // 2MB
@@ -46,6 +49,26 @@ export class AuthController {
     });
 
     return userResponse;
+  }
+
+  @Get('google')
+  @UseGuards(GoogleOAuthGuard)
+  async googleAuth(): Promise<void> {}
+
+  @Get('google/callback')
+  @UseGuards(GoogleOAuthGuard)
+  async googleCallback(@Req() req: any) {
+    return this.authService.handleOAuthLogin(req.user);
+  }
+
+  @Get('github')
+  @UseGuards(GithubOAuthGuard)
+  async githubAuth(): Promise<void> {}
+
+  @Get('github/callback')
+  @UseGuards(GithubOAuthGuard)
+  async githubCallback(@Req() req: any) {
+    return this.authService.handleOAuthLogin(req.user);
   }
 
   @Post('register')

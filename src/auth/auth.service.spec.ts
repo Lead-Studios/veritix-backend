@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { JwtService } from '@nestjs/jwt';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { AuthService, DeleteAccountInput } from './auth.service';
 import { User } from '../users/entities/user.entity';
@@ -11,6 +12,9 @@ jest.mock('bcrypt');
 describe('AuthService', () => {
   let service: AuthService;
   let userRepository: any;
+  let jwtService: any;
+  let emailService: any;
+  let storageService: any;
 
   const mockUserId = 'user-123';
   const mockUserPassword = 'hashed_password_123';
@@ -36,6 +40,19 @@ describe('AuthService', () => {
       save: jest.fn(),
     };
 
+    jwtService = {
+      signAsync: jest.fn().mockResolvedValue('signed-access-token'),
+    };
+
+    emailService = {
+      sendEmail: jest.fn(),
+      sendSecurityAlert: jest.fn(),
+    };
+
+    storageService = {
+      upload: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
@@ -43,14 +60,90 @@ describe('AuthService', () => {
           provide: getRepositoryToken(User),
           useValue: userRepository,
         },
+        {
+          provide: JwtService,
+          useValue: jwtService,
+        },
+        {
+          provide: 'EmailService',
+          useValue: emailService,
+        },
+        {
+          provide: 'StorageService',
+          useValue: storageService,
+        },
       ],
-    }).compile();
+    })
+      .overrideProvider(JwtService)
+      .useValue(jwtService)
+      .overrideProvider(require('../common/email/email.service').EmailService)
+      .useValue(emailService)
+      .overrideProvider(require('../common/storage/storage.service').StorageService)
+      .useValue(storageService)
+      .compile();
 
     service = module.get<AuthService>(AuthService);
   });
 
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  describe('handleOAuthLogin', () => {
+    it('should link a google account to an existing user with the same email', async () => {
+      userRepository.findOne
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({
+          ...mockUser,
+          googleId: null,
+          avatarUrl: null,
+        });
+
+      const result = await service.handleOAuthLogin({
+        email: mockUser.email!,
+        fullName: mockUser.fullName!,
+        googleId: 'google-123',
+        avatarUrl: 'https://example.com/avatar.png',
+      });
+
+      expect(userRepository.update).toHaveBeenCalledWith(
+        mockUserId,
+        expect.objectContaining({
+          googleId: 'google-123',
+          avatarUrl: 'https://example.com/avatar.png',
+        }),
+      );
+      expect(result.accessToken).toBe('signed-access-token');
+    });
+
+    it('should create a new user for first-time github oauth login', async () => {
+      const createdUser = {
+        ...mockUser,
+        id: 'new-user',
+        email: 'oauth@example.com',
+        githubId: 'github-123',
+      };
+
+      userRepository.findOne.mockResolvedValue(null);
+      userRepository.create.mockImplementation((value: Partial<User>) => value);
+      userRepository.save.mockResolvedValue(createdUser);
+      (bcrypt.hash as jest.Mock).mockResolvedValue('generated-hash');
+
+      const result = await service.handleOAuthLogin({
+        email: 'oauth@example.com',
+        fullName: 'OAuth User',
+        githubId: 'github-123',
+      });
+
+      expect(userRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          email: 'oauth@example.com',
+          githubId: 'github-123',
+          isVerified: true,
+        }),
+      );
+      expect(result.user.email).toBe('oauth@example.com');
+    });
   });
 
   describe('deleteAccount', () => {

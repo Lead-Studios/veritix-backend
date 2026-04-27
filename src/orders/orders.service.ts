@@ -16,6 +16,7 @@ import { Ticket } from 'src/tickets/entities/ticket.entity';
 import { TicketTypesService } from 'src/ticket-types/ticket-types.service';
 import { WaitlistService } from 'src/events/waitlist.service';
 import { OrderStatus } from './enums/order-status.enum';
+import { CancelledReason } from './enums/cancelled-reason.enum';
 import { User } from 'src/users/entities/user.entity';
 import { UserRole } from 'src/users/enums/user-role.enum';
 
@@ -35,112 +36,7 @@ export class OrdersService {
   ) {}
 
   async create(dto: CreateOrderDto, user: User): Promise<CreateOrderResult> {
-    const { eventId, items } = dto;
-
-    if (!items || items.length === 0) {
-      throw new BadRequestException('Order must contain at least one item');
-    }
-
-    const ticketTypes = await Promise.all(
-      items.map(async (item) => {
-        if (!Number.isInteger(item.quantity) || item.quantity < 1) {
-          throw new BadRequestException(
-            `Invalid quantity ${item.quantity} for ticketType ${item.ticketTypeId}`,
-          );
-        }
-
-        const ticketType = await this.ticketTypeService.findOne(
-          item.ticketTypeId,
-        );
-        if (!ticketType) {
-          throw new NotFoundException(
-            `TicketType ${item.ticketTypeId} not found`,
-          );
-        }
-
-        if (
-          ticketType.soldQuantity + item.quantity >
-          ticketType.totalQuantity
-        ) {
-          throw new BadRequestException(
-            `Insufficient inventory for ticketType ${item.ticketTypeId}: requested ${item.quantity}, available ${ticketType.totalQuantity - ticketType.soldQuantity}`,
-          );
-        }
-
-        return ticketType;
-      }),
-    );
-
-    const orderId = randomUUID();
-    const stellarMemo = orderId.slice(0, 8);
-    const expiryMinutes =
-      this.config.get<OrderConfig>('order')?.expiryMinutes ?? 15;
-    const expiresAt = new Date(Date.now() + expiryMinutes * 60_000);
-
-    let totalAmountUSD = 0;
-    let totalAmountXLM = 0;
-
-    const orderItems = items.map((item, idx) => {
-      const ticketType = ticketTypes[idx];
-      const unitPrice = Number(ticketType.price);
-      const subtotal = unitPrice * item.quantity;
-      totalAmountUSD += subtotal;
-      totalAmountXLM += subtotal;
-
-      return {
-        ticketTypeId: item.ticketTypeId,
-        quantity: item.quantity,
-        unitPriceUSD: unitPrice,
-        subtotalUSD: subtotal,
-      };
-    });
-
-    const order = await this.dataSource.transaction(async (manager) => {
-      const orderData: Partial<Order> = {
-        id: orderId,
-        userId: user.id,
-        eventId,
-        status: OrderStatus.PENDING,
-        totalAmountUSD,
-        totalAmountXLM,
-        stellarMemo,
-        stellarTxHash: null,
-        refundTxHash: null,
-        expiresAt,
-        paidAt: null,
-      };
-
-      const savedOrder = await manager.save(manager.create(Order, orderData));
-
-      const itemsToSave = orderItems.map((item) =>
-        manager.create(OrderItem, {
-          ...item,
-          orderId: savedOrder.id,
-        }),
-      );
-
-      savedOrder.items = await manager.save(itemsToSave);
-
-      for (const item of items) {
-        await this.ticketTypeService.reserveTickets(
-          item.ticketTypeId,
-          item.quantity,
-          manager.queryRunner,
-        );
-      }
-
-      return savedOrder;
-    });
-
-    this.logger.log(
-      `Order ${order.id} created for user ${user.id} — ${items.length} item(s), ${totalAmountXLM} XLM, memo=${stellarMemo}`,
-    );
-
-    return {
-      order,
-      stellarMemo,
-      amountXLM: totalAmountXLM,
-    };
+    return this.createOrderRecord(dto.eventId, dto.items, user.id);
   }
 
   async findById(orderId: string, user: User): Promise<Order> {
@@ -223,6 +119,10 @@ export class OrdersService {
 
       await manager.update(Order, id, {
         status: OrderStatus.CANCELLED,
+        cancelledReason:
+          user.role === UserRole.ADMIN
+            ? CancelledReason.ADMIN
+            : CancelledReason.MANUAL,
       });
     });
 
@@ -233,6 +133,157 @@ export class OrdersService {
     await this.waitlistService.notifyNext(order.eventId, 1);
 
     order.status = OrderStatus.CANCELLED;
+    order.cancelledReason =
+      user.role === UserRole.ADMIN
+        ? CancelledReason.ADMIN
+        : CancelledReason.MANUAL;
     return order;
+  }
+
+  async retryPayment(orderId: string, user: User): Promise<CreateOrderResult> {
+    const order = await this.orderRepo.findOne({
+      where: { id: orderId },
+      relations: ['items'],
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Order ${orderId} not found`);
+    }
+
+    if (order.userId !== user.id) {
+      throw new ForbiddenException(
+        'You do not have permission to retry payment for this order',
+      );
+    }
+
+    if (
+      order.status !== OrderStatus.CANCELLED ||
+      order.cancelledReason !== CancelledReason.EXPIRED
+    ) {
+      throw new BadRequestException(
+        'Only orders cancelled due to expiry can be retried',
+      );
+    }
+
+    return this.createOrderRecord(
+      order.eventId,
+      order.items.map((item) => ({
+        ticketTypeId: item.ticketTypeId,
+        quantity: item.quantity,
+      })),
+      user.id,
+    );
+  }
+
+  private async createOrderRecord(
+    eventId: string,
+    items: Array<{ ticketTypeId: string; quantity: number }>,
+    userId: string,
+  ): Promise<CreateOrderResult> {
+    if (!items || items.length === 0) {
+      throw new BadRequestException('Order must contain at least one item');
+    }
+
+    const ticketTypes = await Promise.all(
+      items.map(async (item) => {
+        if (!Number.isInteger(item.quantity) || item.quantity < 1) {
+          throw new BadRequestException(
+            `Invalid quantity ${item.quantity} for ticketType ${item.ticketTypeId}`,
+          );
+        }
+
+        const ticketType = await this.ticketTypeService.findOne(
+          item.ticketTypeId,
+        );
+        if (!ticketType) {
+          throw new NotFoundException(
+            `TicketType ${item.ticketTypeId} not found`,
+          );
+        }
+
+        if (
+          ticketType.soldQuantity + item.quantity >
+          ticketType.totalQuantity
+        ) {
+          throw new BadRequestException(
+            `Insufficient inventory for ticketType ${item.ticketTypeId}: requested ${item.quantity}, available ${ticketType.totalQuantity - ticketType.soldQuantity}`,
+          );
+        }
+
+        return ticketType;
+      }),
+    );
+
+    const orderId = randomUUID();
+    const stellarMemo = orderId.slice(0, 8);
+    const expiryMinutes =
+      this.config.get<OrderConfig>('order')?.expiryMinutes ?? 15;
+    const expiresAt = new Date(Date.now() + expiryMinutes * 60_000);
+
+    let totalAmountUSD = 0;
+    let totalAmountXLM = 0;
+
+    const orderItems = items.map((item, idx) => {
+      const ticketType = ticketTypes[idx];
+      const unitPrice = Number(ticketType.price);
+      const subtotal = unitPrice * item.quantity;
+      totalAmountUSD += subtotal;
+      totalAmountXLM += subtotal;
+
+      return {
+        ticketTypeId: item.ticketTypeId,
+        quantity: item.quantity,
+        unitPriceUSD: unitPrice,
+        subtotalUSD: subtotal,
+      };
+    });
+
+    const order = await this.dataSource.transaction(async (manager) => {
+      const orderData: Partial<Order> = {
+        id: orderId,
+        userId,
+        eventId,
+        status: OrderStatus.PENDING,
+        totalAmountUSD,
+        totalAmountXLM,
+        stellarMemo,
+        stellarTxHash: null,
+        refundTxHash: null,
+        expiresAt,
+        paidAt: null,
+        cancelledReason: null,
+      };
+
+      const savedOrder = await manager.save(manager.create(Order, orderData));
+
+      const itemsToSave = orderItems.map((item) =>
+        manager.create(OrderItem, {
+          ...item,
+          orderId: savedOrder.id,
+        }),
+      );
+
+      savedOrder.items = await manager.save(itemsToSave);
+
+      for (const item of items) {
+        await this.ticketTypeService.reserveTickets(
+          item.ticketTypeId,
+          item.quantity,
+          manager.queryRunner,
+        );
+      }
+
+      return savedOrder;
+    });
+
+    this.logger.log(
+      `Order ${order.id} created for user ${userId} — ${items.length} item(s), ${totalAmountXLM} XLM, memo=${stellarMemo}`,
+    );
+
+    return {
+      order,
+      stellarMemo,
+      amountXLM: totalAmountXLM,
+    };
   }
 }

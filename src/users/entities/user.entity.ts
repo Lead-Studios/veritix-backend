@@ -60,6 +60,12 @@ export class User {
   @Column({ nullable: true })
   country: string;
 
+  @Column({ nullable: true, unique: true })
+  googleId: string | null;
+
+  @Column({ nullable: true, unique: true })
+  githubId: string | null;
+
   @CreateDateColumn()
   createdAt: Date;
 

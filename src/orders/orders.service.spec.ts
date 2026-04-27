@@ -5,10 +5,12 @@ import { DataSource } from 'typeorm';
 import { OrdersService } from './orders.service';
 import { Order, OrderItem } from './orders.entity';
 import { Ticket } from 'src/tickets/entities/ticket.entity';
-import { TicketTypeService } from 'src/ticket-types/ticket-types.service';
+import { TicketTypesService } from 'src/ticket-types/ticket-types.service';
 import { OrderStatus } from './enums/order-status.enum';
+import { CancelledReason } from './enums/cancelled-reason.enum';
 import { User } from 'src/users/entities/user.entity';
 import { UserRole } from 'src/users/enums/user-role.enum';
+import { WaitlistService } from 'src/events/waitlist.service';
 import {
   BadRequestException,
   ForbiddenException,
@@ -23,6 +25,7 @@ describe('OrdersService', () => {
   let configService: any;
   let dataSource: any;
   let entityManager: any;
+  let waitlistService: any;
 
   const mockUser: User = { id: 'user-1', role: UserRole.SUBSCRIBER } as any;
   const mockAdmin: User = { id: 'admin-1', role: UserRole.ADMIN } as any;
@@ -51,10 +54,15 @@ describe('OrdersService', () => {
       get: jest.fn().mockReturnValue({ expiryMinutes: 15 }),
     };
 
+    waitlistService = {
+      notifyNext: jest.fn(),
+    };
+
     entityManager = {
       save: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
+      queryRunner: undefined,
     };
 
     dataSource = {
@@ -66,9 +74,10 @@ describe('OrdersService', () => {
         OrdersService,
         { provide: getRepositoryToken(Order), useValue: orderRepo },
         { provide: getRepositoryToken(Ticket), useValue: ticketRepo },
-        { provide: TicketTypeService, useValue: ticketTypeService },
+        { provide: TicketTypesService, useValue: ticketTypeService },
         { provide: ConfigService, useValue: configService },
         { provide: DataSource, useValue: dataSource },
+        { provide: WaitlistService, useValue: waitlistService },
       ],
     }).compile();
 
@@ -96,7 +105,9 @@ describe('OrdersService', () => {
         status: OrderStatus.PENDING,
       };
       entityManager.create.mockReturnValue(mockOrder);
-      entityManager.save.mockResolvedValue(mockOrder);
+      entityManager.save
+        .mockResolvedValueOnce(mockOrder)
+        .mockResolvedValueOnce([{ id: 'item-1', orderId: 'order-1' }]);
 
       const result = await service.create(createInput, mockUser);
 
@@ -206,6 +217,7 @@ describe('OrdersService', () => {
       id: 'order-1',
       userId: 'user-1',
       status: OrderStatus.PENDING,
+      cancelledReason: null,
       items: [{ ticketTypeId: 'tt-1', quantity: 2 }],
     } as any;
 
@@ -217,11 +229,16 @@ describe('OrdersService', () => {
       expect(result.status).toBe(OrderStatus.CANCELLED);
       expect(entityManager.update).toHaveBeenCalledWith(Order, 'order-1', {
         status: OrderStatus.CANCELLED,
+        cancelledReason: CancelledReason.MANUAL,
       });
       expect(ticketTypeService.releaseTickets).toHaveBeenCalledWith(
         'tt-1',
         2,
         undefined, // in mock transaction manager.queryRunner might be undefined unless mocked
+      );
+      expect(waitlistService.notifyNext).toHaveBeenCalledWith(
+        expect.any(String),
+        1,
       );
     });
 
@@ -242,6 +259,55 @@ describe('OrdersService', () => {
 
       await expect(service.cancel('order-1', otherUser)).rejects.toThrow(
         ForbiddenException,
+      );
+    });
+  });
+
+  describe('retryPayment', () => {
+    it('should create a new order when the previous one expired', async () => {
+      orderRepo.findOne.mockResolvedValue({
+        id: 'order-1',
+        userId: mockUser.id,
+        eventId: 'event-1',
+        status: OrderStatus.CANCELLED,
+        cancelledReason: CancelledReason.EXPIRED,
+        items: [{ ticketTypeId: 'tt-1', quantity: 1 }],
+      });
+
+      ticketTypeService.findOne.mockResolvedValue({
+        id: 'tt-1',
+        price: 10,
+        totalQuantity: 10,
+        soldQuantity: 1,
+      });
+
+      entityManager.create.mockImplementation((entity: unknown, value: unknown) => value);
+      entityManager.save
+        .mockResolvedValueOnce({ id: 'new-order', items: [] })
+        .mockResolvedValueOnce([{ id: 'item-1', orderId: 'new-order' }]);
+
+      const result = await service.retryPayment('order-1', mockUser);
+
+      expect(result.order.id).toBe('new-order');
+      expect(ticketTypeService.reserveTickets).toHaveBeenCalledWith(
+        'tt-1',
+        1,
+        undefined,
+      );
+    });
+
+    it('should reject retry for manually cancelled orders', async () => {
+      orderRepo.findOne.mockResolvedValue({
+        id: 'order-1',
+        userId: mockUser.id,
+        eventId: 'event-1',
+        status: OrderStatus.CANCELLED,
+        cancelledReason: CancelledReason.MANUAL,
+        items: [{ ticketTypeId: 'tt-1', quantity: 1 }],
+      });
+
+      await expect(service.retryPayment('order-1', mockUser)).rejects.toThrow(
+        BadRequestException,
       );
     });
   });

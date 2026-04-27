@@ -299,7 +299,7 @@ export class AdminService {
   ): Promise<string | null> {
     try {
       const server = this.stellarService.getServer();
-      const secretKey = process.env.STELLAR_SECRET;
+      const secretKey = process.env.STELLAR_SECRET_KEY;
       if (!secretKey) return null;
 
       const sourceKeypair = StellarSdk.Keypair.fromSecret(secretKey);

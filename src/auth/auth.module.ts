@@ -4,8 +4,12 @@ import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { GoogleStrategy } from './strategies/google.strategy';
+import { GithubStrategy } from './strategies/github.strategy';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { GoogleOAuthGuard } from './guards/google-oauth.guard';
+import { GithubOAuthGuard } from './guards/github-oauth.guard';
 import { User } from '../users/entities/user.entity';
 import { EmailModule } from '../common/email/email.module';
 import { StorageModule } from '../common/storage/storage.module';
@@ -31,7 +35,14 @@ import { StorageModule } from '../common/storage/storage.module';
       }),
     }),
   ],
-  providers: [JwtStrategy, AuthService],
+  providers: [
+    JwtStrategy,
+    GoogleStrategy,
+    GithubStrategy,
+    GoogleOAuthGuard,
+    GithubOAuthGuard,
+    AuthService,
+  ],
   controllers: [AuthController],
   exports: [JwtModule, PassportModule, AuthService],
 })

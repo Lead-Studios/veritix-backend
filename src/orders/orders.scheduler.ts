@@ -6,6 +6,7 @@ import { OrderConfig } from './order.config';
 import { Order } from './orders.entity';
 import { TicketTypesService } from 'src/ticket-types/ticket-types.service';
 import { OrderStatus } from './enums/order-status.enum';
+import { CancelledReason } from './enums/cancelled-reason.enum';
 
 export interface ExpiryRunSummary {
   checkedAt: Date;
@@ -105,6 +106,7 @@ export class OrdersScheduler {
 
       await manager.update(Order, order.id, {
         status: OrderStatus.CANCELLED,
+        cancelledReason: CancelledReason.EXPIRED,
       });
     });
 
